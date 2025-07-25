@@ -225,7 +225,7 @@ PyQt5_sip==12.17.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 python-multipart==0.0.20
-pyttsx3==2.99
+
 pytz==2025.2
 PyYAML==6.0.2
 regex==2024.11.6
@@ -240,6 +240,14 @@ six==1.17.0
 sniffio==1.3.1
 SpeechRecognition==3.14.3
 SQLAlchemy==2.0.41
+# Coqui TTS dependencies
+TTS==0.22.0
+torch>=1.9.0
+torchaudio>=0.9.0
+librosa>=0.8.0
+soundfile>=0.10.0
+sounddevice>=0.4.0
+transformers>=4.33.0
 standard-aifc==3.13.0
 standard-chunk==3.13.0
 starlette==0.47.2
