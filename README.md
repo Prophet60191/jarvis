@@ -1,6 +1,6 @@
-# 🤖 Jarvis Voice Assistant
+# Jarvis Voice Assistant
 
-A **100% local, privacy-focused** voice-activated AI assistant inspired by Tony Stark's Jarvis. Built with Python and powered by local AI models with **zero external API calls**. Features advanced speech recognition, natural conversation flow, and complete offline operation.
+A 100% local, privacy-focused voice-activated AI assistant inspired by Tony Stark's Jarvis. Built with Python and powered by local AI models with zero external API calls. Features advanced speech recognition, natural conversation flow, and complete offline operation.
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,41 +8,41 @@ A **100% local, privacy-focused** voice-activated AI assistant inspired by Tony 
 [![Privacy](https://img.shields.io/badge/privacy-100%25%20local-green.svg)](https://github.com/Prophet60191/jarvis)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-optimized-blue.svg)](https://github.com/Prophet60191/jarvis)
 
-## ✨ Features
+## Features
 
-### 🔒 **100% Local & Private**
+### 100% Local & Private
 - **Zero External APIs**: No data sent to Google, OpenAI, or any external services
 - **Complete Offline Operation**: Works without internet connection
 - **Apple Silicon Optimized**: Native performance on M1/M2/M3 Macs
 - **Privacy First**: All processing happens on your device
 
-### 🎤 **Advanced Voice Interaction**
+### Advanced Voice Interaction
 - **Local Speech Recognition**: Powered by OpenAI Whisper (Faster-Whisper)
 - **Apple System TTS**: High-quality native voice synthesis
 - **Wake Word Detection**: Customizable wake word with confidence scoring
 - **Auto-Listen Feature**: 5-second follow-up window for natural conversation
 - **Voice Activity Detection**: Smart noise filtering and speech detection
 
-### 🧠 **Local AI Integration**
+### Local AI Integration
 - **Local LLM**: Powered by Ollama for complete privacy and offline operation
 - **Tool Integration**: Extensible tool system with LangChain compatibility
 - **Reasoning**: Optional reasoning mode for complex queries
 - **Context Awareness**: Maintains conversation context and history
 - **Natural Conversation**: Seamless follow-up questions without repeating wake word
 
-### 🔧 Professional Architecture
+### Professional Architecture
 - **Modular Design**: Clean separation of concerns with dependency injection
 - **Configuration Management**: Environment-based configuration with validation
 - **Error Handling**: Comprehensive exception hierarchy with detailed logging
 - **Testing**: Full test suite with unit and integration tests
 - **Documentation**: Comprehensive documentation and examples
 
-### 🛠️ **Built-in Tools**
+### Built-in Tools
 - **Time Tool**: Get current time in 80+ cities worldwide with timezone support
 - **Video Tool**: Video content creation advice with platform-specific tips
 - **Extensible**: Easy to add custom tools with the provided base classes
 
-### 🔧 **Technology Stack**
+### Technology Stack
 - **Speech Recognition**: Faster-Whisper (OpenAI Whisper optimized)
 - **Text-to-Speech**: Apple System Voices (macOS native)
 - **AI Model**: Ollama (qwen2.5:1.5b or any compatible model)
@@ -50,7 +50,7 @@ A **100% local, privacy-focused** voice-activated AI assistant inspired by Tony 
 - **Framework**: LangChain for tool integration
 - **Platform**: Optimized for Apple Silicon (M1/M2/M3)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Python 3.8+** (3.9+ recommended for Apple Silicon)
@@ -102,7 +102,7 @@ python -m jarvis.main
    - **New**: Ask follow-up questions immediately (no need to say "Jarvis" again!)
    - Press Ctrl+C to exit
 
-## 📖 Usage Examples
+## Usage Examples
 
 ### Natural Conversation Flow
 ```
@@ -123,29 +123,29 @@ You: "Give me video content advice for today"
 Jarvis: "For Monday video content: Monday Motivation videos perform well..."
 ```
 
-## 🔒 Privacy & Local Operation
+## Privacy & Local Operation
 
 Jarvis is designed with **privacy first** principles:
 
-### ✅ **What Stays Local**
+### What Stays Local
 - **All voice data**: Speech recognition happens on your device using Whisper
 - **All AI processing**: LLM runs locally via Ollama
 - **All conversations**: No conversation data leaves your machine
 - **All audio**: TTS uses Apple's system voices (local)
 
-### ❌ **What's NOT Sent Externally**
-- ❌ No audio sent to Google, OpenAI, or any cloud service
-- ❌ No conversation logs uploaded anywhere
-- ❌ No telemetry or analytics data collected
-- ❌ No internet connection required after initial setup
+### What's NOT Sent Externally
+- No audio sent to Google, OpenAI, or any cloud service
+- No conversation logs uploaded anywhere
+- No telemetry or analytics data collected
+- No internet connection required after initial setup
 
-### 🛡️ **Security Benefits**
+### Security Benefits
 - **Complete offline operation** after setup
 - **No API keys required** for speech or AI
 - **No data breaches possible** - everything stays on your device
 - **Corporate/sensitive environment friendly**
 
-## ⚙️ Configuration
+## Configuration
 
 Jarvis uses environment variables for configuration. Copy `.env.example` to `.env` and customize:
 
@@ -180,7 +180,7 @@ JARVIS_TEMPERATURE=0.7                # Response creativity (0.0-2.0)
 JARVIS_VERBOSE=false                  # Verbose AI output
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 Jarvis follows a modular architecture with clear separation of concerns:
 
@@ -203,7 +203,7 @@ jarvis/
 - **WakeWordDetector**: Detects wake words with confidence scoring
 - **ToolRegistry**: Manages available tools and their execution
 
-## 🔧 Development
+## Development
 
 ### Running Tests
 ```bash
@@ -248,7 +248,7 @@ from jarvis.tools import tool_registry
 tool_registry.register(MyTool())
 ```
 
-## 📚 Documentation
+## Documentation
 
 - [Installation Guide](docs/installation.md)
 - [Configuration Reference](docs/configuration.md)
@@ -257,11 +257,11 @@ tool_registry.register(MyTool())
 - [Tool Development Guide](docs/tools.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## 📋 Requirements
+## Requirements
 
 ### System Requirements
 - **Operating System**: macOS, Linux (Windows support in development)
@@ -273,7 +273,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 - **Speakers/Headphones**: For audio output
 - **Internet**: Required for initial setup and model downloads
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -294,17 +294,16 @@ ollama list
 - Adjust `JARVIS_ENERGY_THRESHOLD` in configuration
 - Test microphone with system settings
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Inspired by Tony Stark's Jarvis from the Marvel Cinematic Universe
 - Built with [Ollama](https://ollama.ai) for local LLM inference
 - Uses [LangChain](https://langchain.com) for AI tool integration
-- Speech recognition powered by Google Speech Recognition API
+- Speech recognition powered by OpenAI Whisper (Faster-Whisper implementation)
+- Text-to-speech using Apple's native system voices
 
----
-
-**"Sometimes you gotta run before you can walk."** - Tony Stark
+"Sometimes you gotta run before you can walk." - Tony Stark
