@@ -12,6 +12,7 @@ from contextlib import contextmanager
 
 from ..config import AudioConfig
 from ..exceptions import MicrophoneError, SpeechRecognitionError, AudioError
+from .whisper_speech import WhisperSpeechRecognizer
 
 
 logger = logging.getLogger(__name__)
@@ -35,14 +36,15 @@ class MicrophoneManager:
         self.config = config
         self.recognizer = sr.Recognizer()
         self.microphone: Optional[sr.Microphone] = None
+        self.whisper_recognizer: Optional[WhisperSpeechRecognizer] = None
         self._is_initialized = False
-        
+
         # Configure recognizer settings
         self.recognizer.energy_threshold = config.energy_threshold
         self.recognizer.dynamic_energy_threshold = True
         self.recognizer.pause_threshold = 0.8
         self.recognizer.operation_timeout = None
-        
+
         logger.info(f"MicrophoneManager initialized with config: {config}")
     
     def initialize(self) -> None:
@@ -66,9 +68,14 @@ class MicrophoneManager:
             with self.microphone as source:
                 logger.info("Adjusting for ambient noise...")
                 self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            
+
+            # Initialize Whisper speech recognizer
+            logger.info("Initializing Whisper speech recognition...")
+            self.whisper_recognizer = WhisperSpeechRecognizer(self.config)
+            self.whisper_recognizer.initialize()
+
             self._is_initialized = True
-            logger.info(f"Microphone initialized successfully: {self.config.mic_name}")
+            logger.info(f"Microphone and Whisper initialized successfully: {self.config.mic_name}")
             
         except OSError as e:
             error_msg = f"Failed to initialize microphone with index {self.config.mic_index}: {str(e)}"
@@ -136,13 +143,13 @@ class MicrophoneManager:
             logger.error(error_msg)
             raise AudioError(error_msg) from e
     
-    def recognize_speech(self, audio_data, service: str = "google") -> str:
+    def recognize_speech(self, audio_data, service: str = "whisper") -> str:
         """
         Recognize speech from audio data using the specified service.
         
         Args:
             audio_data: AudioData object containing the audio to recognize
-            service: Speech recognition service to use ("google", "sphinx", etc.)
+            service: Speech recognition service to use ("whisper", "google", "sphinx")
             
         Returns:
             Recognized text as a string
@@ -153,7 +160,11 @@ class MicrophoneManager:
         try:
             logger.debug(f"Recognizing speech using {service} service")
             
-            if service.lower() == "google":
+            if service.lower() == "whisper":
+                if not self.whisper_recognizer or not self.whisper_recognizer.is_initialized():
+                    raise SpeechRecognitionError("Whisper recognizer not initialized")
+                text = self.whisper_recognizer.recognize_speech_from_audio_data(audio_data)
+            elif service.lower() == "google":
                 text = self.recognizer.recognize_google(audio_data)
             elif service.lower() == "sphinx":
                 text = self.recognizer.recognize_sphinx(audio_data)
@@ -177,7 +188,7 @@ class MicrophoneManager:
     
     def listen_for_speech(self, timeout: Optional[float] = None, 
                          phrase_time_limit: Optional[float] = None,
-                         service: str = "google") -> Optional[str]:
+                         service: str = "whisper") -> Optional[str]:
         """
         Listen for speech and return the recognized text.
         
@@ -245,7 +256,18 @@ class MicrophoneManager:
     
     def cleanup(self) -> None:
         """Clean up microphone resources."""
+        logger.info("Cleaning up microphone resources")
+
+        # Clean up Whisper recognizer
+        if hasattr(self, 'whisper_recognizer') and self.whisper_recognizer:
+            try:
+                self.whisper_recognizer.cleanup()
+                logger.debug("Whisper recognizer cleaned up")
+            except Exception as e:
+                logger.error(f"Error cleaning up Whisper recognizer: {e}")
+
+        # Clean up microphone
         if self.microphone:
-            logger.info("Cleaning up microphone resources")
             self.microphone = None
-            self._is_initialized = False
+
+        self._is_initialized = False

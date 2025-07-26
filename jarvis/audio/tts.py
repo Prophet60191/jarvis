@@ -1,8 +1,8 @@
 """
 Text-to-Speech management for Jarvis Voice Assistant.
 
-This module handles text-to-speech operations using Coqui TTS for
-high-quality neural voice synthesis with voice cloning support.
+This module handles text-to-speech operations using Apple's high-quality
+system voices for reliable, fast, and compatible speech synthesis.
 """
 
 import logging
@@ -10,6 +10,7 @@ from typing import List, Dict, Any
 
 from ..config import AudioConfig
 from ..exceptions import TextToSpeechError
+from .apple_tts import AppleTTSManager
 from .coqui_tts import CoquiTTSManager
 from .streaming_tts import StreamingTTSManager
 from .multilang_tts import MultiLanguageTTSManager
@@ -22,8 +23,8 @@ class TextToSpeechManager:
     """
     Manages text-to-speech operations for the Jarvis voice assistant.
 
-    This class now uses Coqui TTS for high-quality neural voice synthesis
-    while maintaining compatibility with the existing interface.
+    This class uses Apple's system TTS for reliable, high-quality speech synthesis
+    that's perfectly compatible with Apple Silicon Macs.
     """
 
     def __init__(self, config: AudioConfig):
@@ -34,11 +35,16 @@ class TextToSpeechManager:
             config: Audio configuration settings
         """
         self.config = config
+
+        # Use Apple TTS as primary backend
+        self.apple_tts = AppleTTSManager(config)
+
+        # Keep other TTS systems available as alternatives
         self.coqui_tts = CoquiTTSManager(config)
         self.streaming_tts = StreamingTTSManager(config)
         self.multilang_tts = MultiLanguageTTSManager(config)
 
-        logger.info(f"TextToSpeechManager initialized with Coqui TTS backend")
+        logger.info(f"TextToSpeechManager initialized with Apple TTS backend")
     
     def initialize(self) -> None:
         """
@@ -48,14 +54,16 @@ class TextToSpeechManager:
             TextToSpeechError: If TTS engine initialization fails
         """
         try:
-            logger.info("Initializing Coqui TTS engine...")
-            self.coqui_tts.initialize()
-            self.streaming_tts.initialize()
-            self.multilang_tts.initialize()
-            logger.info("Coqui TTS engine initialized successfully")
+            # Initialize Apple TTS as primary backend
+            logger.info("Initializing Apple TTS engine...")
+            self.apple_tts.initialize()
+            logger.info("Apple TTS engine initialized successfully")
+
+            # Note: Other TTS systems are available but not initialized by default
+            # to avoid the Apple Silicon compatibility issues
 
         except Exception as e:
-            error_msg = f"Failed to initialize Coqui TTS engine: {str(e)}"
+            error_msg = f"Failed to initialize Apple TTS engine: {str(e)}"
             logger.error(error_msg)
             raise TextToSpeechError(error_msg) from e
     
@@ -66,11 +74,11 @@ class TextToSpeechManager:
         Returns:
             True if TTS engine is initialized, False otherwise
         """
-        return self.coqui_tts.is_initialized()
-    
+        return self.apple_tts.is_initialized()
+
     def speak(self, text: str, wait: bool = True) -> None:
         """
-        Convert text to speech and play it using Coqui TTS.
+        Convert text to speech and play it using Apple TTS.
 
         Args:
             text: Text to convert to speech
@@ -79,8 +87,8 @@ class TextToSpeechManager:
         Raises:
             TextToSpeechError: If TTS operation fails
         """
-        self.coqui_tts.speak(text, wait)
-    
+        self.apple_tts.speak(text, wait)
+
     def speak_async(self, text: str) -> None:
         """
         Convert text to speech asynchronously (non-blocking).
@@ -91,7 +99,7 @@ class TextToSpeechManager:
         Raises:
             TextToSpeechError: If TTS operation fails
         """
-        self.coqui_tts.speak_async(text)
+        self.apple_tts.speak_async(text)
 
     def stop_speaking(self) -> None:
         """
@@ -100,7 +108,7 @@ class TextToSpeechManager:
         Raises:
             TextToSpeechError: If stop operation fails
         """
-        self.coqui_tts.stop_speaking()
+        self.apple_tts.stop_speaking()
 
     def get_available_voices(self) -> List[Dict[str, Any]]:
         """
@@ -112,7 +120,7 @@ class TextToSpeechManager:
         Raises:
             TextToSpeechError: If unable to retrieve voices
         """
-        return self.coqui_tts.get_available_voices()
+        return self.apple_tts.get_available_voices()
     
     def set_voice(self, voice_id: str) -> None:
         """
@@ -292,8 +300,31 @@ class TextToSpeechManager:
 
     def cleanup(self) -> None:
         """Clean up TTS resources."""
-        if hasattr(self, 'streaming_tts'):
-            self.streaming_tts.cleanup()
-        if hasattr(self, 'multilang_tts'):
-            self.multilang_tts.cleanup()
-        self.coqui_tts.cleanup()
+        logger.info("Cleaning up TTS resources")
+
+        # Clean up Apple TTS (primary backend)
+        if hasattr(self, 'apple_tts') and self.apple_tts:
+            try:
+                self.apple_tts.cleanup()
+                logger.debug("Apple TTS cleaned up")
+            except Exception as e:
+                logger.error(f"Error cleaning up Apple TTS: {e}")
+
+        # Clean up other TTS systems
+        if hasattr(self, 'streaming_tts') and self.streaming_tts:
+            try:
+                self.streaming_tts.cleanup()
+            except Exception as e:
+                logger.error(f"Error cleaning up streaming TTS: {e}")
+
+        if hasattr(self, 'multilang_tts') and self.multilang_tts:
+            try:
+                self.multilang_tts.cleanup()
+            except Exception as e:
+                logger.error(f"Error cleaning up multilang TTS: {e}")
+
+        if hasattr(self, 'coqui_tts') and self.coqui_tts:
+            try:
+                self.coqui_tts.cleanup()
+            except Exception as e:
+                logger.error(f"Error cleaning up Coqui TTS: {e}")

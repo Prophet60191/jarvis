@@ -120,6 +120,20 @@ class CoquiTTSManager:
                 # Initialize TTS model
                 self.tts = TTS(self.model_name).to(self.device)
 
+                # Ensure all model parameters are in float32 to avoid mixed precision issues
+                if hasattr(self.tts, 'synthesizer') and hasattr(self.tts.synthesizer, 'tts_model'):
+                    # Convert the entire TTS model to float32
+                    self.tts.synthesizer.tts_model.float()
+
+                    # Also convert any sub-components that might be in half precision
+                    if hasattr(self.tts.synthesizer.tts_model, 'hifigan_decoder'):
+                        self.tts.synthesizer.tts_model.hifigan_decoder.float()
+
+                    # Convert any other model components
+                    for module in self.tts.synthesizer.tts_model.modules():
+                        if hasattr(module, 'float'):
+                            module.float()
+
                 # Optimize model for performance
                 self.tts = self.performance_optimizer.optimize_model(self.tts)
 
@@ -192,16 +206,25 @@ class CoquiTTSManager:
                         return
 
                     # Generate speech using voice cloning
-                    wav = self.tts.tts(
-                        text=text,
-                        speaker_wav=speaker_wav_path,
-                        language=self.language,
-                        temperature=self.temperature,
-                        length_penalty=self.length_penalty,
-                        repetition_penalty=self.repetition_penalty,
-                        top_k=self.top_k,
-                        top_p=self.top_p
-                    )
+                    try:
+                        wav = self.tts.tts(
+                            text=text,
+                            speaker_wav=speaker_wav_path,
+                            language=self.language,
+                            temperature=self.temperature,
+                            length_penalty=self.length_penalty,
+                            repetition_penalty=self.repetition_penalty,
+                            top_k=self.top_k,
+                            top_p=self.top_p
+                        )
+                    except RuntimeError as e:
+                        if "expected scalar type Float but found Half" in str(e) or "MPSFloatType" in str(e):
+                            logger.warning(f"Voice cloning failed due to tensor precision issues: {e}")
+                            logger.warning("Falling back to basic TTS")
+                            self._fallback_speak(text)
+                            return
+                        else:
+                            raise
 
                 generation_time = time.time() - start_time
                 self.performance_optimizer.record_generation_time(generation_time)

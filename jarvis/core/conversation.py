@@ -284,9 +284,30 @@ class ConversationManager:
             
             self.speech_manager.speak_text(response_text)
             self.last_activity_time = time.time()
-            
+
             # Return to listening for next command
             self._change_state(ConversationState.LISTENING_FOR_COMMAND)
+
+            # Automatically listen for follow-up command for 5 seconds
+            logger.debug("Listening for follow-up command (5 seconds)...")
+            follow_up_command = self.speech_manager.listen_for_speech(
+                timeout=5.0,
+                phrase_time_limit=4.0,
+                enhance_audio=True,
+                recognition_service="whisper"
+            )
+
+            if follow_up_command:
+                logger.info(f"Follow-up command received: '{follow_up_command}'")
+                # Process the follow-up command immediately
+                try:
+                    follow_up_response = self.process_command(follow_up_command)
+                    # Recursively respond (this will also listen for another follow-up)
+                    self.respond(follow_up_response)
+                except Exception as e:
+                    logger.warning(f"Failed to process follow-up command: {e}")
+            else:
+                logger.debug("No follow-up command received")
             
         except Exception as e:
             error_msg = f"Failed to deliver response: {str(e)}"

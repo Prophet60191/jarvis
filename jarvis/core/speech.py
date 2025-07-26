@@ -81,7 +81,7 @@ class SpeechManager:
     def listen_for_speech(self, timeout: Optional[float] = None,
                          phrase_time_limit: Optional[float] = None,
                          enhance_audio: bool = True,
-                         recognition_service: str = "google") -> Optional[str]:
+                         recognition_service: str = "whisper") -> Optional[str]:
         """
         Listen for speech and return the recognized text.
         

@@ -10,13 +10,14 @@ import logging
 from typing import Optional, Union, Any
 from dataclasses import dataclass, field
 from pathlib import Path
+from dotenv import load_dotenv
 
 
 @dataclass
 class AudioConfig:
     """Audio-related configuration settings."""
-    mic_index: int = 2  # MacBook Pro Microphone
-    mic_name: str = "MacBook Pro Microphone"
+    mic_index: int = 0  # Default microphone
+    mic_name: str = ". . . Microphone"
     energy_threshold: int = 100
     timeout: float = 2.0
     phrase_time_limit: float = 4.0
@@ -26,6 +27,12 @@ class AudioConfig:
     tts_volume: float = 0.8
     tts_voice_preference: str = "Daniel"  # Preferred voice name (British male voice)
     response_delay: float = 0.5  # Delay after speech completion
+
+    # Whisper Speech Recognition settings
+    whisper_model_size: str = "base"  # tiny, base, small, medium, large
+    whisper_device: str = "cpu"
+    whisper_language: str = "en"  # or "auto" for auto-detection
+    whisper_compute_type: str = "float32"
 
     # Coqui TTS settings
     coqui_model: str = "tts_models/multilingual/multi-dataset/xtts_v2"
@@ -105,6 +112,12 @@ class JarvisConfig:
         config.audio.tts_volume = _get_env_float("JARVIS_TTS_VOLUME", config.audio.tts_volume)
         config.audio.tts_voice_preference = _get_env_str("JARVIS_TTS_VOICE", config.audio.tts_voice_preference)
         config.audio.response_delay = _get_env_float("JARVIS_RESPONSE_DELAY", config.audio.response_delay)
+
+        # Whisper Speech Recognition configuration
+        config.audio.whisper_model_size = _get_env_str("JARVIS_WHISPER_MODEL_SIZE", config.audio.whisper_model_size)
+        config.audio.whisper_device = _get_env_str("JARVIS_WHISPER_DEVICE", config.audio.whisper_device)
+        config.audio.whisper_language = _get_env_str("JARVIS_WHISPER_LANGUAGE", config.audio.whisper_language)
+        config.audio.whisper_compute_type = _get_env_str("JARVIS_WHISPER_COMPUTE_TYPE", config.audio.whisper_compute_type)
 
         # Coqui TTS configuration
         config.audio.coqui_model = _get_env_str("JARVIS_COQUI_MODEL", config.audio.coqui_model)
@@ -240,12 +253,14 @@ _config: Optional[JarvisConfig] = None
 def get_config() -> JarvisConfig:
     """
     Get the global configuration instance.
-    
+
     Returns:
         JarvisConfig instance.
     """
     global _config
     if _config is None:
+        # Load environment variables from .env file
+        load_dotenv()
         _config = JarvisConfig.from_env()
         _config.validate()
     return _config
