@@ -1,24 +1,34 @@
 # 🤖 Jarvis Voice Assistant
 
-A professional voice-activated AI assistant inspired by Tony Stark's Jarvis, built with Python and powered by local LLM models. Features a modular architecture following software engineering best practices.
+A **100% local, privacy-focused** voice-activated AI assistant inspired by Tony Stark's Jarvis. Built with Python and powered by local AI models with **zero external API calls**. Features advanced speech recognition, natural conversation flow, and complete offline operation.
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20local-green.svg)](https://github.com/Prophet60191/jarvis)
+[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-optimized-blue.svg)](https://github.com/Prophet60191/jarvis)
 
 ## ✨ Features
 
-### 🎤 Voice Interaction
-- **Wake Word Detection**: Customizable wake word with confidence scoring
-- **Speech Recognition**: High-quality speech-to-text with noise reduction
-- **Text-to-Speech**: Natural voice synthesis with voice selection
-- **Conversation Management**: Stateful conversation flow with timeout handling
+### 🔒 **100% Local & Private**
+- **Zero External APIs**: No data sent to Google, OpenAI, or any external services
+- **Complete Offline Operation**: Works without internet connection
+- **Apple Silicon Optimized**: Native performance on M1/M2/M3 Macs
+- **Privacy First**: All processing happens on your device
 
-### 🧠 AI Integration
-- **Local LLM**: Powered by Ollama for privacy and offline operation
+### 🎤 **Advanced Voice Interaction**
+- **Local Speech Recognition**: Powered by OpenAI Whisper (Faster-Whisper)
+- **Apple System TTS**: High-quality native voice synthesis
+- **Wake Word Detection**: Customizable wake word with confidence scoring
+- **Auto-Listen Feature**: 5-second follow-up window for natural conversation
+- **Voice Activity Detection**: Smart noise filtering and speech detection
+
+### 🧠 **Local AI Integration**
+- **Local LLM**: Powered by Ollama for complete privacy and offline operation
 - **Tool Integration**: Extensible tool system with LangChain compatibility
 - **Reasoning**: Optional reasoning mode for complex queries
 - **Context Awareness**: Maintains conversation context and history
+- **Natural Conversation**: Seamless follow-up questions without repeating wake word
 
 ### 🔧 Professional Architecture
 - **Modular Design**: Clean separation of concerns with dependency injection
@@ -27,29 +37,40 @@ A professional voice-activated AI assistant inspired by Tony Stark's Jarvis, bui
 - **Testing**: Full test suite with unit and integration tests
 - **Documentation**: Comprehensive documentation and examples
 
-### 🛠️ Built-in Tools
+### 🛠️ **Built-in Tools**
 - **Time Tool**: Get current time in 80+ cities worldwide with timezone support
 - **Video Tool**: Video content creation advice with platform-specific tips
 - **Extensible**: Easy to add custom tools with the provided base classes
 
+### 🔧 **Technology Stack**
+- **Speech Recognition**: Faster-Whisper (OpenAI Whisper optimized)
+- **Text-to-Speech**: Apple System Voices (macOS native)
+- **AI Model**: Ollama (qwen2.5:1.5b or any compatible model)
+- **Audio Processing**: PyAudio, speech_recognition
+- **Framework**: LangChain for tool integration
+- **Platform**: Optimized for Apple Silicon (M1/M2/M3)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
-- Microphone and speakers/headphones
-- [Ollama](https://ollama.ai) installed
+- **Python 3.8+** (3.9+ recommended for Apple Silicon)
+- **macOS** (optimized for Apple Silicon M1/M2/M3)
+- **Microphone and speakers/headphones**
+- **[Ollama](https://ollama.ai)** installed locally
 
 ### Installation
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/your-username/jarvis-assistant.git
-cd jarvis-assistant
+git clone https://github.com/Prophet60191/jarvis.git
+cd jarvis
 ```
 
 2. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
+# Install Faster-Whisper for local speech recognition
+pip install faster-whisper
 ```
 
 3. **Install and configure Ollama:**
@@ -67,23 +88,31 @@ cp .env.example .env
 
 5. **Run Jarvis:**
 ```bash
+# Use the enhanced startup script (recommended)
+python start_jarvis.py
+
+# Or run directly
 python -m jarvis.main
 ```
 
 6. **Start talking:**
-   - Say "Jarvis" (or your custom wake word)
+   - Say "Jarvis" clearly
    - Wait for the acknowledgment
    - Ask your question or give a command
+   - **New**: Ask follow-up questions immediately (no need to say "Jarvis" again!)
    - Press Ctrl+C to exit
 
 ## 📖 Usage Examples
 
-### Basic Interaction
+### Natural Conversation Flow
 ```
 You: "Jarvis"
 Jarvis: "Yes sir?"
 You: "What time is it in New York?"
 Jarvis: "The current time in New York is 2:30 PM on Monday, January 15, 2024"
+[Auto-listening for 5 seconds...]
+You: "What about in Tokyo?" (no need to say "Jarvis" again!)
+Jarvis: "In Tokyo, it's currently 4:30 AM on Tuesday, January 16, 2024"
 ```
 
 ### Video Content Advice
@@ -94,17 +123,47 @@ You: "Give me video content advice for today"
 Jarvis: "For Monday video content: Monday Motivation videos perform well..."
 ```
 
+## 🔒 Privacy & Local Operation
+
+Jarvis is designed with **privacy first** principles:
+
+### ✅ **What Stays Local**
+- **All voice data**: Speech recognition happens on your device using Whisper
+- **All AI processing**: LLM runs locally via Ollama
+- **All conversations**: No conversation data leaves your machine
+- **All audio**: TTS uses Apple's system voices (local)
+
+### ❌ **What's NOT Sent Externally**
+- ❌ No audio sent to Google, OpenAI, or any cloud service
+- ❌ No conversation logs uploaded anywhere
+- ❌ No telemetry or analytics data collected
+- ❌ No internet connection required after initial setup
+
+### 🛡️ **Security Benefits**
+- **Complete offline operation** after setup
+- **No API keys required** for speech or AI
+- **No data breaches possible** - everything stays on your device
+- **Corporate/sensitive environment friendly**
+
 ## ⚙️ Configuration
 
 Jarvis uses environment variables for configuration. Copy `.env.example` to `.env` and customize:
+
+### Speech Recognition Settings (Whisper)
+```bash
+JARVIS_WHISPER_MODEL_SIZE="base"      # Model: tiny, base, small, medium, large
+JARVIS_WHISPER_DEVICE="cpu"           # Device: cpu (recommended for Apple Silicon)
+JARVIS_WHISPER_LANGUAGE="en"          # Language: en, es, fr, etc. or "auto"
+JARVIS_WHISPER_COMPUTE_TYPE="float32" # Precision: float32 (recommended)
+```
 
 ### Audio Settings
 ```bash
 JARVIS_MIC_INDEX=2                    # Microphone index
 JARVIS_ENERGY_THRESHOLD=100           # Voice detection sensitivity
-JARVIS_TTS_RATE=150                   # Speech rate (words per minute)
-JARVIS_TTS_VOLUME=0.8                 # TTS volume (0.0-1.0)
-JARVIS_TTS_VOICE="alex"               # Voice name
+JARVIS_TTS_RATE=180                   # Speech rate (words per minute)
+JARVIS_TTS_VOLUME=0.9                 # TTS volume (0.0-1.0)
+JARVIS_TTS_VOICE="Daniel"             # Apple voice name
 ```
 
 ### Conversation Settings
