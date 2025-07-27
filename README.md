@@ -1,34 +1,34 @@
-# 🎤 Jarvis Voice Assistant
+# Jarvis Voice Assistant
 
 A sophisticated AI-powered voice assistant with extensible tool integration, web-based control panel, and Model Context Protocol (MCP) support.
 
-## ✨ Features
+## Features
 
-### 🗣️ **Voice Interaction**
+### **Voice Interaction**
 - **Speech-to-Text (STT)**: Real-time voice recognition using OpenAI Whisper
 - **Text-to-Speech (TTS)**: Natural voice synthesis with multiple engine support
 - **Voice Cloning**: Custom voice profiles for personalized responses
 - **Conversation Memory**: Maintains context across interactions
 
-### 🔧 **Extensible Tool System**
+### **Extensible Tool System**
 - **Dynamic Tool Loading**: Add new capabilities without code changes
 - **MCP Integration**: Model Context Protocol for seamless tool discovery
 - **Built-in Tools**: Time, weather, calculations, file operations, and more
 - **Custom Tools**: Easy plugin development framework
 
-### 🖥️ **Web Control Panel**
+### **Web Control Panel**
 - **Real-time Dashboard**: Monitor system status and performance
 - **Settings Management**: Configure voice, audio, and system preferences
 - **Tool Management**: Enable/disable tools and manage MCP servers
 - **Live Conversation**: Web-based chat interface with voice controls
 
-### 🌐 **MCP Server Management**
+### **MCP Server Management**
 - **Add/Remove Servers**: Manage external MCP tool providers
 - **Server Templates**: Quick setup for popular services (GitHub, filesystem, etc.)
 - **Connection Testing**: Verify server connectivity before deployment
 - **Tool Discovery**: Automatic detection of available tools from connected servers
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.8+
@@ -61,7 +61,7 @@ A sophisticated AI-powered voice assistant with extensible tool integration, web
    - Open http://localhost:8080 in your browser
    - Use the control panel to configure settings and manage tools
 
-## 🎯 Usage
+## Usage
 
 ### Voice Commands
 - **"Hey Jarvis"** - Wake word to start interaction
@@ -82,7 +82,7 @@ A sophisticated AI-powered voice assistant with extensible tool integration, web
 3. Choose from templates or configure custom servers
 4. Test connection and enable desired tools
 
-## 🛠️ Development
+## Development
 
 ### Project Structure
 ```
@@ -106,7 +106,7 @@ jarvis/
 ### MCP Tool Development
 Follow the [MCP specification](https://modelcontextprotocol.io/) to create compatible tools that can be discovered and used by Jarvis.
 
-## 📋 Configuration
+## Configuration
 
 ### Environment Variables
 ```bash
@@ -123,7 +123,7 @@ STT_ENGINE=openai  # or whisper_local
 ### Settings File
 Configuration is managed through the web interface and stored in `jarvis/config/settings.json`.
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -148,7 +148,7 @@ Run with debug logging:
 python start_jarvis.py --debug
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -162,17 +162,17 @@ python start_jarvis.py --debug
 - Update documentation for API changes
 - Ensure MCP compatibility for new tools
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - OpenAI for GPT and Whisper models
 - Model Context Protocol community
 - Contributors and beta testers
 
-## 📞 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/Prophet60191/jarvis/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Prophet60191/jarvis/discussions)
@@ -180,4 +180,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the Jarvis community**
+**Made with love by the Jarvis community**
