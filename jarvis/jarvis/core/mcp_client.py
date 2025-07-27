@@ -229,7 +229,8 @@ class STDIOTransport(MCPTransport):
     
     async def send_request(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Send a JSON-RPC request via STDIO."""
-        if not self.connected or not self.process:
+        # Allow initialize request even when not connected yet
+        if not self.process or (not self.connected and method != "initialize"):
             raise RuntimeError("Not connected to MCP server")
             
         request = self._create_request(method, params)
@@ -261,7 +262,7 @@ class STDIOTransport(MCPTransport):
     async def _read_responses(self) -> None:
         """Read responses from the MCP server."""
         try:
-            while self.connected and self.process:
+            while self.process and self.process.poll() is None:
                 line = await asyncio.get_event_loop().run_in_executor(
                     None, self.process.stdout.readline
                 )

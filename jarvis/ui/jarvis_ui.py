@@ -817,7 +817,10 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(result).encode())
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             logger.error(f"Error handling MCP connect action: {e}")
+            logger.error(f"Full traceback: {error_details}")
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -3653,7 +3656,22 @@ class JarvisUI:
         self.port = port
         self.server = None
         self.open_browser = open_browser
-    
+
+        # Start MCP system
+        self._start_mcp_system()
+
+    def _start_mcp_system(self):
+        """Start the MCP client system."""
+        try:
+            from jarvis.tools import start_mcp_system
+            success = start_mcp_system()
+            if success:
+                logger.info("MCP system started successfully")
+            else:
+                logger.warning("Failed to start MCP system")
+        except Exception as e:
+            logger.error(f"Error starting MCP system: {e}")
+
     def start_server(self):
         """Start the HTTP server."""
         try:
@@ -3689,6 +3707,21 @@ class JarvisUI:
             logger.info("Stopping Jarvis UI server...")
             self.server.shutdown()
             self.server.server_close()
+
+        # Stop MCP system
+        self._stop_mcp_system()
+
+    def _stop_mcp_system(self):
+        """Stop the MCP client system."""
+        try:
+            from jarvis.tools import stop_mcp_system
+            success = stop_mcp_system()
+            if success:
+                logger.info("MCP system stopped successfully")
+            else:
+                logger.warning("Failed to stop MCP system")
+        except Exception as e:
+            logger.error(f"Error stopping MCP system: {e}")
 
     def run(self):
         """Run the application."""
