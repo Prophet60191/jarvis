@@ -731,6 +731,37 @@ python close_ui.py --port 3000
 # Via voice command - "Jarvis, close UI"
 ```
 
+## Known Issues
+
+### Model Configuration Issue (HIGH PRIORITY)
+
+**Issue**: Jarvis may not properly switch from Llama 3.1-8B to Qwen2.5-7B despite configuration updates.
+
+**Symptoms**:
+- Startup display shows wrong model name
+- Tool responses return JSON instead of natural language
+- Memory functionality works but gives technical output to users
+
+**Impact**:
+- Poor user experience with technical responses
+- Reduced tool calling reliability
+- MCP memory integration appears broken to users
+
+**Status**: Under investigation
+
+**Workaround**:
+```bash
+# Force model via environment variable
+export JARVIS_MODEL="qwen2.5:7b-instruct"
+./Start_Jarvis.command
+```
+
+**For Developers**: See detailed analysis in [`docs/MODEL_CONFIGURATION_ISSUE.md`](docs/MODEL_CONFIGURATION_ISSUE.md)
+
+**Expected Fix**: Configuration system overhaul to ensure proper model loading and validation.
+
+---
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

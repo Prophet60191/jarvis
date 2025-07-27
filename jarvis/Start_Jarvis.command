@@ -59,10 +59,10 @@ fi
 
 # Check if required model is available
 echo -e "${BLUE}🔍 Checking for AI model...${NC}"
-if ! ollama list | grep -q "llama3.1:8b"; then
-    echo -e "${YELLOW}⚠️  Required model 'llama3.1:8b' not found.${NC}"
+if ! ollama list | grep -q "qwen2.5:7b-instruct"; then
+    echo -e "${YELLOW}⚠️  Required model 'qwen2.5:7b-instruct' not found.${NC}"
     echo -e "${BLUE}📥 Downloading model (this may take a few minutes)...${NC}"
-    ollama pull llama3.1:8b
+    ollama pull qwen2.5:7b-instruct
 fi
 
 # Display system info
@@ -71,7 +71,7 @@ echo -e "${PURPLE}🎯 Jarvis System Information:${NC}"
 echo -e "${GREEN}📍 Location: $JARVIS_DIR${NC}"
 echo -e "${GREEN}🐍 Python: $(python --version)${NC}"
 echo -e "${GREEN}🤖 Ollama: $(ollama --version 2>/dev/null || echo 'Version check failed')${NC}"
-echo -e "${GREEN}🧠 AI Model: llama3.1:8b (Single Model)${NC}"
+echo -e "${GREEN}🧠 AI Model: qwen2.5:7b-instruct (Enhanced Tool Calling)${NC}"
 
 echo -e "${CYAN}================================================${NC}"
 echo -e "${GREEN}🚀 Starting Jarvis Voice Assistant...${NC}"

@@ -147,7 +147,7 @@ class ConversationConfig:
 @dataclass
 class LLMConfig:
     """Language model configuration settings."""
-    model: str = "llama3.1:8b"  # Excellent tool calling, natural language, and code capabilities
+    model: str = "qwen2.5:7b-instruct"  # Excellent tool calling, natural language, and reasoning capabilities
     verbose: bool = False
     reasoning: bool = False
     temperature: float = 0.7

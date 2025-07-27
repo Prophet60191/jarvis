@@ -122,6 +122,11 @@ class MCPTransport(ABC):
     async def send_request(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Send a JSON-RPC request to the server."""
         pass
+
+    @abstractmethod
+    async def send_notification(self, method: str, params: Dict[str, Any] = None) -> None:
+        """Send a JSON-RPC notification to the server (no response expected)."""
+        pass
         
     def _create_request(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create a JSON-RPC 2.0 request."""
@@ -134,6 +139,16 @@ class MCPTransport(ABC):
         if params:
             request["params"] = params
         return request
+
+    def _create_notification(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Create a JSON-RPC 2.0 notification (no id field)."""
+        notification = {
+            "jsonrpc": "2.0",
+            "method": method
+        }
+        if params:
+            notification["params"] = params
+        return notification
 
 
 class STDIOTransport(MCPTransport):
@@ -150,11 +165,17 @@ class STDIOTransport(MCPTransport):
         try:
             # Build command with arguments
             cmd = [self.config.command] + self.config.args
-            
+            logger.debug(f"🚀 Starting MCP server with command: {' '.join(cmd)}")
+
             # Set up environment
             env = dict(os.environ)
             env.update(self.config.env)
-            
+
+            # Ensure we have a proper working directory
+            # Default to home directory if no cwd specified
+            working_dir = self.config.cwd or os.path.expanduser("~")
+            logger.debug(f"📁 Using working directory: {working_dir}")
+
             # Start the process
             self.process = subprocess.Popen(
                 cmd,
@@ -162,18 +183,21 @@ class STDIOTransport(MCPTransport):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=env,
-                cwd=self.config.cwd,
+                cwd=working_dir,
                 text=True,
                 bufsize=0
             )
+
+            logger.debug(f"✅ MCP server process started with PID: {self.process.pid}")
             
             # Start reading responses
             self.reader_task = asyncio.create_task(self._read_responses())
             
-            # Send initialize request
+            # Send initialize request with proper capabilities
             init_response = await self.send_request("initialize", {
-                "protocolVersion": "2024-11-05",
+                "protocolVersion": "2024-11-05",  # Use server's supported version
                 "capabilities": {
+                    "tools": {},  # Request tool capabilities
                     "roots": {"listChanged": True},
                     "sampling": {}
                 },
@@ -186,7 +210,11 @@ class STDIOTransport(MCPTransport):
             if "error" in init_response:
                 logger.error(f"MCP initialization failed: {init_response['error']}")
                 return False
-                
+
+            # Send required notifications/initialized message (per MCP spec)
+            await self.send_notification("notifications/initialized")
+            logger.debug("✅ Sent notifications/initialized to server")
+
             self.connected = True
             logger.info(f"Connected to MCP server: {self.config.name}")
             return True
@@ -258,7 +286,24 @@ class STDIOTransport(MCPTransport):
             return {"error": {"code": -32603, "message": str(e)}}
         finally:
             self.pending_requests.pop(request_id, None)
-    
+
+    async def send_notification(self, method: str, params: Dict[str, Any] = None) -> None:
+        """Send a JSON-RPC notification via STDIO (no response expected)."""
+        if not self.process:
+            raise RuntimeError("Not connected to MCP server")
+
+        notification = self._create_notification(method, params)
+
+        try:
+            # Send notification
+            notification_json = json.dumps(notification) + "\n"
+            self.process.stdin.write(notification_json)
+            self.process.stdin.flush()
+            logger.debug(f"Sent notification: {method}")
+
+        except Exception as e:
+            logger.error(f"Error sending MCP notification: {e}")
+
     async def _read_responses(self) -> None:
         """Read responses from the MCP server."""
         try:
@@ -541,6 +586,58 @@ class MCPClientManager:
 
         logger.info("MCP Client Manager started")
 
+    async def wait_for_servers_ready(self, timeout: float = 10.0) -> bool:
+        """
+        Wait for MCP servers to be connected and tools to be discovered.
+
+        Args:
+            timeout: Maximum time to wait in seconds
+
+        Returns:
+            True if servers are ready, False if timeout
+        """
+        start_time = time.time()
+
+        while time.time() - start_time < timeout:
+            # Check if any servers are connected and have tools
+            connected_servers = [
+                server for server in self.servers.values()
+                if server.status == MCPServerStatus.CONNECTED and server.tools
+            ]
+
+            if connected_servers:
+                total_tools = sum(len(server.tools) for server in connected_servers)
+                logger.info(f"🎉 MCP servers ready: {len(connected_servers)} servers with {total_tools} tools")
+                return True
+
+            await asyncio.sleep(0.5)  # Check every 500ms
+
+        logger.warning(f"⚠️ MCP servers not ready after {timeout}s timeout")
+        return False
+
+    def wait_for_servers_ready_sync(self, timeout: float = 10.0) -> bool:
+        """
+        Synchronous wrapper for wait_for_servers_ready.
+
+        Args:
+            timeout: Maximum time to wait in seconds
+
+        Returns:
+            True if servers are ready, False if timeout
+        """
+        if not self.event_loop:
+            logger.error("MCP event loop not available")
+            return False
+
+        try:
+            future = asyncio.run_coroutine_threadsafe(
+                self.wait_for_servers_ready(timeout), self.event_loop
+            )
+            return future.result(timeout + 1.0)  # Add 1s buffer for the future itself
+        except Exception as e:
+            logger.error(f"Error waiting for MCP servers: {e}")
+            return False
+
     def stop(self) -> None:
         """Stop the MCP client manager."""
         if self.background_task:
@@ -556,8 +653,8 @@ class MCPClientManager:
     def load_configuration(self) -> None:
         """Load MCP server configurations from file."""
         if not self.config_file.exists():
-            logger.info("No MCP configuration file found, creating default")
-            self.save_configuration()
+            logger.info("No MCP configuration file found, creating default with built-in servers")
+            self._create_default_configuration()
             return
 
         try:
@@ -648,7 +745,52 @@ class MCPClientManager:
         except Exception as e:
             logger.error(f"Error saving MCP configuration: {e}")
 
-    async def connect_server(self, server_name: str) -> bool:
+    def _create_default_configuration(self) -> None:
+        """Create default MCP configuration with built-in servers."""
+        try:
+            # Ensure the .jarvis directory exists
+            self.config_file.parent.mkdir(parents=True, exist_ok=True)
+            logger.info(f"📁 Created Jarvis config directory: {self.config_file.parent}")
+
+            # Add default Memory Storage server
+            memory_config = MCPServerConfig(
+                name="Memory Storage",
+                transport=MCPTransportType.STDIO,
+                command="npx",
+                args=["@modelcontextprotocol/server-memory"],
+                enabled=True
+            )
+
+            # Create server info and add to servers
+            memory_server_info = MCPServerInfo(
+                name="Memory Storage",
+                config=memory_config,
+                status=MCPServerStatus.DISCONNECTED
+            )
+            self.servers["Memory Storage"] = memory_server_info
+
+            # Save the configuration
+            self.save_configuration()
+
+            # Connect to enabled servers asynchronously with delay
+            if self.event_loop:
+                # Add a small delay to ensure event loop is fully started
+                async def delayed_connect():
+                    await asyncio.sleep(1)  # Give event loop time to stabilize
+                    await self.connect_server("Memory Storage")
+
+                asyncio.run_coroutine_threadsafe(
+                    delayed_connect(), self.event_loop
+                )
+
+            logger.info("✅ Created default MCP configuration with Memory Storage server")
+
+        except Exception as e:
+            logger.error(f"❌ Error creating default MCP configuration: {e}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+
+    async def connect_server(self, server_name: str, max_retries: int = 3) -> bool:
         """
         Connect to an MCP server.
 
@@ -664,39 +806,67 @@ class MCPClientManager:
 
         server_info = self.servers[server_name]
 
-        # Update status
-        server_info.status = MCPServerStatus.CONNECTING
-        self._notify_status_change(server_name, MCPServerStatus.CONNECTING)
+        # Retry connection with exponential backoff
+        for attempt in range(max_retries):
+            try:
+                # Update status
+                server_info.status = MCPServerStatus.CONNECTING
+                self._notify_status_change(server_name, MCPServerStatus.CONNECTING)
 
-        try:
-            # Create transport
-            transport = self._create_transport(server_info.config)
+                if attempt > 0:
+                    wait_time = min(2 ** attempt, 10)  # Exponential backoff, max 10s
+                    logger.info(f"🔄 Retrying MCP connection to {server_name} (attempt {attempt + 1}/{max_retries}) after {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.info(f"🔗 Connecting to MCP server: {server_name}")
 
-            # Connect
-            if await transport.connect():
-                self.transports[server_name] = transport
-                server_info.status = MCPServerStatus.CONNECTED
-                server_info.connected_at = time.time()
-                server_info.last_error = None
+                # Create transport with enhanced logging
+                logger.debug(f"🔧 Creating transport for {server_name} with config: {server_info.config}")
+                transport = self._create_transport(server_info.config)
 
-                # Discover tools
-                await self._discover_tools(server_name)
+                # Connect with timeout
+                try:
+                    connection_result = await asyncio.wait_for(
+                        transport.connect(),
+                        timeout=30.0  # Increased timeout to 30 seconds
+                    )
 
-                self._notify_status_change(server_name, MCPServerStatus.CONNECTED)
-                logger.info(f"Successfully connected to MCP server: {server_name}")
-                return True
-            else:
-                server_info.status = MCPServerStatus.ERROR
-                server_info.last_error = "Connection failed"
-                self._notify_status_change(server_name, MCPServerStatus.ERROR)
-                return False
+                    if connection_result:
+                        self.transports[server_name] = transport
+                        server_info.status = MCPServerStatus.CONNECTED
+                        server_info.connected_at = time.time()
+                        server_info.last_error = None
 
-        except Exception as e:
-            server_info.status = MCPServerStatus.ERROR
-            server_info.last_error = str(e)
-            self._notify_status_change(server_name, MCPServerStatus.ERROR)
-            logger.error(f"Error connecting to MCP server {server_name}: {e}")
-            return False
+                        # Discover tools with timeout
+                        logger.info(f"🔍 Discovering tools for {server_name}...")
+                        await asyncio.wait_for(
+                            self._discover_tools(server_name),
+                            timeout=15.0  # 15 second timeout for tool discovery
+                        )
+
+                        self._notify_status_change(server_name, MCPServerStatus.CONNECTED)
+                        logger.info(f"✅ Successfully connected to MCP server: {server_name}")
+                        return True
+                    else:
+                        raise Exception("Transport connection returned False")
+
+                except asyncio.TimeoutError:
+                    raise Exception(f"Connection timeout after 30 seconds")
+
+            except Exception as e:
+                error_msg = str(e)
+                server_info.last_error = error_msg
+
+                if attempt < max_retries - 1:
+                    logger.warning(f"⚠️ MCP connection attempt {attempt + 1} failed for {server_name}: {error_msg}")
+                else:
+                    # Final attempt failed
+                    server_info.status = MCPServerStatus.ERROR
+                    self._notify_status_change(server_name, MCPServerStatus.ERROR)
+                    logger.error(f"❌ Failed to connect to MCP server {server_name} after {max_retries} attempts: {error_msg}")
+                    return False
+
+        return False
 
     async def disconnect_server(self, server_name: str) -> None:
         """
@@ -763,38 +933,59 @@ class MCPClientManager:
         server_info = self.servers[server_name]
 
         try:
-            # Request tools list
-            response = await transport.send_request("tools/list")
+            logger.info(f"🔍 Requesting tools list from {server_name}...")
+
+            # Request tools list with timeout
+            response = await asyncio.wait_for(
+                transport.send_request("tools/list"),
+                timeout=10.0
+            )
 
             if "error" in response:
-                logger.error(f"Error discovering tools from {server_name}: {response['error']}")
+                logger.error(f"❌ Error discovering tools from {server_name}: {response['error']}")
                 return
 
             # Process tools
             tools_data = response.get("result", {}).get("tools", [])
             discovered_tools = []
 
-            for tool_data in tools_data:
-                tool = MCPTool(
-                    name=tool_data["name"],
-                    description=tool_data.get("description", ""),
-                    server_name=server_name,
-                    parameters=tool_data.get("inputSchema", {}),
-                    metadata=tool_data
-                )
+            logger.info(f"📋 Processing {len(tools_data)} tools from {server_name}...")
 
-                discovered_tools.append(tool)
-                self.tools[f"{server_name}:{tool.name}"] = tool
+            for tool_data in tools_data:
+                try:
+                    tool = MCPTool(
+                        name=tool_data["name"],
+                        description=tool_data.get("description", ""),
+                        server_name=server_name,
+                        parameters=tool_data.get("inputSchema", {}),
+                        metadata=tool_data
+                    )
+
+                    discovered_tools.append(tool)
+                    self.tools[f"{server_name}:{tool.name}"] = tool
+                    logger.debug(f"   ✅ Added tool: {tool.name}")
+
+                except Exception as e:
+                    logger.warning(f"   ⚠️ Failed to process tool {tool_data.get('name', 'unknown')}: {e}")
 
             server_info.tools = discovered_tools
 
             # Notify UI of tool updates
             self._notify_tools_updated()
 
-            logger.info(f"Discovered {len(discovered_tools)} tools from {server_name}")
+            logger.info(f"✅ Successfully discovered {len(discovered_tools)} tools from {server_name}")
 
+            # Log tool names for debugging
+            if discovered_tools:
+                tool_names = [tool.name for tool in discovered_tools]
+                logger.debug(f"   Tools: {', '.join(tool_names)}")
+
+        except asyncio.TimeoutError:
+            logger.error(f"❌ Timeout discovering tools from {server_name}")
         except Exception as e:
-            logger.error(f"Error discovering tools from {server_name}: {e}")
+            logger.error(f"❌ Error discovering tools from {server_name}: {e}")
+            import traceback
+            logger.debug(f"Full traceback: {traceback.format_exc()}")
 
     async def execute_tool(self, tool_name: str, **kwargs) -> Dict[str, Any]:
         """

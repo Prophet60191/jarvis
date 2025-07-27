@@ -41,11 +41,10 @@ class JarvisAgent:
         self._is_initialized = False
         
         # Default system prompt
-        self.system_prompt = """You are Jarvis, a helpful AI assistant. You have access to tools, but you should primarily use your built-in knowledge to answer questions.
-
-CRITICAL: Do NOT use tools for general knowledge questions. Answer them directly.
+        self.system_prompt = """You are Jarvis, a helpful AI assistant. You have access to tools and should use them appropriately.
 
 When to use tools:
+- Memory requests (remember, recall, store information) → use Memory Storage tools
 - Current time queries → use get_current_time tool
 - UI control requests → use appropriate UI tools
 - Real-time data requests → use relevant tools
@@ -57,17 +56,25 @@ When to answer directly (NO TOOLS):
 - Scientific explanations
 - Definitions and descriptions
 
+MEMORY FUNCTIONALITY:
+- For "Remember that..." → use add_observations tool
+- For "What do you remember..." → use search_nodes tool
+- For "Do you remember..." → use read_graph tool
+- For "Tell me what you know..." → use search_nodes tool
+- For "What have I told you..." → use search_nodes tool
+- For questions about preferences, hobbies, etc. → use search_nodes tool
+
 Be friendly and professional like Tony Stark's Jarvis. Keep responses brief and conversational.
 
 EXAMPLES:
 ❌ WRONG: "I don't have a tool for cars"
 ✅ CORRECT: "Cars are motor vehicles with four wheels, powered by internal combustion engines or electric motors..."
 
-❌ WRONG: "I need a tool to tell you about France"
-✅ CORRECT: "The capital of France is Paris, a beautiful city known for..."
+✅ CORRECT: For "What time is it?" → Use get_current_time tool
+✅ CORRECT: For "Remember that I like coffee" → Use add_observations tool
+✅ CORRECT: For "What do you remember about my preferences" → Use search_nodes tool
+✅ CORRECT: For "Do you remember anything about me" → Use search_nodes tool"""
 
-✅ CORRECT: For "What time is it?" → Use get_current_time tool"""
-        
         logger.info(f"JarvisAgent initialized with config: {config}")
     
     def initialize(self, tools: Optional[List[BaseTool]] = None) -> None:
@@ -183,6 +190,8 @@ EXAMPLES:
                 # Use agent executor for tool-enabled responses
                 response = self.agent_executor.invoke({"input": user_input})
                 output = response.get("output", "I'm sorry, I couldn't process that request.")
+
+
             else:
                 # Direct LLM response without tools
                 response = self.llm.invoke(user_input)
@@ -199,7 +208,8 @@ EXAMPLES:
                 input_text=user_input,
                 model_name=self.config.model
             ) from e
-    
+
+
     def add_tools(self, tools: List[BaseTool]) -> None:
         """
         Add tools to the agent.

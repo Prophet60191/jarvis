@@ -62,42 +62,34 @@ class MCPLangChainTool(LangChainBaseTool):
     
     def _create_input_schema(self, mcp_tool: MCPTool) -> type:
         """
-        Create a dynamic Pydantic model for the tool's input schema.
-        
+        Create a simple input schema that accepts any parameters.
+
         Args:
             mcp_tool: MCP tool to create schema for
-            
+
         Returns:
             Pydantic model class for input validation
         """
-        # Extract parameters from MCP tool schema
-        parameters = mcp_tool.parameters
-        
-        if not parameters or not isinstance(parameters, dict):
-            # No parameters - return empty schema
-            return type(f"{mcp_tool.name}Input", (BaseModel,), {})
-        
-        # Build field definitions
-        fields = {}
-        properties = parameters.get("properties", {})
-        required = parameters.get("required", [])
-        
-        for param_name, param_info in properties.items():
-            param_type = param_info.get("type", "string")
-            param_description = param_info.get("description", f"Parameter {param_name}")
-            param_default = param_info.get("default")
-            
-            # Map JSON schema types to Python types
-            python_type = self._map_json_type_to_python(param_type)
-            
-            # Create field with appropriate configuration
-            if param_name in required:
-                fields[param_name] = (python_type, Field(description=param_description))
-            else:
-                fields[param_name] = (Optional[python_type], Field(default=param_default, description=param_description))
-        
-        # Create dynamic model class
-        return type(f"{mcp_tool.name}Input", (BaseModel,), fields)
+        # Create a simple schema that accepts any keyword arguments
+        # This avoids complex dynamic field creation that causes Pydantic issues
+
+        class DynamicMCPInput(BaseModel):
+            """Dynamic input schema for MCP tools."""
+
+            class Config:
+                extra = "allow"  # Allow any additional fields
+                arbitrary_types_allowed = True
+
+            def __init__(self, **data):
+                # Accept any keyword arguments
+                super().__init__(**data)
+
+        # Set a unique name for the class
+        model_name = f"{mcp_tool.name.replace('-', '_').replace(' ', '_')}Input"
+        DynamicMCPInput.__name__ = model_name
+        DynamicMCPInput.__qualname__ = model_name
+
+        return DynamicMCPInput
     
     def _map_json_type_to_python(self, json_type: str) -> type:
         """
@@ -198,16 +190,17 @@ class MCPToolManager:
     def __init__(self, mcp_client: MCPClientManager):
         """
         Initialize the MCP tool manager.
-        
+
         Args:
             mcp_client: MCP client manager instance
         """
         self.mcp_client = mcp_client
         self.langchain_tools: Dict[str, MCPLangChainTool] = {}
-        
+        self.tool_update_callbacks = []  # Callbacks to notify when tools change
+
         # Set up callbacks for tool updates
         self.mcp_client.on_tools_updated = self._on_tools_updated
-        
+
         logger.info("MCP Tool Manager initialized")
     
     def _on_tools_updated(self, mcp_tools: List[MCPTool]) -> None:
@@ -231,8 +224,16 @@ class MCPToolManager:
                     except Exception as e:
                         logger.error(f"Failed to convert MCP tool {mcp_tool.name}: {e}")
             
-            logger.info(f"Updated MCP tools: {len(self.langchain_tools)} tools available")
-            
+            logger.info(f"✅ Updated MCP tools: {len(self.langchain_tools)} tools available")
+
+            # Log tool names for debugging
+            if self.langchain_tools:
+                tool_names = [tool.name for tool in self.langchain_tools.values()]
+                logger.debug(f"   Available MCP tools: {', '.join(tool_names)}")
+
+            # Notify callbacks about tool updates
+            self._notify_tool_update_callbacks()
+
         except Exception as e:
             logger.error(f"Error updating MCP tools: {e}")
     
@@ -279,11 +280,31 @@ class MCPToolManager:
     def get_tool_count(self) -> int:
         """
         Get the number of available MCP tools.
-        
+
         Returns:
             Number of available tools
         """
         return len(self.langchain_tools)
+
+    def add_tool_update_callback(self, callback: Callable[[], None]) -> None:
+        """
+        Add a callback to be notified when MCP tools are updated.
+
+        Args:
+            callback: Function to call when tools are updated
+        """
+        self.tool_update_callbacks.append(callback)
+        logger.debug("Added tool update callback")
+
+    def _notify_tool_update_callbacks(self) -> None:
+        """Notify all registered callbacks about tool updates."""
+        logger.info(f"🔄 Notifying {len(self.tool_update_callbacks)} callbacks about MCP tool updates")
+        for callback in self.tool_update_callbacks:
+            try:
+                callback()
+                logger.debug("✅ Tool update callback executed successfully")
+            except Exception as e:
+                logger.error(f"❌ Error in tool update callback: {e}")
     
     def get_server_tool_count(self, server_name: str) -> int:
         """

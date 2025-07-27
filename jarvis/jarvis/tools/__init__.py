@@ -10,6 +10,7 @@ from .base import BaseTool, ToolResult
 from .registry import ToolRegistry
 # TimeTool moved to MCP plugin system (device_time_tool.py)
 from .video_tool import VideoTool
+# from .refresh_tools import RefreshToolsTool  # Temporarily disabled
 from ..plugins.manager import PluginManager
 from ..core.mcp_client import MCPClientManager
 from ..core.mcp_tool_adapter import MCPToolManager
@@ -29,6 +30,7 @@ mcp_tool_manager = MCPToolManager(mcp_client)
 # Register built-in tools
 # TimeTool now available as MCP plugin (device_time_tool.py)
 tool_registry.register(VideoTool())
+# tool_registry.register(RefreshToolsTool())  # Temporarily disabled
 
 def get_langchain_tools():
     """
@@ -47,8 +49,12 @@ def get_langchain_tools():
     plugin_tools = plugin_manager.get_all_tools()
     tools.extend(plugin_tools)
 
-    # Add MCP tools
-    mcp_tools = mcp_tool_manager.get_langchain_tools()
+    # Add MCP tools (check if MCP system is available and has tools)
+    mcp_manager = get_mcp_tool_manager()
+    if mcp_manager:
+        mcp_tools = mcp_manager.get_langchain_tools()
+    else:
+        mcp_tools = []
     tools.extend(mcp_tools)
 
     logger.info(f"Loaded {len(builtin_tools)} built-in tools, {len(plugin_tools)} plugin tools, and {len(mcp_tools)} MCP tools")

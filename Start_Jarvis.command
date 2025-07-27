@@ -111,7 +111,43 @@ echo -e "${YELLOW}💡 Say 'Jarvis' to wake up the assistant${NC}"
 echo -e "${YELLOW}💡 Press Ctrl+C to stop Jarvis${NC}"
 echo -e "${CYAN}================================================${NC}"
 
-# Start Jarvis
+# Pre-check MCP system
+echo -e "${BLUE}🔧 Checking MCP system...${NC}"
+python -c "
+import sys
+import os
+import time
+sys.path.insert(0, os.getcwd())
+
+try:
+    from jarvis.tools import start_mcp_system, get_mcp_tool_manager
+    print('🚀 Starting MCP system...')
+    result = start_mcp_system()
+    print(f'MCP start result: {result}')
+
+    # Give MCP time to connect
+    print('⏳ Waiting for MCP connections...')
+    time.sleep(5)
+
+    tool_manager = get_mcp_tool_manager()
+    if tool_manager:
+        tool_count = tool_manager.get_tool_count()
+        print(f'✅ MCP tools available: {tool_count}')
+        if tool_count > 0:
+            print('🎉 MCP system ready!')
+        else:
+            print('⚠️ MCP started but no tools discovered')
+    else:
+        print('❌ MCP tool manager not available')
+
+except Exception as e:
+    print(f'❌ MCP check failed: {e}')
+"
+
+echo -e "${CYAN}================================================${NC}"
+
+# Start Jarvis with MCP pre-initialized
+echo -e "${GREEN}🚀 Starting Jarvis Voice Assistant with MCP...${NC}"
 python -m jarvis.main
 
 # Handle exit

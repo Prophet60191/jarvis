@@ -2,6 +2,26 @@
 
 A sophisticated AI-powered voice assistant with extensible tool integration, web-based control panel, and Model Context Protocol (MCP) support.
 
+## 🚧 Current Status
+
+**Latest Update**: July 27, 2025 - MCP Memory Integration Complete
+
+### ✅ Recently Completed
+- **MCP Memory System**: Successfully integrated 9 memory tools (create_entities, add_observations, search_nodes, etc.)
+- **Official MCP Adapters**: Implemented using `langchain-mcp-adapters` for proper tool conversion
+- **Tool Discovery**: 17 total tools now available (8 built-in + 9 MCP memory tools)
+- **Memory Storage**: Knowledge graph-based memory system for user preferences and context
+
+### ⚠️ Known Issues
+- **Model Configuration**: Tool calling quality inconsistent due to model switching issues
+- **Response Format**: Some tool responses return JSON instead of natural language
+- **See**: [`jarvis/docs/MODEL_CONFIGURATION_ISSUE.md`](jarvis/docs/MODEL_CONFIGURATION_ISSUE.md) for detailed analysis
+
+### 🎯 Next Steps
+- Resolve model configuration system for consistent Qwen2.5-7B usage
+- Improve tool response formatting for better user experience
+- Expand MCP server integrations (GitHub, filesystem, web search)
+
 ## Features
 
 ### **Voice Interaction**
@@ -180,4 +200,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with love by the Jarvis community**
+**Made by the Jarvis community**
