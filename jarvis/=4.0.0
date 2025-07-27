@@ -1,0 +1,29 @@
+Collecting pywebview
+  Downloading pywebview-5.4-py3-none-any.whl.metadata (4.5 kB)
+Requirement already satisfied: pyobjc-core in /Users/josed/.pyenv/versions/3.11.7/lib/python3.11/site-packages (from pywebview) (11.1)
+Requirement already satisfied: pyobjc-framework-Cocoa in /Users/josed/.pyenv/versions/3.11.7/lib/python3.11/site-packages (from pywebview) (11.1)
+Requirement already satisfied: pyobjc-framework-Quartz in /Users/josed/.pyenv/versions/3.11.7/lib/python3.11/site-packages (from pywebview) (11.1)
+Requirement already satisfied: pyobjc-framework-WebKit in /Users/josed/.pyenv/versions/3.11.7/lib/python3.11/site-packages (from pywebview) (11.1)
+Requirement already satisfied: pyobjc-framework-security in /Users/josed/.pyenv/versions/3.11.7/lib/python3.11/site-packages (from pywebview) (11.1)
+Collecting proxy_tools (from pywebview)
+  Downloading proxy_tools-0.1.0.tar.gz (3.0 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting bottle (from pywebview)
+  Downloading bottle-0.13.4-py2.py3-none-any.whl.metadata (1.6 kB)
+Requirement already satisfied: typing_extensions in /Users/josed/.pyenv/versions/3.11.7/lib/python3.11/site-packages (from pywebview) (4.14.1)
+Downloading pywebview-5.4-py3-none-any.whl (475 kB)
+Downloading bottle-0.13.4-py2.py3-none-any.whl (103 kB)
+Building wheels for collected packages: proxy_tools
+  Building wheel for proxy_tools (pyproject.toml): started
+  Building wheel for proxy_tools (pyproject.toml): finished with status 'done'
+  Created wheel for proxy_tools: filename=proxy_tools-0.1.0-py3-none-any.whl size=2936 sha256=e75a7b567eb51070f55ac3e025fc08c9959d77bd47f42661552ab25038d76247
+  Stored in directory: /Users/josed/Library/Caches/pip/wheels/2b/5f/96/7e96e7cbf06e426e168a6891a6ca2226787cc79fc816830dd4
+Successfully built proxy_tools
+Installing collected packages: proxy_tools, bottle, pywebview
+
+Successfully installed bottle-0.13.4 proxy_tools-0.1.0 pywebview-5.4

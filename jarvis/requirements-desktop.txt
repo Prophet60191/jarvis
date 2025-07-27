@@ -1,0 +1,19 @@
+# Jarvis Desktop Application Requirements
+# Additional dependencies for the native desktop app
+
+# Core desktop app dependency
+pywebview>=4.0.0
+
+# Platform-specific webview engines (optional but recommended)
+# macOS - uses built-in WebKit
+# Windows - uses Edge WebView2 (recommended) or IE
+# Linux - uses GTK WebKit
+
+# For Windows users (optional - improves performance)
+# pythonnet>=3.0.0  # For .NET integration on Windows
+
+# For Linux users (optional - GTK support)
+# PyGObject>=3.42.0  # For GTK integration on Linux
+
+# Development and debugging
+# pywebview[dev]  # Includes development tools

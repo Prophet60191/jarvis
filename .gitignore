@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Logs
+*.log
+logs/
+jarvis_debug.log
+
+# Audio files
+*.wav
+*.mp3
+*.m4a
+*.aac
+
+# Model files
+models/
+*.bin
+*.safetensors
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Jarvis specific
+voices/audio/
+voices/metadata/
+.jarvis/
+
+# Environment variables (keep template)
+.env
+!.env.example
