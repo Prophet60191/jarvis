@@ -91,8 +91,8 @@ def open_jarvis_ui(panel: str = "main") -> str:
         if not os.path.exists(ui_script):
             return "Jarvis UI application not found. Please install the desktop app with: python install_desktop.py"
 
-        # Launch the web UI application with the specified panel
-        cmd = [sys.executable, ui_script, "--panel", panel]
+        # Launch the web UI application with the specified panel (no browser window)
+        cmd = [sys.executable, ui_script, "--panel", panel, "--no-browser"]
 
         # Launch in background (non-blocking)
         subprocess.Popen(
@@ -117,7 +117,7 @@ def open_jarvis_ui(panel: str = "main") -> str:
         }
 
         panel_name = panel_names.get(panel, f"'{panel}' panel")
-        return f"Opening Jarvis {panel_name} in your browser. The web interface should appear shortly."
+        return f"Opening Jarvis {panel_name} in the desktop app. The interface should appear shortly."
         
     except Exception as e:
         logger.error(f"Failed to open Jarvis UI: {e}")

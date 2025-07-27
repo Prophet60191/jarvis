@@ -1045,7 +1045,7 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
 
     def get_html_template(self, title: str, content: str) -> str:
         """Get the HTML template with the specified title and content."""
-        return f"""
+        return """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1565,7 +1565,7 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
     </script>
 </body>
 </html>
-        """
+        """.format(title=title, content=content)
 
     def get_main_content(self) -> str:
         """Get the main dashboard content."""
@@ -2699,7 +2699,7 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
         <div class="config-section">
             <div class="section-header">
                 <h2>MCP Servers</h2>
-                <button class="btn btn-primary" onclick="showAddServerModal()">
+                <button class="btn btn-primary" onclick="showAddServerModal()" id="add-server-btn">
                     <i class="icon">+</i> Add Server
                 </button>
             </div>
@@ -2723,7 +2723,7 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
         </div>
 
         <!-- Add Server Modal -->
-        <div id="add-server-modal" class="modal" style="display: none;">
+        <div id="add-server-modal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Add MCP Server</h3>
@@ -2964,9 +2964,13 @@ X-API-Key: key"></textarea>
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
         }
 
         .modal-content {
@@ -3166,6 +3170,9 @@ X-API-Key: key"></textarea>
         let servers = {};
         let tools = {};
 
+        // Debug: Test if functions are accessible
+        console.log('MCP JavaScript starting to load...');
+
         function loadServers() {
             fetch('/api/mcp/servers')
                 .then(response => response.json())
@@ -3202,31 +3209,31 @@ X-API-Key: key"></textarea>
                 return;
             }
 
-            const html = Object.entries(servers).map(([name, server]) => `
-                <div class="server-card">
-                    <div class="server-header">
-                        <div class="server-name">${name}</div>
-                        <div class="server-status status-${server.status}">${server.status.toUpperCase()}</div>
-                    </div>
-                    <div class="server-info">
-                        <div><strong>Transport:</strong> ${server.config.transport}</div>
-                        ${server.config.transport === 'stdio' ?
-                            `<div><strong>Command:</strong> ${server.config.command} ${server.config.args.join(' ')}</div>` :
-                            `<div><strong>URL:</strong> ${server.config.url}</div>`
-                        }
-                        <div><strong>Tools:</strong> ${server.tools ? server.tools.length : 0} available</div>
-                        ${server.last_error ? `<div style="color: #F44336;"><strong>Error:</strong> ${server.last_error}</div>` : ''}
-                    </div>
-                    <div class="server-actions">
-                        ${server.status === 'connected' ?
-                            `<button class="btn btn-secondary btn-small" onclick="disconnectServer('${name}')">Disconnect</button>` :
-                            `<button class="btn btn-primary btn-small" onclick="connectServer('${name}')">Connect</button>`
-                        }
-                        <button class="btn btn-secondary btn-small" onclick="configureServer('${name}')">Configure</button>
-                        <button class="btn btn-danger btn-small" onclick="removeServer('${name}')">Remove</button>
-                    </div>
-                </div>
-            `).join('');
+            const html = Object.entries(servers).map(([name, server]) =>
+                '<div class="server-card">' +
+                    '<div class="server-header">' +
+                        '<div class="server-name">' + name + '</div>' +
+                        '<div class="server-status status-' + server.status + '">' + server.status.toUpperCase() + '</div>' +
+                    '</div>' +
+                    '<div class="server-info">' +
+                        '<div><strong>Transport:</strong> ' + server.config.transport + '</div>' +
+                        (server.config.transport === 'stdio' ?
+                            '<div><strong>Command:</strong> ' + server.config.command + ' ' + server.config.args.join(' ') + '</div>' :
+                            '<div><strong>URL:</strong> ' + server.config.url + '</div>'
+                        ) +
+                        '<div><strong>Tools:</strong> ' + (server.tools ? server.tools.length : 0) + ' available</div>' +
+                        (server.last_error ? '<div style="color: #F44336;"><strong>Error:</strong> ' + server.last_error + '</div>' : '') +
+                    '</div>' +
+                    '<div class="server-actions">' +
+                        (server.status === 'connected' ?
+                            '<button class="btn btn-secondary btn-small" onclick="disconnectServer(\\'' + name + '\\')">Disconnect</button>' :
+                            '<button class="btn btn-primary btn-small" onclick="connectServer(\\'' + name + '\\')">Connect</button>'
+                        ) +
+                        '<button class="btn btn-secondary btn-small" onclick="configureServer(\\'' + name + '\\')">Configure</button>' +
+                        '<button class="btn btn-danger btn-small" onclick="removeServer(\\'' + name + '\\')">Remove</button>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
 
             serversList.innerHTML = html;
         }
@@ -3239,34 +3246,56 @@ X-API-Key: key"></textarea>
                 return;
             }
 
-            const html = Object.entries(tools).map(([name, tool]) => `
-                <div class="tool-card">
-                    <div class="tool-header">
-                        <div>
-                            <div class="tool-name">${tool.name}</div>
-                            <div class="tool-server">[${tool.server_name}]</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" ${tool.enabled ? 'checked' : ''}
-                                   onchange="toggleTool('${name}', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="tool-description">${tool.description || 'No description available'}</div>
-                </div>
-            `).join('');
+            const html = Object.entries(tools).map(([name, tool]) =>
+                '<div class="tool-card">' +
+                    '<div class="tool-header">' +
+                        '<div>' +
+                            '<div class="tool-name">' + tool.name + '</div>' +
+                            '<div class="tool-server">[' + tool.server_name + ']</div>' +
+                        '</div>' +
+                        '<label class="toggle-switch">' +
+                            '<input type="checkbox" ' + (tool.enabled ? 'checked' : '') +
+                                   ' onchange="toggleTool(\\'' + name + '\\', this.checked)">' +
+                            '<span class="toggle-slider"></span>' +
+                        '</label>' +
+                    '</div>' +
+                    '<div class="tool-description">' + (tool.description || 'No description available') + '</div>' +
+                '</div>'
+            ).join('');
 
             toolsList.innerHTML = html;
         }
 
         function showAddServerModal() {
-            document.getElementById('add-server-modal').style.display = 'flex';
+            console.log('showAddServerModal called');
+            const modal = document.getElementById('add-server-modal');
+            if (modal) {
+                modal.classList.add('show');
+                console.log('Modal should now be visible');
+            } else {
+                console.error('Modal element not found!');
+                alert('Error: Modal element not found. Please refresh the page.');
+            }
         }
 
+        // Make function globally accessible
+        window.showAddServerModal = showAddServerModal;
+
         function hideAddServerModal() {
-            document.getElementById('add-server-modal').style.display = 'none';
-            document.getElementById('add-server-form').reset();
+            console.log('hideAddServerModal called');
+            const modal = document.getElementById('add-server-modal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+
+            const form = document.getElementById('add-server-form');
+            if (form) {
+                form.reset();
+            }
         }
+
+        // Make function globally accessible
+        window.hideAddServerModal = hideAddServerModal;
 
         function loadTemplate() {
             const template = document.getElementById('server-template').value;
@@ -3424,7 +3453,7 @@ X-API-Key: key"></textarea>
                 // Parse environment variables
                 const envText = formData.get('env') || '';
                 data.env = {};
-                envText.split('\n').forEach(line => {
+                envText.split('\\n').forEach(line => {
                     const [key, ...valueParts] = line.split('=');
                     if (key && valueParts.length > 0) {
                         data.env[key.trim()] = valueParts.join('=').trim();
@@ -3442,7 +3471,7 @@ X-API-Key: key"></textarea>
                 // Parse headers
                 const headersText = formData.get('headers') || '';
                 data.headers = {};
-                headersText.split('\n').forEach(line => {
+                headersText.split('\\n').forEach(line => {
                     const [key, ...valueParts] = line.split(':');
                     if (key && valueParts.length > 0) {
                         data.headers[key.trim()] = valueParts.join(':').trim();
@@ -3499,7 +3528,7 @@ X-API-Key: key"></textarea>
         }
 
         function removeServer(serverName) {
-            if (!confirm(`Are you sure you want to remove server "${serverName}"?`)) {
+            if (!confirm('Are you sure you want to remove server "' + serverName + '"?')) {
                 return;
             }
 
@@ -3553,7 +3582,7 @@ X-API-Key: key"></textarea>
         function showNotification(message, type = 'info') {
             // Create notification element
             const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
+            notification.className = 'notification notification-' + type;
             notification.textContent = message;
 
             // Add to page
@@ -3570,8 +3599,37 @@ X-API-Key: key"></textarea>
         }
 
         // Load data on page load
+        console.log('MCP page JavaScript loaded');
         loadServers();
         loadTools();
+
+        // Initialize page when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded for MCP page');
+
+            // Check if elements exist
+            const addButton = document.getElementById('add-server-btn');
+            const modal = document.getElementById('add-server-modal');
+            const form = document.getElementById('add-server-form');
+
+            console.log('Add button found:', !!addButton);
+            console.log('Modal found:', !!modal);
+            console.log('Form found:', !!form);
+
+            if (!addButton) console.error('Add Server button not found!');
+            if (!modal) console.error('Modal not found!');
+            if (!form) console.error('Form not found!');
+
+            // Add fallback event listener for the Add Server button
+            if (addButton) {
+                console.log('Adding click event listener to Add Server button');
+                addButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Add Server button clicked via event listener');
+                    showAddServerModal();
+                });
+            }
+        });
 
         // Auto-refresh every 30 seconds
         setInterval(() => {
@@ -3589,11 +3647,12 @@ X-API-Key: key"></textarea>
 class JarvisUI:
     """Main Jarvis UI application class."""
 
-    def __init__(self, initial_panel: str = "main", port: int = 8080):
+    def __init__(self, initial_panel: str = "main", port: int = 8080, open_browser: bool = True):
         """Initialize the Jarvis UI application."""
         self.initial_panel = initial_panel
         self.port = port
         self.server = None
+        self.open_browser = open_browser
     
     def start_server(self):
         """Start the HTTP server."""
@@ -3603,14 +3662,17 @@ class JarvisUI:
             JarvisUIHandler._server_instance = self.server
             logger.info(f"Starting Jarvis UI server on http://localhost:{self.port}")
 
-            # Open browser after a short delay
-            def open_browser():
-                time.sleep(1)
-                url = f"http://localhost:{self.port}/{self.initial_panel}"
-                webbrowser.open(url)
-                logger.info(f"Opened browser to {url}")
+            # Open browser after a short delay (only if requested)
+            if self.open_browser:
+                def open_browser():
+                    time.sleep(1)
+                    url = f"http://localhost:{self.port}/{self.initial_panel}"
+                    webbrowser.open(url)
+                    logger.info(f"Opened browser to {url}")
 
-            threading.Thread(target=open_browser, daemon=True).start()
+                threading.Thread(target=open_browser, daemon=True).start()
+            else:
+                logger.info(f"Web server started at http://localhost:{self.port}/{self.initial_panel} (browser not opened)")
 
             # Start server
             self.server.serve_forever()
@@ -3642,7 +3704,7 @@ def main():
     parser.add_argument(
         "--panel",
         default="main",
-        choices=["main", "settings", "audio", "performance", "tools", "status"],
+        choices=["main", "settings", "audio", "performance", "tools", "status", "mcp"],
         help="Initial panel to display"
     )
     parser.add_argument(
@@ -3651,11 +3713,16 @@ def main():
         default=8080,
         help="Port to run the web server on (default: 8080)"
     )
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Don't automatically open browser window"
+    )
 
     args = parser.parse_args()
 
     try:
-        app = JarvisUI(initial_panel=args.panel, port=args.port)
+        app = JarvisUI(initial_panel=args.panel, port=args.port, open_browser=not args.no_browser)
         app.run()
     except Exception as e:
         logger.error(f"Failed to start Jarvis UI: {e}")

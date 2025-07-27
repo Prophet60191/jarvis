@@ -61,31 +61,11 @@ class JarvisDesktopApp:
         try:
             from ui.jarvis_ui import JarvisUI
             
-            # Create and start the web server
-            self.web_server = JarvisUI(initial_panel=self.panel, port=self.port)
-            
+            # Create and start the web server (without opening browser)
+            self.web_server = JarvisUI(initial_panel=self.panel, port=self.port, open_browser=False)
+
             # Start server without opening browser
             logger.info(f"Starting Jarvis web server on port {self.port}")
-            
-            # Override the browser opening behavior
-            original_start = self.web_server.start_server
-            def start_without_browser():
-                try:
-                    from http.server import HTTPServer
-                    from ui.jarvis_ui import JarvisUIHandler
-                    
-                    self.web_server.server = HTTPServer(('localhost', self.port), JarvisUIHandler)
-                    JarvisUIHandler._server_instance = self.web_server.server
-                    logger.info(f"Jarvis web server started on http://localhost:{self.port}")
-                    
-                    # Start server without browser opening
-                    self.web_server.server.serve_forever()
-                    
-                except Exception as e:
-                    logger.error(f"Failed to start web server: {e}")
-                    raise
-            
-            self.web_server.start_server = start_without_browser
             self.web_server.start_server()
             
         except Exception as e:
