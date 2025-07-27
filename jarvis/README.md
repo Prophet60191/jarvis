@@ -39,6 +39,14 @@ A 100% local, privacy-focused voice-activated AI assistant inspired by Tony Star
 - **Testing**: Full test suite with unit and integration tests
 - **Documentation**: Comprehensive documentation and examples
 
+### MCP Integration System
+- **Model Context Protocol**: Connect to external tools and services dynamically
+- **Server Templates**: Pre-configured setups for GitHub, file system, web search, databases
+- **Web Management**: Professional UI for server configuration and tool management
+- **Secure Storage**: Encrypted configuration with API key protection
+- **Real-time Discovery**: Automatic tool enumeration from connected servers
+- **LangChain Integration**: Seamless integration with existing tool system
+
 ### MCP Plugin System
 - **Extensible Tool Architecture**: Add new tools without modifying core code
 - **Automatic Discovery**: Plugins are found and loaded automatically
@@ -183,6 +191,78 @@ Jarvis: "Opening Jarvis Audio Configuration. The UI should appear on your screen
 [Web browser opens to http://localhost:8080/audio]
 ```
 
+## MCP Integration Setup
+
+### Adding External Tools
+
+Jarvis supports the Model Context Protocol (MCP) for connecting to external tools and services:
+
+#### Quick Setup (Memory Storage)
+1. **Access MCP Management**:
+   ```bash
+   # Start Jarvis UI
+   python ui/jarvis_ui.py
+   # Navigate to Settings → MCP Tools & Servers
+   ```
+
+2. **Add Memory Server** (no setup required):
+   - Click "Add Server"
+   - Select "Memory Storage" from template dropdown
+   - Click "Test Connection" → Should show "Configuration is valid"
+   - Click "Add Server" → Success notification appears
+   - Click "Connect" to activate
+
+#### Popular Integrations
+
+**GitHub Integration**:
+```bash
+# 1. Install MCP server
+npm install -g @modelcontextprotocol/server-github
+
+# 2. Get GitHub Personal Access Token
+# Go to GitHub Settings → Developer settings → Personal access tokens
+
+# 3. In Jarvis UI:
+# Template: "GitHub Integration"
+# Environment: GITHUB_TOKEN=your_token_here
+```
+
+**File System Access**:
+```bash
+# 1. Install MCP server
+npm install -g @modelcontextprotocol/server-filesystem
+
+# 2. In Jarvis UI:
+# Template: "File System Access"
+# Arguments: -m @modelcontextprotocol/server-filesystem /Users
+```
+
+**Web Search (Brave)**:
+```bash
+# 1. Install MCP server
+npm install -g @modelcontextprotocol/server-brave-search
+
+# 2. Get Brave Search API key from https://api.search.brave.com/
+
+# 3. In Jarvis UI:
+# Template: "Brave Search"
+# Environment: BRAVE_API_KEY=your_api_key_here
+```
+
+#### Using MCP Tools
+Once connected, MCP tools are automatically available:
+```
+You: "Jarvis"
+Jarvis: "Yes sir?"
+You: "List my GitHub repositories"
+Jarvis: "I found 15 repositories in your GitHub account..."
+
+You: "Search the web for Python tutorials"
+Jarvis: "I found several Python tutorials for you..."
+```
+
+For detailed setup instructions, see [MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md).
+
 ## Web Configuration Interface
 
 Jarvis features a **modern, professional web interface** for complete configuration management:
@@ -199,6 +279,7 @@ Jarvis features a **modern, professional web interface** for complete configurat
 - **Audio Configuration** (`/audio`) - Microphone, TTS, and Coqui settings
 - **LLM Configuration** (`/llm`) - Language model parameters
 - **Conversation Settings** (`/conversation`) - Wake word and flow settings
+- **MCP Tools & Servers** (`/mcp`) - External tool integration management
 - **Logging Configuration** (`/logging`) - Log levels and output settings
 - **Voice Profiles** (`/voice-profiles`) - Voice cloning management
 - **Device Information** (`/device`) - Hardware and system details

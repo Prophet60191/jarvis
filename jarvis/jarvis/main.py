@@ -78,7 +78,14 @@ class JarvisApplication:
             self.speech_manager.initialize()
             logger.info("✅ Speech system initialized")
 
-            # Initialize LLM agent with tools (built-in + plugins)
+            # Start MCP system
+            from .tools import start_mcp_system
+            if start_mcp_system():
+                logger.info("✅ MCP system started")
+            else:
+                logger.warning("⚠️ MCP system failed to start, continuing without MCP tools")
+
+            # Initialize LLM agent with tools (built-in + plugins + MCP)
             self.agent = JarvisAgent(self.config.llm)
             langchain_tools = get_langchain_tools()
             self.agent.initialize(tools=langchain_tools)
@@ -376,6 +383,18 @@ class JarvisApplication:
             except Exception as e:
                 terminal_ui.show_component_status("Speech Manager", f"error: {str(e)}", False)
                 logger.error(f"Error cleaning up speech manager: {str(e)}")
+
+        # Cleanup MCP system
+        try:
+            from .tools import stop_mcp_system
+            if stop_mcp_system():
+                terminal_ui.show_component_status("MCP System", "cleaned up", True)
+                logger.info("✅ MCP system cleaned up")
+            else:
+                terminal_ui.show_component_status("MCP System", "cleanup failed", False)
+        except Exception as e:
+            terminal_ui.show_component_status("MCP System", f"error: {str(e)}", False)
+            logger.error(f"Error cleaning up MCP system: {str(e)}")
 
         terminal_ui.show_shutdown_complete()
         logger.info("👋 Jarvis shutdown complete")

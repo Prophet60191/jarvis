@@ -16,6 +16,11 @@ Welcome to the comprehensive documentation for Jarvis Voice Assistant! This guid
 - **[Architecture Overview](ARCHITECTURE.md)** - Complete system architecture and design decisions
 - **[MCP System Overview](MCP_SYSTEM_OVERVIEW.md)** - Plugin system architecture and implementation
 
+### 🔗 **MCP Integration (NEW!)**
+- **[MCP Integration Guide](MCP_INTEGRATION_GUIDE.md)** - Complete guide to external tool integration
+- **[MCP API Reference](MCP_API_REFERENCE.md)** - Technical API documentation for MCP components
+- **[MCP Troubleshooting](MCP_TROUBLESHOOTING.md)** - Common MCP issues and solutions
+
 ### 🛠️ **Development**
 - **[Developer Quick Start](DEVELOPER_QUICK_START.md)** - Comprehensive developer onboarding
 - **[API Documentation](API_DOCUMENTATION.md)** - Complete API reference for all components

@@ -311,6 +311,8 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.serve_voice_profiles_page()
         elif path == "/device":
             self.serve_device_config_page()
+        elif path == "/mcp":
+            self.serve_mcp_page()
         elif path == "/api/status":
             self.serve_status_api()
         elif path == "/api/config":
@@ -325,6 +327,10 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.serve_voice_profiles_api()
         elif path == "/api/device-info":
             self.serve_device_info_api()
+        elif path == "/api/mcp/servers":
+            self.serve_mcp_servers_api()
+        elif path == "/api/mcp/tools":
+            self.serve_mcp_tools_api()
         else:
             self.serve_404()
 
@@ -343,6 +349,14 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.handle_close_window()
         elif path == "/api/voice-profiles":
             self.handle_voice_profile_action()
+        elif path == "/api/mcp/servers":
+            self.handle_mcp_server_action()
+        elif path == "/api/mcp/connect":
+            self.handle_mcp_connect_action()
+        elif path == "/api/mcp/disconnect":
+            self.handle_mcp_disconnect_action()
+        elif path == "/api/mcp/tools/toggle":
+            self.handle_mcp_tool_toggle()
         else:
             self.serve_404()
 
@@ -465,6 +479,14 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
     def serve_device_config_page(self):
         """Serve the device configuration page."""
         html = self.get_html_template("Device Configuration", self.get_device_config_content())
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html.encode())
+
+    def serve_mcp_page(self):
+        """Serve the MCP management page."""
+        html = self.get_html_template("MCP Tools & Servers", self.get_mcp_content())
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
@@ -614,6 +636,266 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def serve_mcp_servers_api(self):
+        """Serve MCP servers information as JSON API."""
+        try:
+            # Get MCP client manager
+            from jarvis.tools import get_mcp_client
+            mcp_client = get_mcp_client()
+
+            # Get all servers
+            all_servers = mcp_client.get_all_servers()
+
+            # Format server data for UI
+            servers_data = {"servers": {}}
+            for server_name, server_info in all_servers.items():
+                servers_data["servers"][server_name] = {
+                    "config": {
+                        "name": server_info.config.name,
+                        "transport": server_info.config.transport.value,
+                        "command": server_info.config.command,
+                        "args": server_info.config.args,
+                        "url": server_info.config.url,
+                        "enabled": server_info.config.enabled
+                    },
+                    "status": server_info.status.value,
+                    "tools": [
+                        {
+                            "name": tool.name,
+                            "description": tool.description,
+                            "enabled": tool.enabled
+                        }
+                        for tool in server_info.tools
+                    ],
+                    "last_error": server_info.last_error,
+                    "connected_at": server_info.connected_at
+                }
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(servers_data, indent=2).encode())
+        except Exception as e:
+            logger.error(f"Error serving MCP servers API: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def serve_mcp_tools_api(self):
+        """Serve MCP tools information as JSON API."""
+        try:
+            # Get MCP client manager
+            from jarvis.tools import get_mcp_client
+            mcp_client = get_mcp_client()
+
+            # Get all tools
+            all_tools = mcp_client.get_all_tools()
+
+            # Format tools data for UI
+            tools_data = {"tools": {}}
+            for tool in all_tools:
+                tool_key = f"{tool.server_name}:{tool.name}"
+                tools_data["tools"][tool_key] = {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "server_name": tool.server_name,
+                    "enabled": tool.enabled,
+                    "parameters": tool.parameters
+                }
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(tools_data, indent=2).encode())
+        except Exception as e:
+            logger.error(f"Error serving MCP tools API: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def handle_mcp_server_action(self):
+        """Handle MCP server management actions."""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            action = data.get('action')
+
+            # Get MCP client manager
+            from jarvis.tools import get_mcp_client
+            from jarvis.core.mcp_client import MCPServerConfig, MCPTransportType
+            mcp_client = get_mcp_client()
+
+            if action == 'add':
+                # Create server configuration
+                config = MCPServerConfig(
+                    name=data.get('name'),
+                    transport=MCPTransportType(data.get('transport')),
+                    enabled=data.get('enabled', True),
+                    command=data.get('command'),
+                    args=data.get('args', []),
+                    env=data.get('env', {}),
+                    cwd=data.get('cwd'),
+                    url=data.get('url'),
+                    headers=data.get('headers', {}),
+                    timeout=data.get('timeout', 30)
+                )
+
+                success = mcp_client.add_server(config)
+                result = {"success": success, "message": "Server added successfully" if success else "Failed to add server"}
+
+            elif action == 'remove':
+                server_name = data.get('name')
+                success = mcp_client.remove_server(server_name)
+                result = {"success": success, "message": "Server removed successfully" if success else "Failed to remove server"}
+
+            elif action == 'test':
+                # For test, create a temporary config and try to validate it
+                try:
+                    config = MCPServerConfig(
+                        name=data.get('name', 'test'),
+                        transport=MCPTransportType(data.get('transport')),
+                        command=data.get('command'),
+                        args=data.get('args', []),
+                        url=data.get('url'),
+                        headers=data.get('headers', {}),
+                        timeout=data.get('timeout', 30)
+                    )
+                    config.validate()
+                    result = {"success": True, "message": "Configuration is valid"}
+                except Exception as e:
+                    result = {"success": False, "error": f"Configuration error: {str(e)}"}
+            else:
+                result = {"success": False, "error": "Unknown action"}
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+        except Exception as e:
+            logger.error(f"Error handling MCP server action: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
+
+    def handle_mcp_connect_action(self):
+        """Handle MCP server connect action."""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            server_name = data.get('server')
+
+            # Get MCP client manager
+            from jarvis.tools import get_mcp_client
+            mcp_client = get_mcp_client()
+
+            # Connect to server asynchronously
+            import asyncio
+            if mcp_client.event_loop:
+                future = asyncio.run_coroutine_threadsafe(
+                    mcp_client.connect_server(server_name),
+                    mcp_client.event_loop
+                )
+                success = future.result(timeout=10)  # 10 second timeout
+                result = {"success": success, "message": f"Connected to {server_name}" if success else f"Failed to connect to {server_name}"}
+            else:
+                result = {"success": False, "error": "MCP system not running"}
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+        except Exception as e:
+            logger.error(f"Error handling MCP connect action: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
+
+    def handle_mcp_disconnect_action(self):
+        """Handle MCP server disconnect action."""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            server_name = data.get('server')
+
+            # Get MCP client manager
+            from jarvis.tools import get_mcp_client
+            mcp_client = get_mcp_client()
+
+            # Disconnect from server asynchronously
+            import asyncio
+            if mcp_client.event_loop:
+                future = asyncio.run_coroutine_threadsafe(
+                    mcp_client.disconnect_server(server_name),
+                    mcp_client.event_loop
+                )
+                future.result(timeout=5)  # 5 second timeout
+                result = {"success": True, "message": f"Disconnected from {server_name}"}
+            else:
+                result = {"success": False, "error": "MCP system not running"}
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+        except Exception as e:
+            logger.error(f"Error handling MCP disconnect action: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
+
+    def handle_mcp_tool_toggle(self):
+        """Handle MCP tool enable/disable toggle."""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            tool_name = data.get('tool')
+            enabled = data.get('enabled', True)
+
+            # Get MCP tool manager
+            from jarvis.tools import get_mcp_tool_manager
+            mcp_tool_manager = get_mcp_tool_manager()
+
+            # Toggle tool
+            if enabled:
+                success = mcp_tool_manager.enable_tool(tool_name)
+            else:
+                success = mcp_tool_manager.disable_tool(tool_name)
+
+            result = {
+                "success": success,
+                "message": f"Tool {tool_name} {'enabled' if enabled else 'disabled'}" if success else f"Failed to {'enable' if enabled else 'disable'} tool {tool_name}"
+            }
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+        except Exception as e:
+            logger.error(f"Error handling MCP tool toggle: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
 
     def handle_config_update(self):
         """Handle configuration update requests."""
@@ -1185,6 +1467,9 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 <a href="/device" class="nav-link" data-page="device">
                     <span class="icon">💻</span>Device Info
                 </a>
+                <a href="/mcp" class="nav-link" data-page="mcp">
+                    <span class="icon">🔗</span>MCP Tools
+                </a>
             </div>
         </nav>
     </div>
@@ -1435,6 +1720,12 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 <h3>General Settings</h3>
                 <p>Debug mode, data directories, and other general application settings.</p>
                 <a href="/general" class="btn">General Settings</a>
+            </div>
+
+            <div class="status-card">
+                <h3>MCP Tools & Servers</h3>
+                <p>Manage Model Context Protocol servers and discover external tools and integrations.</p>
+                <a href="/mcp" class="btn">Manage MCP</a>
             </div>
         </div>
 
@@ -2373,6 +2664,920 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
 
         loadDeviceInfo();
         setInterval(loadDeviceInfo, 30000); // Refresh every 30 seconds
+        </script>
+        """
+
+    def get_mcp_content(self) -> str:
+        """Get the MCP management content."""
+        return """
+        <div class="page-header">
+            <h1>MCP Tools & Servers</h1>
+            <div class="breadcrumb">
+                <a href="/settings">Settings</a> > MCP Tools & Servers
+            </div>
+        </div>
+
+        <div class="info-banner">
+            <h3>🔗 Model Context Protocol (MCP)</h3>
+            <p>Connect Jarvis to external tools and services through MCP servers. Popular options include GitHub integration, file system access, web search, and database connections.</p>
+            <details>
+                <summary>📚 Quick Setup Guide</summary>
+                <div class="setup-guide">
+                    <h4>Getting Started:</h4>
+                    <ol>
+                        <li><strong>Install Node.js</strong> if you haven't already (required for most MCP servers)</li>
+                        <li><strong>Click "Add Server"</strong> and choose a template for quick setup</li>
+                        <li><strong>Popular first choice:</strong> Memory Storage (no setup required)</li>
+                        <li><strong>For GitHub:</strong> Get a personal access token from GitHub Settings</li>
+                        <li><strong>Test connection</strong> before saving to ensure everything works</li>
+                    </ol>
+                    <p><strong>Need help?</strong> Each template includes detailed setup instructions.</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="config-section">
+            <div class="section-header">
+                <h2>MCP Servers</h2>
+                <button class="btn btn-primary" onclick="showAddServerModal()">
+                    <i class="icon">+</i> Add Server
+                </button>
+            </div>
+
+            <div id="servers-list" class="servers-grid">
+                <p>Loading MCP servers...</p>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-header">
+                <h2>Available Tools</h2>
+                <button class="btn btn-secondary" onclick="refreshTools()">
+                    <i class="icon">🔄</i> Refresh Tools
+                </button>
+            </div>
+
+            <div id="tools-list" class="tools-grid">
+                <p>Loading tools...</p>
+            </div>
+        </div>
+
+        <!-- Add Server Modal -->
+        <div id="add-server-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add MCP Server</h3>
+                    <button class="modal-close" onclick="hideAddServerModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-server-form">
+                        <div class="form-group">
+                            <label for="server-template">Quick Setup (Optional):</label>
+                            <select id="server-template" onchange="loadTemplate()">
+                                <option value="">Custom Configuration</option>
+                                <option value="github">GitHub Integration</option>
+                                <option value="filesystem">File System Access</option>
+                                <option value="brave_search">Brave Search</option>
+                                <option value="memory">Memory Storage</option>
+                                <option value="sqlite">SQLite Database</option>
+                            </select>
+                            <small>Select a template for quick setup, or choose "Custom Configuration" to configure manually</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="server-name">Server Name:</label>
+                            <input type="text" id="server-name" name="name" required
+                                   placeholder="e.g., GitHub Integration">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="transport-type">Transport Type:</label>
+                            <select id="transport-type" name="transport" onchange="updateTransportConfig()">
+                                <option value="stdio">STDIO (Process)</option>
+                                <option value="sse">HTTP/SSE</option>
+                                <option value="websocket">WebSocket</option>
+                            </select>
+                        </div>
+
+                        <!-- STDIO Configuration -->
+                        <div id="stdio-config" class="transport-config">
+                            <div class="form-group">
+                                <label for="command">Command:</label>
+                                <input type="text" id="command" name="command"
+                                       placeholder="e.g., npx">
+                            </div>
+                            <div class="form-group">
+                                <label for="args">Arguments:</label>
+                                <input type="text" id="args" name="args"
+                                       placeholder="e.g., -m @modelcontextprotocol/server-github">
+                                <small>Separate multiple arguments with spaces</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="env-vars">Environment Variables:</label>
+                                <textarea id="env-vars" name="env" rows="3"
+                                          placeholder="KEY1=value1
+KEY2=value2"></textarea>
+                                <small>One per line, format: KEY=value</small>
+                            </div>
+                        </div>
+
+                        <!-- HTTP/SSE Configuration -->
+                        <div id="http-config" class="transport-config" style="display: none;">
+                            <div class="form-group">
+                                <label for="server-url">Server URL:</label>
+                                <input type="url" id="server-url" name="url"
+                                       placeholder="https://api.example.com/mcp">
+                            </div>
+                            <div class="form-group">
+                                <label for="headers">Headers:</label>
+                                <textarea id="headers" name="headers" rows="3"
+                                          placeholder="Authorization: Bearer token
+X-API-Key: key"></textarea>
+                                <small>One per line, format: Header: value</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="timeout">Timeout (seconds):</label>
+                                <input type="number" id="timeout" name="timeout" value="30" min="1" max="300">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enabled" name="enabled" checked>
+                                Enable server automatically
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddServerModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="testConnection()">Test Connection</button>
+                    <button type="button" class="btn btn-primary" onclick="addServer()">Add Server</button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+        .info-banner {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-banner h3 {
+            margin: 0 0 0.5rem 0;
+            color: #2196F3;
+        }
+
+        .info-banner p {
+            margin: 0 0 1rem 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .info-banner details {
+            margin-top: 1rem;
+        }
+
+        .info-banner summary {
+            cursor: pointer;
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        .setup-guide {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .setup-guide h4 {
+            margin: 0 0 0.5rem 0;
+            color: white;
+        }
+
+        .setup-guide ol {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .setup-guide li {
+            margin: 0.5rem 0;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .servers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .server-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .server-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .server-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .server-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-connected { background: #4CAF50; color: white; }
+        .status-connecting { background: #FF9800; color: white; }
+        .status-disconnected { background: #757575; color: white; }
+        .status-error { background: #F44336; color: white; }
+
+        .server-info {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .server-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-name {
+            font-weight: bold;
+        }
+
+        .tool-server {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tool-description {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .transport-config {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-danger {
+            background: #F44336;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            background: #4CAF50;
+            border: 1px solid #45a049;
+        }
+
+        .notification-error {
+            background: #F44336;
+            border: 1px solid #da190b;
+        }
+
+        .notification-info {
+            background: #2196F3;
+            border: 1px solid #0b7dda;
+        }
+        </style>
+
+        <script>
+        let servers = {};
+        let tools = {};
+
+        function loadServers() {
+            fetch('/api/mcp/servers')
+                .then(response => response.json())
+                .then(data => {
+                    servers = data.servers || {};
+                    renderServers();
+                })
+                .catch(error => {
+                    console.error('Error loading servers:', error);
+                    document.getElementById('servers-list').innerHTML =
+                        '<p>Error loading servers: ' + error.message + '</p>';
+                });
+        }
+
+        function loadTools() {
+            fetch('/api/mcp/tools')
+                .then(response => response.json())
+                .then(data => {
+                    tools = data.tools || {};
+                    renderTools();
+                })
+                .catch(error => {
+                    console.error('Error loading tools:', error);
+                    document.getElementById('tools-list').innerHTML =
+                        '<p>Error loading tools: ' + error.message + '</p>';
+                });
+        }
+
+        function renderServers() {
+            const serversList = document.getElementById('servers-list');
+
+            if (Object.keys(servers).length === 0) {
+                serversList.innerHTML = '<p>No MCP servers configured. Click "Add Server" to get started.</p>';
+                return;
+            }
+
+            const html = Object.entries(servers).map(([name, server]) => `
+                <div class="server-card">
+                    <div class="server-header">
+                        <div class="server-name">${name}</div>
+                        <div class="server-status status-${server.status}">${server.status.toUpperCase()}</div>
+                    </div>
+                    <div class="server-info">
+                        <div><strong>Transport:</strong> ${server.config.transport}</div>
+                        ${server.config.transport === 'stdio' ?
+                            `<div><strong>Command:</strong> ${server.config.command} ${server.config.args.join(' ')}</div>` :
+                            `<div><strong>URL:</strong> ${server.config.url}</div>`
+                        }
+                        <div><strong>Tools:</strong> ${server.tools ? server.tools.length : 0} available</div>
+                        ${server.last_error ? `<div style="color: #F44336;"><strong>Error:</strong> ${server.last_error}</div>` : ''}
+                    </div>
+                    <div class="server-actions">
+                        ${server.status === 'connected' ?
+                            `<button class="btn btn-secondary btn-small" onclick="disconnectServer('${name}')">Disconnect</button>` :
+                            `<button class="btn btn-primary btn-small" onclick="connectServer('${name}')">Connect</button>`
+                        }
+                        <button class="btn btn-secondary btn-small" onclick="configureServer('${name}')">Configure</button>
+                        <button class="btn btn-danger btn-small" onclick="removeServer('${name}')">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+
+            serversList.innerHTML = html;
+        }
+
+        function renderTools() {
+            const toolsList = document.getElementById('tools-list');
+
+            if (Object.keys(tools).length === 0) {
+                toolsList.innerHTML = '<p>No tools available. Connect to MCP servers to discover tools.</p>';
+                return;
+            }
+
+            const html = Object.entries(tools).map(([name, tool]) => `
+                <div class="tool-card">
+                    <div class="tool-header">
+                        <div>
+                            <div class="tool-name">${tool.name}</div>
+                            <div class="tool-server">[${tool.server_name}]</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${tool.enabled ? 'checked' : ''}
+                                   onchange="toggleTool('${name}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="tool-description">${tool.description || 'No description available'}</div>
+                </div>
+            `).join('');
+
+            toolsList.innerHTML = html;
+        }
+
+        function showAddServerModal() {
+            document.getElementById('add-server-modal').style.display = 'flex';
+        }
+
+        function hideAddServerModal() {
+            document.getElementById('add-server-modal').style.display = 'none';
+            document.getElementById('add-server-form').reset();
+        }
+
+        function loadTemplate() {
+            const template = document.getElementById('server-template').value;
+            if (!template) return;
+
+            const templates = {
+                github: {
+                    name: 'GitHub Integration',
+                    transport: 'stdio',
+                    command: 'npx',
+                    args: '-m @modelcontextprotocol/server-github',
+                    env: 'GITHUB_TOKEN=your_github_token_here'
+                },
+                filesystem: {
+                    name: 'File System Access',
+                    transport: 'stdio',
+                    command: 'npx',
+                    args: '-m @modelcontextprotocol/server-filesystem /Users',
+                    env: ''
+                },
+                brave_search: {
+                    name: 'Brave Search',
+                    transport: 'stdio',
+                    command: 'npx',
+                    args: '-m @modelcontextprotocol/server-brave-search',
+                    env: 'BRAVE_API_KEY=your_brave_api_key_here'
+                },
+                memory: {
+                    name: 'Memory Storage',
+                    transport: 'stdio',
+                    command: 'npx',
+                    args: '-m @modelcontextprotocol/server-memory',
+                    env: ''
+                },
+                sqlite: {
+                    name: 'SQLite Database',
+                    transport: 'stdio',
+                    command: 'npx',
+                    args: '-m @modelcontextprotocol/server-sqlite /path/to/database.db',
+                    env: ''
+                }
+            };
+
+            const config = templates[template];
+            if (config) {
+                document.getElementById('server-name').value = config.name;
+                document.getElementById('transport-type').value = config.transport;
+                document.getElementById('command').value = config.command;
+                document.getElementById('args').value = config.args;
+                document.getElementById('env-vars').value = config.env;
+                updateTransportConfig();
+            }
+        }
+
+        function updateTransportConfig() {
+            const transport = document.getElementById('transport-type').value;
+            const stdioConfig = document.getElementById('stdio-config');
+            const httpConfig = document.getElementById('http-config');
+
+            if (transport === 'stdio') {
+                stdioConfig.style.display = 'block';
+                httpConfig.style.display = 'none';
+            } else {
+                stdioConfig.style.display = 'none';
+                httpConfig.style.display = 'block';
+            }
+        }
+
+        function testConnection() {
+            const formData = getFormData();
+            if (!formData) return;
+
+            // Show loading state
+            const testBtn = event.target;
+            const originalText = testBtn.textContent;
+            testBtn.textContent = 'Testing...';
+            testBtn.disabled = true;
+
+            fetch('/api/mcp/servers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'test', ...formData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Connection test successful!');
+                } else {
+                    alert('Connection test failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Connection test failed: ' + error.message);
+            })
+            .finally(() => {
+                testBtn.textContent = originalText;
+                testBtn.disabled = false;
+            });
+        }
+
+        function addServer() {
+            const formData = getFormData();
+            if (!formData) return;
+
+            // Show loading state
+            const addBtn = document.querySelector('button[onclick="addServer()"]');
+            const originalText = addBtn.textContent;
+            addBtn.textContent = 'Adding...';
+            addBtn.disabled = true;
+
+            fetch('/api/mcp/servers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', ...formData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideAddServerModal();
+                    loadServers();
+                    loadTools();
+                    showNotification('Server added successfully!', 'success');
+                } else {
+                    showNotification('Failed to add server: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Failed to add server: ' + error.message, 'error');
+            })
+            .finally(() => {
+                addBtn.textContent = originalText;
+                addBtn.disabled = false;
+            });
+        }
+
+        function getFormData() {
+            const form = document.getElementById('add-server-form');
+            const formData = new FormData(form);
+
+            const data = {
+                name: formData.get('name'),
+                transport: formData.get('transport'),
+                enabled: formData.get('enabled') === 'on'
+            };
+
+            if (!data.name) {
+                alert('Please enter a server name');
+                return null;
+            }
+
+            if (data.transport === 'stdio') {
+                data.command = formData.get('command');
+                data.args = formData.get('args') ? formData.get('args').split(' ').filter(arg => arg.trim()) : [];
+
+                // Parse environment variables
+                const envText = formData.get('env') || '';
+                data.env = {};
+                envText.split('\n').forEach(line => {
+                    const [key, ...valueParts] = line.split('=');
+                    if (key && valueParts.length > 0) {
+                        data.env[key.trim()] = valueParts.join('=').trim();
+                    }
+                });
+
+                if (!data.command) {
+                    alert('Please enter a command for STDIO transport');
+                    return null;
+                }
+            } else {
+                data.url = formData.get('url');
+                data.timeout = parseInt(formData.get('timeout')) || 30;
+
+                // Parse headers
+                const headersText = formData.get('headers') || '';
+                data.headers = {};
+                headersText.split('\n').forEach(line => {
+                    const [key, ...valueParts] = line.split(':');
+                    if (key && valueParts.length > 0) {
+                        data.headers[key.trim()] = valueParts.join(':').trim();
+                    }
+                });
+
+                if (!data.url) {
+                    alert('Please enter a URL for HTTP/WebSocket transport');
+                    return null;
+                }
+            }
+
+            return data;
+        }
+
+        function connectServer(serverName) {
+            fetch('/api/mcp/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ server: serverName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadServers();
+                    loadTools();
+                } else {
+                    alert('Failed to connect: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Failed to connect: ' + error.message);
+            });
+        }
+
+        function disconnectServer(serverName) {
+            fetch('/api/mcp/disconnect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ server: serverName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadServers();
+                    loadTools();
+                } else {
+                    alert('Failed to disconnect: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Failed to disconnect: ' + error.message);
+            });
+        }
+
+        function removeServer(serverName) {
+            if (!confirm(`Are you sure you want to remove server "${serverName}"?`)) {
+                return;
+            }
+
+            fetch('/api/mcp/servers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'remove', name: serverName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadServers();
+                    loadTools();
+                } else {
+                    alert('Failed to remove server: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Failed to remove server: ' + error.message);
+            });
+        }
+
+        function toggleTool(toolName, enabled) {
+            fetch('/api/mcp/tools/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tool: toolName, enabled: enabled })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Failed to toggle tool: ' + (data.error || 'Unknown error'));
+                    loadTools(); // Reload to reset state
+                }
+            })
+            .catch(error => {
+                alert('Failed to toggle tool: ' + error.message);
+                loadTools(); // Reload to reset state
+            });
+        }
+
+        function refreshTools() {
+            loadTools();
+        }
+
+        function configureServer(serverName) {
+            // TODO: Implement server configuration modal
+            showNotification('Server configuration coming soon!', 'info');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Show with animation
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 5000);
+        }
+
+        // Load data on page load
+        loadServers();
+        loadTools();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadServers();
+            loadTools();
+        }, 30000);
         </script>
         """
 
