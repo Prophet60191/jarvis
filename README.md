@@ -4,13 +4,14 @@ A sophisticated AI-powered voice assistant with extensible tool integration, web
 
 ## 🚧 Current Status
 
-**Latest Update**: July 27, 2025 - MCP Memory Integration Complete
+**Latest Update**: July 28, 2025 - RAG Memory System & Plugin Architecture Complete
 
 ### ✅ Recently Completed
-- **MCP Memory System**: Successfully integrated 9 memory tools (create_entities, add_observations, search_nodes, etc.)
-- **Official MCP Adapters**: Implemented using `langchain-mcp-adapters` for proper tool conversion
-- **Tool Discovery**: 17 total tools now available (8 built-in + 9 MCP memory tools)
-- **Memory Storage**: Knowledge graph-based memory system for user preferences and context
+- **RAG Memory System**: ChromaDB-based dual memory with semantic search and persistent storage
+- **Plugin Architecture**: Zero built-in tools - everything is plugin-based for maximum flexibility
+- **Memory Migration**: Replaced 9 MCP memory tools with 2 simple RAG tools (remember_fact, search_long_term_memory)
+- **Enhanced UX**: PII protection, contextual messages, and improved user guidance
+- **Clean Architecture**: Dynamic tool loading with hot-swappable plugins
 
 ### ⚠️ Known Issues
 - **Model Configuration**: Tool calling quality inconsistent due to model switching issues
@@ -28,18 +29,27 @@ A sophisticated AI-powered voice assistant with extensible tool integration, web
 - **Speech-to-Text (STT)**: Real-time voice recognition using OpenAI Whisper
 - **Text-to-Speech (TTS)**: Natural voice synthesis with multiple engine support
 - **Voice Cloning**: Custom voice profiles for personalized responses
-- **Conversation Memory**: Maintains context across interactions
+- **Dual Memory System**: Short-term chat context + persistent long-term fact storage
 
-### **Extensible Tool System**
+### **RAG Memory System** 🧠
+- **Dual Memory Architecture**: Short-term chat context + long-term persistent facts
+- **Semantic Search**: Find information by meaning, not just keywords
+- **Natural Commands**: Simple "Remember that..." and "What do you remember..." interactions
+- **PII Protection**: Automatic detection and warnings for sensitive information
+- **ChromaDB Storage**: Production-ready vector database with data persistence
+
+### **Plugin-Based Architecture**
+- **Zero Built-in Tools**: Pure plugin system for maximum flexibility
 - **Dynamic Tool Loading**: Add new capabilities without code changes
-- **MCP Integration**: Model Context Protocol for seamless tool discovery
-- **Built-in Tools**: Time, weather, calculations, file operations, and more
+- **MCP Integration**: Model Context Protocol for external service integration
+- **Plugin Tools**: Time, UI controls, memory management, and more
 - **Custom Tools**: Easy plugin development framework
 
 ### **Web Control Panel**
 - **Real-time Dashboard**: Monitor system status and performance
 - **Settings Management**: Configure voice, audio, and system preferences
-- **Tool Management**: Enable/disable tools and manage MCP servers
+- **Tool Management**: Enable/disable plugins and manage MCP servers
+- **Memory Management**: View and manage stored long-term memories
 - **Live Conversation**: Web-based chat interface with voice controls
 
 ### **MCP Server Management**
@@ -84,11 +94,18 @@ A sophisticated AI-powered voice assistant with extensible tool integration, web
 ## Usage
 
 ### Voice Commands
+
+#### **Basic Interaction**
 - **"Hey Jarvis"** - Wake word to start interaction
 - **"What time is it?"** - Get current time
-- **"Tell me a joke"** - Entertainment commands
 - **"Open the settings"** - Launch web control panel
 - **"Stop listening"** - Pause voice recognition
+
+#### **Memory System**
+- **"Remember that I like iced coffee"** - Store facts in long-term memory
+- **"Remember my birthday is March 15th"** - Store personal information
+- **"What do you remember about my preferences?"** - Search stored memories
+- **"Do you remember anything about my schedule?"** - Query specific topics
 
 ### Web Interface
 - **Dashboard**: View system status and recent activity

@@ -28,24 +28,15 @@ class OfficialMCPManager:
     schema conversion and compatibility issues.
     """
     
-    def __init__(self):
-        """Initialize the official MCP manager."""
+    def __init__(self, server_configs: Dict[str, Dict[str, Any]]):
+        """Initialize the official MCP manager with server configurations."""
+        self.loop: Optional[asyncio.AbstractEventLoop] = None  # Reference to main event loop
         self.sessions: Dict[str, ClientSession] = {}
+        self.clients: Dict[str, Any] = {}  # Store active client connections
         self.tools: List[LangChainBaseTool] = []
-        self.server_configs = self._get_server_configs()
-        
-    def _get_server_configs(self) -> Dict[str, Dict[str, Any]]:
-        """Get MCP server configurations."""
-        # Get the desktop directory path
-        desktop_path = Path.home() / "Desktop"
-        
-        return {
-            "memory_storage": {
-                "command": "npx",
-                "args": ["-y", "@modelcontextprotocol/server-memory"],
-                "env": None
-            }
-        }
+        self.server_configs = server_configs
+        logger.info(f"OfficialMCPManager initialized with {len(self.server_configs)} server configurations.")
+
     
     async def start_servers(self) -> bool:
         """
@@ -78,7 +69,7 @@ class OfficialMCPManager:
             return False
     
     async def _start_server(self, server_name: str, config: Dict[str, Any]) -> None:
-        """Start a single MCP server and load its tools."""
+        """Start a single MCP server and load its tools, keeping the connection alive."""
         try:
             # Create server parameters
             server_params = StdioServerParameters(
@@ -86,26 +77,37 @@ class OfficialMCPManager:
                 args=config["args"],
                 env=config.get("env")
             )
-            
-            # Connect to server using official client
-            async with stdio_client(server_params) as (read, write):
-                async with ClientSession(read, write) as session:
-                    # Initialize the connection
-                    await session.initialize()
-                    
-                    # Load tools using official adapters
-                    server_tools = await load_mcp_tools(session)
-                    
-                    logger.info(f"📦 Loaded {len(server_tools)} tools from {server_name}")
-                    
-                    # Add tools to our collection
-                    self.tools.extend(server_tools)
-                    
-                    # Store session for later use (if needed)
-                    self.sessions[server_name] = session
-                    
+
+            # Manually create and enter the client context to keep it open
+            client = stdio_client(server_params)
+            read, write = await client.__aenter__()
+
+            # Manually create and enter the session context to keep it open
+            session = ClientSession(read, write)
+            await session.__aenter__()
+
+            # Initialize the connection
+            await session.initialize()
+
+            # Load tools using the LIVE session
+            server_tools = await load_mcp_tools(session)
+
+            logger.info(f"📦 Loaded {len(server_tools)} tools from {server_name}")
+
+            # Store the LIVE tools and connection objects for later use
+            self.tools.extend(server_tools)
+            self.clients[server_name] = client  # Store the active client
+            self.sessions[server_name] = session  # Store the active session
+
         except Exception as e:
             logger.error(f"❌ Error starting server {server_name}: {e}")
+            # If something fails, make sure to clean up
+            if server_name in self.sessions:
+                await self.sessions[server_name].__aexit__(None, None, None)
+                del self.sessions[server_name]
+            if server_name in self.clients:
+                await self.clients[server_name].__aexit__(None, None, None)
+                del self.clients[server_name]
             raise
     
     def get_tools(self) -> List[LangChainBaseTool]:
@@ -129,21 +131,29 @@ class OfficialMCPManager:
         """Stop all MCP servers and clean up resources."""
         try:
             logger.info("🛑 Stopping MCP servers...")
-            
-            # Close all sessions
-            for server_name, session in self.sessions.items():
+
+            # Explicitly close all active sessions and clients in reverse order
+            for server_name in list(self.sessions.keys()):
+                session = self.sessions.pop(server_name)
                 try:
-                    # Sessions are automatically closed when exiting context
-                    logger.info(f"✅ Stopped MCP server: {server_name}")
+                    await session.__aexit__(None, None, None)
+                    logger.info(f"✅ Closed MCP session: {server_name}")
                 except Exception as e:
-                    logger.error(f"❌ Error stopping server {server_name}: {e}")
-            
-            # Clear collections
-            self.sessions.clear()
+                    logger.error(f"❌ Error closing session {server_name}: {e}")
+
+            for server_name in list(self.clients.keys()):
+                client = self.clients.pop(server_name)
+                try:
+                    await client.__aexit__(None, None, None)
+                    logger.info(f"✅ Stopped MCP client: {server_name}")
+                except Exception as e:
+                    logger.error(f"❌ Error stopping client {server_name}: {e}")
+
+            # Clear tool list
             self.tools.clear()
-            
+
             logger.info("✅ All MCP servers stopped")
-            
+
         except Exception as e:
             logger.error(f"❌ Error stopping MCP servers: {e}")
 
@@ -157,21 +167,36 @@ def get_official_mcp_manager() -> Optional[OfficialMCPManager]:
     return _official_mcp_manager
 
 
-async def start_official_mcp_system() -> bool:
+async def start_official_mcp_system(app_config: Any) -> bool:
     """
     Start the official MCP system using langchain-mcp-adapters.
-    
+
+    Args:
+        app_config: Main application configuration object
+
     Returns:
         bool: True if system started successfully
     """
     global _official_mcp_manager
-    
+
     try:
         if _official_mcp_manager is None:
-            _official_mcp_manager = OfficialMCPManager()
-        
+            # Convert MCPServerConfig objects to dictionaries for the manager
+            server_configs = {}
+            if hasattr(app_config, 'mcp') and app_config.mcp.enabled:
+                for server_name, server_config in app_config.mcp.servers.items():
+                    if server_config.enabled:
+                        server_configs[server_name] = {
+                            "command": server_config.command,
+                            "args": server_config.args,
+                            "env": server_config.env,
+                            "timeout": server_config.timeout
+                        }
+
+            _official_mcp_manager = OfficialMCPManager(server_configs)
+
         success = await _official_mcp_manager.start_servers()
-        
+
         if success:
             tool_count = _official_mcp_manager.get_tool_count()
             logger.info(f"🎉 Official MCP system started with {tool_count} tools")
@@ -179,7 +204,7 @@ async def start_official_mcp_system() -> bool:
         else:
             logger.warning("⚠️ Official MCP system failed to start")
             return False
-            
+
     except Exception as e:
         logger.error(f"❌ Failed to start official MCP system: {e}")
         return False

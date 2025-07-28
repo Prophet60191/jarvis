@@ -23,6 +23,8 @@ class ConfigSection(Enum):
     LLM = "llm"
     LOGGING = "logging"
     GENERAL = "general"
+    MCP = "mcp"
+    RAG = "rag"
     ALL = "all"
 
 
@@ -164,11 +166,51 @@ class LoggingConfig:
 
 
 @dataclass
+class MCPServerConfig:
+    """Configuration for a single MCP server."""
+    name: str
+    command: str
+    args: List[str] = field(default_factory=list)
+    env: Optional[Dict[str, str]] = None
+    enabled: bool = True
+    timeout: int = 30
+
+
+@dataclass
+class MCPConfig:
+    """MCP (Model Context Protocol) configuration settings."""
+    servers: Dict[str, MCPServerConfig] = field(default_factory=lambda: {
+        "memory_storage": MCPServerConfig(
+            name="memory_storage",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-memory"],
+            env=None,
+            enabled=False,  # Disabled - using RAG memory system instead
+            timeout=30
+        )
+    })
+    enabled: bool = True
+
+
+@dataclass
 class GeneralConfig:
     """General application configuration settings."""
     debug: bool = False
     data_dir: Path = field(default_factory=lambda: Path.home() / ".jarvis")
     config_file: Optional[Path] = None
+
+
+@dataclass
+class RAGConfig:
+    """RAG (Retrieval-Augmented Generation) memory system configuration."""
+    enabled: bool = True
+    vector_store_path: str = "data/chroma_db"
+    documents_path: str = "data/documents"
+    backup_path: str = "data/backups"
+    collection_name: str = "jarvis_memory"
+    chunk_size: int = 1000
+    chunk_overlap: int = 150
+    search_k: int = 5
 
 
 @dataclass
@@ -179,6 +221,8 @@ class JarvisConfig:
     llm: LLMConfig = field(default_factory=LLMConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     general: GeneralConfig = field(default_factory=GeneralConfig)
+    mcp: MCPConfig = field(default_factory=MCPConfig)
+    rag: RAGConfig = field(default_factory=RAGConfig)
     
     @classmethod
     def from_env(cls) -> 'JarvisConfig':
@@ -255,7 +299,20 @@ class JarvisConfig:
         config_file_str = os.getenv("JARVIS_CONFIG_FILE")
         if config_file_str:
             config.general.config_file = Path(config_file_str)
-        
+
+        # MCP configuration
+        config.mcp.enabled = _get_env_bool("JARVIS_MCP_ENABLED", config.mcp.enabled)
+
+        # RAG configuration
+        config.rag.enabled = _get_env_bool("JARVIS_RAG_ENABLED", config.rag.enabled)
+        config.rag.vector_store_path = _get_env_str("JARVIS_RAG_VECTOR_STORE_PATH", config.rag.vector_store_path)
+        config.rag.documents_path = _get_env_str("JARVIS_RAG_DOCUMENTS_PATH", config.rag.documents_path)
+        config.rag.backup_path = _get_env_str("JARVIS_RAG_BACKUP_PATH", config.rag.backup_path)
+        config.rag.collection_name = _get_env_str("JARVIS_RAG_COLLECTION_NAME", config.rag.collection_name)
+        config.rag.chunk_size = _get_env_int("JARVIS_RAG_CHUNK_SIZE", config.rag.chunk_size)
+        config.rag.chunk_overlap = _get_env_int("JARVIS_RAG_CHUNK_OVERLAP", config.rag.chunk_overlap)
+        config.rag.search_k = _get_env_int("JARVIS_RAG_SEARCH_K", config.rag.search_k)
+
         return config
     
     def validate(self) -> None:

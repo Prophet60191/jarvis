@@ -15,6 +15,7 @@
 - **File Location**: Must be in `jarvis/tools/plugins/` (not `tools/plugins/`)
 - **Function Name**: Becomes the tool name (use `get_current_time` not `get_time`)
 - **Descriptive Names**: Avoid generic names that might conflict
+- **Zero Built-in Tools**: Everything is plugin-based for maximum flexibility
 
 ## 📋 Essential Components
 
@@ -180,12 +181,13 @@ def test_tool_registration():
 
 ```
 jarvis/tools/
-├── __init__.py          # Core tool registry (don't modify)
+├── __init__.py          # Core tool loading (plugin-based)
 ├── plugins/             # Place your tools here
-│   └── your_tool.py     # Your tool implementation
-├── system_info.py       # Example: System tools
-├── time_tools.py        # Example: Time tools
-└── video_day.py         # Example: Content tools
+│   ├── device_time_tool.py      # Time functionality
+│   ├── jarvis_ui_tool.py        # UI controls
+│   └── your_tool.py             # Your tool implementation
+├── rag_tools.py         # RAG memory system tools
+└── rag_memory_manager.py # RAG backend
 
 templates/
 └── tool_template.py     # Copy this to start

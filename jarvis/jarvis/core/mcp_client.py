@@ -752,13 +752,13 @@ class MCPClientManager:
             self.config_file.parent.mkdir(parents=True, exist_ok=True)
             logger.info(f"📁 Created Jarvis config directory: {self.config_file.parent}")
 
-            # Add default Memory Storage server
+            # Add default Memory Storage server (disabled - using RAG memory system)
             memory_config = MCPServerConfig(
                 name="Memory Storage",
                 transport=MCPTransportType.STDIO,
                 command="npx",
                 args=["@modelcontextprotocol/server-memory"],
-                enabled=True
+                enabled=False  # Disabled in favor of RAG memory system
             )
 
             # Create server info and add to servers

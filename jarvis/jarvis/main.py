@@ -9,6 +9,7 @@ import sys
 import signal
 import time
 import asyncio
+import threading
 from typing import Optional
 from pathlib import Path
 
@@ -46,6 +47,8 @@ class JarvisApplication:
         self.agent: Optional[JarvisAgent] = None
         self.conversation_manager: Optional[ConversationManager] = None
         self.wake_word_detector: Optional[WakeWordDetector] = None
+        self.mcp_client = None  # Store MCP client for event loop access
+        self.loop: Optional[asyncio.AbstractEventLoop] = None  # Persistent event loop
         self.running = False
 
         # Set up signal handlers for graceful shutdown
@@ -58,6 +61,22 @@ class JarvisApplication:
         """Handle shutdown signals."""
         logger.info(f"Received signal {signum}, initiating graceful shutdown...")
         self.running = False
+
+    def set_event_loop(self, loop: asyncio.AbstractEventLoop):
+        """Sets the single, persistent event loop for the application."""
+        self.loop = loop
+        logger.info("✅ Persistent event loop set for application")
+
+    async def shutdown_async(self):
+        """Perform asynchronous shutdown tasks."""
+        logger.info("Running async shutdown tasks...")
+        # Stop the official MCP system
+        try:
+            from .core.mcp_official_adapter import stop_official_mcp_system
+            await stop_official_mcp_system()
+            logger.info("✅ MCP system cleaned up")
+        except Exception as e:
+            logger.error(f"Error cleaning up MCP system: {str(e)}")
 
     @error_handler(reraise=True)
     async def initialize(self) -> None:
@@ -93,13 +112,33 @@ class JarvisApplication:
             logger.info("🔄 Initializing agent with all available tools...")
             print("🔄 USING SYNCHRONOUS TOOL INITIALIZATION")
 
+            # Initialize RAG system if enabled
+            print("🧠 Initializing RAG memory system...")
+            from .tools.rag_memory_manager import RAGMemoryManager
+            from .tools.rag_tools import get_rag_tools
+
+            rag_tools = []
+            if self.config.rag.enabled:
+                try:
+                    self.rag_manager = RAGMemoryManager(self.config)
+                    rag_tools = get_rag_tools(self.rag_manager, debug_mode=self.config.general.debug)
+                    print(f"✅ RAG system initialized with {len(rag_tools)} tools")
+                    logger.info(f"✅ RAG system initialized with {len(rag_tools)} tools")
+                except Exception as e:
+                    print(f"⚠️ RAG system initialization failed: {e}")
+                    logger.warning(f"RAG system initialization failed: {e}")
+                    self.rag_manager = None
+            else:
+                print("⚠️ RAG system disabled in configuration")
+                self.rag_manager = None
+
             # Use official MCP adapters for proper tool conversion
             print("🔄 Starting official MCP system...")
             from .core.mcp_official_adapter import start_official_mcp_system, get_official_mcp_tools
             from .tools import tool_registry, plugin_manager
 
             # Start official MCP system
-            mcp_success = await start_official_mcp_system()
+            mcp_success = await start_official_mcp_system(self.config)
 
             if mcp_success:
                 print("✅ Official MCP system started successfully")
@@ -108,20 +147,26 @@ class JarvisApplication:
                 mcp_tools = await get_official_mcp_tools()
                 print(f"🎉 Official MCP adapters loaded {len(mcp_tools)} tools")
 
-                # Get built-in and plugin tools
-                builtin_tools = tool_registry.get_langchain_tools()
+                # Get plugin tools (includes all functionality - no built-in tools)
                 plugin_tools = plugin_manager.get_all_tools()
 
-                # Combine all tools
-                all_tools = builtin_tools + plugin_tools + mcp_tools
-                print(f"📊 Total tools: {len(all_tools)} (built-in: {len(builtin_tools)}, plugin: {len(plugin_tools)}, MCP: {len(mcp_tools)})")
+                # Combine all tools including RAG tools
+                all_tools = plugin_tools + mcp_tools + rag_tools
+                print(f"📊 Total tools: {len(all_tools)} (plugin: {len(plugin_tools)}, MCP: {len(mcp_tools)}, RAG: {len(rag_tools)})")
+
+                # Store MCP manager for conversation manager access
+                from .core.mcp_official_adapter import get_official_mcp_manager
+                self.mcp_client = get_official_mcp_manager()
+                if self.mcp_client:
+                    self.mcp_client.loop = self.loop  # Pass the persistent event loop
             else:
-                print("⚠️ Official MCP system failed - using basic tools only")
-                # Fallback to basic tools
-                builtin_tools = tool_registry.get_langchain_tools()
+                print("⚠️ Official MCP system failed - using plugin tools only")
+                # Fallback to plugin tools + RAG tools (no built-in tools)
                 plugin_tools = plugin_manager.get_all_tools()
-                all_tools = builtin_tools + plugin_tools
-                print(f"📊 Fallback tools: {len(all_tools)} (built-in: {len(builtin_tools)}, plugin: {len(plugin_tools)})")
+                all_tools = plugin_tools + rag_tools
+                print(f"📊 Fallback tools: {len(all_tools)} (plugin: {len(plugin_tools)}, RAG: {len(rag_tools)})")
+                # Set MCP client to None in fallback case
+                self.mcp_client = None
 
             print("🤖 Creating JarvisAgent...")
             self.agent = JarvisAgent(self.config.llm)
@@ -138,20 +183,20 @@ class JarvisApplication:
                 print(f"🛠️ Agent tool names: {[tool.name for tool in all_tools]}")
                 logger.info(f"✅ AI agent initialized with {len(all_tools)} tools")
             except asyncio.TimeoutError:
-                print("❌ Agent initialization timed out - falling back to basic tools")
-                # Fallback to just built-in tools if MCP tools cause issues
-                from .tools import tool_registry, plugin_manager
-                basic_tools = tool_registry.get_langchain_tools() + plugin_manager.get_all_tools()
+                print("❌ Agent initialization timed out - falling back to plugin tools")
+                # Fallback to plugin tools + RAG tools if MCP tools cause issues
+                from .tools import plugin_manager
+                basic_tools = plugin_manager.get_all_tools() + rag_tools
                 self.agent.initialize(tools=basic_tools)
-                print(f"✅ Agent initialized with {len(basic_tools)} basic tools (fallback)")
-                logger.info(f"✅ Agent initialized with {len(basic_tools)} basic tools (fallback)")
+                print(f"✅ Agent initialized with {len(basic_tools)} plugin tools (fallback)")
+                logger.info(f"✅ Agent initialized with {len(basic_tools)} plugin tools (fallback)")
             except Exception as e:
                 print(f"❌ Agent initialization failed: {e}")
-                # Fallback to basic tools
-                from .tools import tool_registry, plugin_manager
-                basic_tools = tool_registry.get_langchain_tools() + plugin_manager.get_all_tools()
+                # Fallback to plugin tools + RAG tools
+                from .tools import plugin_manager
+                basic_tools = plugin_manager.get_all_tools() + rag_tools
                 self.agent.initialize(tools=basic_tools)
-                print(f"✅ Agent initialized with {len(basic_tools)} basic tools (error fallback)")
+                print(f"✅ Agent initialized with {len(basic_tools)} plugin tools (error fallback)")
                 logger.error(f"Agent initialization failed, using fallback: {e}")
 
             # MCP tools are now handled in the async agent initialization above
@@ -161,7 +206,8 @@ class JarvisApplication:
             self.conversation_manager = ConversationManager(
                 self.config.conversation,
                 self.speech_manager,
-                self.agent
+                self.agent,
+                self.mcp_client  # Pass MCP client for event loop access
             )
             print("✅ Conversation manager initialized")
             logger.info("✅ Conversation manager initialized")
@@ -180,14 +226,7 @@ class JarvisApplication:
             self._setup_callbacks()
             print("✅ Callbacks set up")
 
-            # Setup emergency stop system
-            setup_emergency_stop(
-                speech_manager=self.speech_manager,
-                agent=self.agent,
-                conversation_manager=self.conversation_manager,
-                tts_manager=getattr(self.speech_manager, 'tts_manager', None)
-            )
-            logger.info("✅ Emergency stop system activated")
+            # Emergency stop system will be set up in main thread after initialization
 
             logger.info("🎉 Jarvis initialization completed successfully!")
 
@@ -235,6 +274,9 @@ class JarvisApplication:
             print("🔍 GETTING MCP CLIENT...")
             mcp_client = get_mcp_client()
             print(f"🔍 MCP CLIENT: {mcp_client is not None}")
+
+            # Store MCP client for conversation manager access
+            self.mcp_client = mcp_client
 
             logger.info(f"🔍 MCP tool manager available: {mcp_tool_manager is not None}")
             logger.info(f"🔍 MCP client available: {mcp_client is not None}")
@@ -340,7 +382,7 @@ class JarvisApplication:
             # Display startup information
             self._display_startup_info()
 
-            # Start main loop
+            # Start main loop (synchronous for wake word detection)
             self._main_loop()
 
         except KeyboardInterrupt:
@@ -367,12 +409,10 @@ class JarvisApplication:
         terminal_ui.clear_screen()
         terminal_ui.print_header()
 
-        # Get all available tools (including official MCP tools)
-        from .core.mcp_official_adapter import get_official_mcp_tools
-        from .tools import tool_registry, plugin_manager
+        # Get all available tools (plugin-based architecture)
+        from .tools import plugin_manager
 
-        # Get tools from all sources
-        builtin_tools = tool_registry.get_langchain_tools()
+        # Get plugin tools (includes all functionality - no built-in tools)
         plugin_tools = plugin_manager.get_all_tools()
 
         # Get MCP tools using official adapters (if available)
@@ -387,7 +427,7 @@ class JarvisApplication:
         except Exception:
             mcp_tools = []
 
-        all_tools = builtin_tools + plugin_tools + mcp_tools
+        all_tools = plugin_tools + mcp_tools
         tool_names = [tool.name for tool in all_tools]
 
         # Show configuration
@@ -421,7 +461,7 @@ class JarvisApplication:
 
         while self.running:
             try:
-                # Listen for wake word
+                # Listen for wake word (synchronous - works better)
                 detection = self.wake_word_detector.listen_once(timeout=2.0)
 
                 if detection.detected:
@@ -467,7 +507,7 @@ class JarvisApplication:
                    self.running):
 
                 try:
-                    # Handle one conversation cycle
+                    # Handle one conversation cycle (sync wrapper for async agent)
                     should_continue = self.conversation_manager.handle_conversation_cycle()
 
                     if not should_continue:
@@ -605,29 +645,54 @@ class JarvisApplication:
         logger.info("👋 Jarvis shutdown complete")
 
 
-async def main() -> int:
+def main() -> int:
     """
-    Main entry point for the Jarvis Voice Assistant.
-
-    Returns:
-        Exit code (0 for success, 1 for error)
+    Main synchronous entry point for the Jarvis Voice Assistant.
+    Manages the asyncio event loop in a background thread.
     """
+    loop = None
+    app = None
     try:
         # Clear any cached configuration to ensure fresh load
         clear_config_cache()
 
-        # Load configuration first to set up logging
+        # Load config to set up logging
         config = get_config()
-
-        # Set up logging with clean console (CRITICAL only) and full file logging
         setup_logging(config.logging, clean_console=True)
         setup_exception_logging()
 
         logger.info("Starting Jarvis Voice Assistant")
 
-        # Create and run application
+        # Create and start the single, persistent event loop in a background thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop_thread = threading.Thread(target=loop.run_forever, daemon=True)
+        loop_thread.start()
+
+        logger.info("🚀 Persistent event loop started in background thread.")
+
+        # Create the application instance
         app = JarvisApplication()
-        await app.initialize()
+
+        # Pass the running loop to the application for its components to use
+        app.set_event_loop(loop)
+
+        # Run initialization on the background loop and wait for it to complete
+        logger.info("🤖 Submitting initialization task to event loop...")
+        init_future = asyncio.run_coroutine_threadsafe(app.initialize(), loop)
+        init_future.result()  # Wait for initialization to finish
+        logger.info("✅ Initialization complete.")
+
+        # Set up emergency stop system in main thread (signal handlers must be in main thread)
+        logger.info("🛑 Setting up emergency stop system in main thread...")
+        setup_emergency_stop(
+            speech_manager=app.speech_manager,
+            agent=app.agent,
+            conversation_manager=app.conversation_manager,
+            tts_manager=getattr(app.speech_manager, 'tts_manager', None)
+        )
+        logger.info("✅ Emergency stop system activated")
 
         # Check if we should run tests first
         if config.general.debug:
@@ -636,18 +701,31 @@ async def main() -> int:
                 logger.error("Component tests failed")
                 return 1
 
-        # Run the application
+        # Now that initialization is done, run the main synchronous loop
         app.run()
 
         return 0
 
     except KeyboardInterrupt:
-        logger.info("Application interrupted by user")
+        logger.info("Application interrupted by user.")
         return 0
     except Exception as e:
-        logger.error(f"Application failed: {str(e)}", exc_info=True)
+        logger.critical(f"A critical error occurred: {e}", exc_info=True)
         return 1
+    finally:
+        logger.info("🛑 Shutting down application...")
+        if app and loop and loop.is_running():
+            # Submit the async shutdown task to the loop
+            shutdown_future = asyncio.run_coroutine_threadsafe(app.shutdown_async(), loop)
+            try:
+                shutdown_future.result(timeout=10) # Wait for shutdown to complete
+            except Exception as e:
+                logger.error(f"Error during async shutdown: {e}")
+
+            # Stop the event loop
+            loop.call_soon_threadsafe(loop.stop)
+        logger.info("👋 Jarvis shutdown complete.")
 
 
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+    sys.exit(main())

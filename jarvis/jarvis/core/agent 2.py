@@ -9,9 +9,8 @@ import logging
 from typing import Optional, Dict, Any, List
 from langchain_ollama import ChatOllama
 from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
-from langchain.memory import ConversationBufferMemory
 
 from ..config import LLMConfig
 from ..exceptions import LLMError, ModelLoadError, ModelInferenceError, ToolError
@@ -31,7 +30,7 @@ class JarvisAgent:
     def __init__(self, config: LLMConfig):
         """
         Initialize the Jarvis agent.
-
+        
         Args:
             config: LLM configuration settings
         """
@@ -40,106 +39,109 @@ class JarvisAgent:
         self.agent_executor: Optional[AgentExecutor] = None
         self.tools: List[BaseTool] = []
         self._is_initialized = False
-
-        # Initialize short-term conversational memory
-        self.memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True
-        )
         
-        # Enhanced system prompt with explicit dual memory guidance
-        self.system_prompt = """You are Jarvis, a helpful AI assistant with a sophisticated dual memory system:
+        # Default system prompt
+        self.system_prompt = """You are Jarvis, a helpful AI assistant. You have access to tools, but you should primarily use your built-in knowledge to answer questions.
 
-🧠 DUAL MEMORY SYSTEM:
-1. SHORT-TERM MEMORY (chat_history): Current conversation context, pronouns, recent exchanges
-   - Automatically available in this conversation
-   - Use for: "it", "that", "the one we discussed", follow-up questions
-   - Clears when conversation ends
+CRITICAL: Do NOT use tools for general knowledge questions. Answer them directly.
 
-2. LONG-TERM MEMORY (persistent): Facts users explicitly asked you to remember
-   - Only accessible via search_long_term_memory tool
-   - Use for: stored preferences, personal facts, information from past sessions
-   - Persists across all conversations forever
+When to use tools:
+- Current time queries → use get_current_time tool
+- UI control requests → use appropriate UI tools
+- Real-time data requests → use relevant tools
 
-🎯 MEMORY DECISION TREE:
-- User asks about something from THIS conversation → Use chat_history (automatic)
-- User asks "What do you remember about..." → Use search_long_term_memory tool
-- User asks "Do you remember when I told you..." → Use search_long_term_memory tool
-- User says "Remember that..." → Use remember_fact tool
-- User asks about preferences/facts from past sessions → Use search_long_term_memory tool
+When to answer directly (NO TOOLS):
+- General knowledge questions (facts, concepts, explanations)
+- Questions about how things work
+- Historical information
+- Scientific explanations
+- Definitions and descriptions
 
-🔧 TOOL USAGE GUIDELINES:
-- Long-term memory queries → search_long_term_memory tool
-- Storing new facts → remember_fact tool (only when user explicitly says "remember")
-- Current time → get_current_time tool
-- UI control → appropriate UI tools
-- General knowledge → Answer directly (NO TOOLS needed)
-
-⚠️ CRITICAL MEMORY RULES:
-1. NEVER assume information is in long-term memory - always search first
-2. If search_long_term_memory returns "No relevant information found" → Tell user honestly
-3. Only use remember_fact when user explicitly says "remember" or "store" or "commit to memory"
-4. Don't confuse chat context with stored memories
-
-🎭 PERSONALITY:
 Be friendly and professional like Tony Stark's Jarvis. Keep responses brief and conversational.
 
-📝 EXAMPLES:
-❌ WRONG: "I don't have a tool for cars" (answer general knowledge directly)
-✅ CORRECT: "Cars are motor vehicles with four wheels..."
+EXAMPLES:
+❌ WRONG: "I don't have a tool for cars"
+✅ CORRECT: "Cars are motor vehicles with four wheels, powered by internal combustion engines or electric motors..."
 
-✅ CORRECT: "What time is it?" → Use get_current_time tool
-✅ CORRECT: "Remember that I like coffee" → Use remember_fact tool
-✅ CORRECT: "What do you remember about my preferences?" → Use search_long_term_memory tool
-✅ CORRECT: "What did we just discuss?" → Use chat_history (automatic context)"""
+❌ WRONG: "I need a tool to tell you about France"
+✅ CORRECT: "The capital of France is Paris, a beautiful city known for..."
 
+✅ CORRECT: For "What time is it?" → Use get_current_time tool"""
+        
         logger.info(f"JarvisAgent initialized with config: {config}")
     
     def initialize(self, tools: Optional[List[BaseTool]] = None) -> None:
         """
-        Configures the agent with the tools it will use.
-
+        Initialize the LLM and agent with the configured settings.
+        
         Args:
             tools: List of tools to make available to the agent
+            
+        Raises:
+            ModelLoadError: If model loading fails
+            LLMError: If agent initialization fails
         """
-        if tools:
-            self.tools = tools
-            logger.info(f"Agent configured with {len(self.tools)} tools: {[tool.name for tool in self.tools]}")
-
-        self._is_initialized = True
-        logger.info("JarvisAgent configured and ready for JIT initialization.")
+        try:
+            logger.info(f"Initializing LLM model: {self.config.model}")
+            
+            # Initialize the language model
+            self.llm = ChatOllama(
+                model=self.config.model,
+                reasoning=self.config.reasoning,
+                temperature=self.config.temperature,
+                verbose=self.config.verbose
+            )
+            
+            # Test the model with a simple query
+            test_response = self.llm.invoke("Hello")
+            logger.debug(f"Model test response: {test_response}")
+            
+            # Set up tools
+            if tools:
+                self.tools = tools
+                logger.info(f"Loaded {len(self.tools)} tools: {[tool.name for tool in self.tools]}")
+            
+            # Create the agent if tools are available
+            if self.tools:
+                self._create_agent()
+            
+            self._is_initialized = True
+            logger.info("JarvisAgent initialized successfully")
+            
+        except Exception as e:
+            error_msg = f"Failed to initialize LLM model '{self.config.model}': {str(e)}"
+            logger.error(error_msg)
+            raise ModelLoadError(error_msg, model_name=self.config.model) from e
     
     def _create_agent(self) -> None:
-        """Create the tool-calling agent with memory support."""
+        """Create the tool-calling agent."""
         try:
-            # Create the prompt template with chat history placeholder
+            # Create the prompt template
             prompt = ChatPromptTemplate.from_messages([
                 ("system", self.system_prompt),
-                MessagesPlaceholder(variable_name="chat_history"),
                 ("human", "{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad")
+                ("placeholder", "{agent_scratchpad}")
             ])
-
+            
             # Create the agent
             agent = create_tool_calling_agent(
                 llm=self.llm,
                 tools=self.tools,
                 prompt=prompt
             )
-
-            # Create the agent executor with memory
+            
+            # Create the agent executor
             self.agent_executor = AgentExecutor(
                 agent=agent,
                 tools=self.tools,
-                memory=self.memory,
                 verbose=self.config.verbose,
                 handle_parsing_errors=True,
                 max_iterations=5,
                 max_execution_time=30
             )
-
-            logger.info("Agent executor created successfully with memory support")
-
+            
+            logger.info("Agent executor created successfully")
+            
         except Exception as e:
             error_msg = f"Failed to create agent: {str(e)}"
             logger.error(error_msg)
@@ -147,80 +149,57 @@ Be friendly and professional like Tony Stark's Jarvis. Keep responses brief and 
     
     def is_initialized(self) -> bool:
         """
-        Check if the agent is properly configured.
-
+        Check if the agent is properly initialized.
+        
         Returns:
-            True if agent is configured with tools, False otherwise
+            True if agent is initialized, False otherwise
         """
-        return self._is_initialized
+        return self._is_initialized and self.llm is not None
     
-    async def process_input(self, user_input: str) -> str:
+    def process_input(self, user_input: str) -> str:
         """
         Process user input and generate a response.
-        This method uses Just-In-Time (JIT) initialization for the LLM and AgentExecutor
-        to ensure they are created on the correct asyncio event loop.
+        
+        Args:
+            user_input: User's input text
+            
+        Returns:
+            Agent's response text
+            
+        Raises:
+            ModelInferenceError: If model inference fails
+            ToolError: If tool execution fails
         """
         if not self.is_initialized():
-            raise LLMError("Agent not configured. Call initialize() with tools first.")
-
+            raise LLMError("Agent not initialized. Call initialize() first.")
+        
         if not user_input or not user_input.strip():
             return "I didn't hear anything. Could you please repeat that?"
-
+        
         try:
-            # === JIT INITIALIZATION LOGIC START ===
-            if self.llm is None:
-                logger.info(f"JIT Initializing LLM model: {self.config.model}")
-                self.llm = ChatOllama(
-                    model=self.config.model,
-                    reasoning=self.config.reasoning,
-                    temperature=self.config.temperature,
-                    verbose=self.config.verbose
-                )
-
-            if self.agent_executor is None and self.tools:
-                logger.info("JIT Creating Agent Executor with memory...")
-                prompt = ChatPromptTemplate.from_messages([
-                    ("system", self.system_prompt),
-                    MessagesPlaceholder(variable_name="chat_history"),
-                    ("human", "{input}"),
-                    MessagesPlaceholder(variable_name="agent_scratchpad")
-                ])
-                agent = create_tool_calling_agent(self.llm, self.tools, prompt)
-                self.agent_executor = AgentExecutor(
-                    agent=agent,
-                    tools=self.tools,
-                    memory=self.memory,
-                    verbose=self.config.verbose,
-                    handle_parsing_errors=True,
-                    max_iterations=5,
-                    max_execution_time=30
-                )
-            # === JIT INITIALIZATION LOGIC END ===
-
-            logger.info(f"🔍 AGENT DEBUG: Processing input: '{user_input}'")
-
+            logger.debug(f"Processing input: '{user_input[:100]}{'...' if len(user_input) > 100 else ''}'")
+            
             if self.agent_executor:
-                logger.info(f"🔍 AGENT DEBUG: Using agent executor with {len(self.tools)} tools: {[t.name for t in self.tools]}")
-                response = await self.agent_executor.ainvoke({"input": user_input})
+                # Use agent executor for tool-enabled responses
+                response = self.agent_executor.invoke({"input": user_input})
                 output = response.get("output", "I'm sorry, I couldn't process that request.")
             else:
-                logger.info("🔍 AGENT DEBUG: No tools/executor, using direct LLM call.")
-                response = await self.llm.ainvoke(user_input)
+                # Direct LLM response without tools
+                response = self.llm.invoke(user_input)
                 output = response.content if hasattr(response, 'content') else str(response)
-
+            
             logger.debug(f"Generated response: '{output[:100]}{'...' if len(output) > 100 else ''}'")
             return output
-
+            
         except Exception as e:
             error_msg = f"Failed to process input: {str(e)}"
-            logger.error(error_msg, exc_info=True)
+            logger.error(error_msg)
             raise ModelInferenceError(
                 error_msg,
                 input_text=user_input,
                 model_name=self.config.model
             ) from e
-
-
+    
     def add_tools(self, tools: List[BaseTool]) -> None:
         """
         Add tools to the agent.
@@ -351,11 +330,6 @@ Be friendly and professional like Tony Stark's Jarvis. Keep responses brief and 
             logger.error(f"Model test failed: {str(e)}")
             return False
     
-    def clear_chat_memory(self) -> None:
-        """Clear the short-term conversational memory for a new session."""
-        self.memory.clear()
-        logger.info("Short-term chat memory cleared")
-
     def cleanup(self) -> None:
         """Clean up agent resources."""
         logger.info("Cleaning up agent resources")
@@ -363,4 +337,3 @@ Be friendly and professional like Tony Stark's Jarvis. Keep responses brief and 
         self.agent_executor = None
         self.tools.clear()
         self._is_initialized = False
-        self.memory.clear()

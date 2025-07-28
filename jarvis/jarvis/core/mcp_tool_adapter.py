@@ -8,8 +8,9 @@ converting MCP tools to LangChain-compatible tools for use in conversations.
 import asyncio
 import json
 import logging
+import concurrent.futures
 from typing import Any, Dict, List, Optional, Callable
-from langchain_core.tools import BaseTool as LangChainBaseTool
+from langchain_core.tools import BaseTool as LangChainBaseTool, tool
 from pydantic import BaseModel, Field
 
 from .mcp_client import MCPClientManager, MCPTool
@@ -26,16 +27,19 @@ class MCPToolInput(BaseModel):
 class MCPLangChainTool(LangChainBaseTool):
     """
     LangChain tool wrapper for MCP tools.
-    
+
     This class adapts MCP tools to work with LangChain's agent system,
     handling async execution and parameter validation.
     """
-    
+
     name: str = Field(description="Tool name")
     description: str = Field(description="Tool description")
     mcp_tool: MCPTool = Field(description="Underlying MCP tool")
     mcp_client: MCPClientManager = Field(description="MCP client manager")
-    
+
+    # Explicitly set this to support synchronous execution
+    coroutine: Optional[Any] = None
+
     class Config:
         arbitrary_types_allowed = True
     
@@ -114,32 +118,47 @@ class MCPLangChainTool(LangChainBaseTool):
     def _run(self, **kwargs: Any) -> str:
         """
         Execute the MCP tool synchronously.
-        
+
         Args:
             **kwargs: Tool parameters
-            
+
         Returns:
             Tool execution result as string
         """
         try:
-            # Run async execution in event loop
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If we're already in an event loop, create a new thread
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(self._run_async, **kwargs)
-                    result = future.result(timeout=30)  # 30 second timeout
-            else:
-                # Run directly in the event loop
-                result = loop.run_until_complete(self._run_async(**kwargs))
-            
+            logger.info(f"🔍 MCP TOOL DEBUG: _run called for tool '{self.name}' with args: {kwargs}")
+
+            # Create a new event loop for synchronous execution
+            try:
+                # Try to get the current event loop
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    logger.info(f"🔍 MCP TOOL DEBUG: Event loop is running, using thread executor")
+                    # If we're already in an event loop, run in a new thread
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(self._run_in_new_loop, **kwargs)
+                        result = future.result(timeout=30)  # 30 second timeout
+                else:
+                    logger.info(f"🔍 MCP TOOL DEBUG: Event loop not running, using run_until_complete")
+                    # Run directly in the existing loop
+                    result = loop.run_until_complete(self._run_async(**kwargs))
+            except RuntimeError as e:
+                logger.info(f"🔍 MCP TOOL DEBUG: RuntimeError ({e}), creating new event loop")
+                # No event loop exists, create a new one
+                result = asyncio.run(self._run_async(**kwargs))
+
+            logger.info(f"🔍 MCP TOOL DEBUG: Tool '{self.name}' execution successful, result: '{result[:200]}{'...' if len(result) > 200 else ''}'")
             return result
-            
+
         except Exception as e:
             error_msg = f"Error executing MCP tool {self.name}: {str(e)}"
-            logger.error(error_msg)
+            logger.error(f"🔍 MCP TOOL DEBUG: Tool '{self.name}' execution failed: {error_msg}")
+            logger.error(f"🔍 MCP TOOL DEBUG: Full exception: {e}", exc_info=True)
             return error_msg
+
+    def _run_in_new_loop(self, **kwargs: Any) -> str:
+        """Run the async method in a new event loop."""
+        return asyncio.run(self._run_async(**kwargs))
     
     async def _run_async(self, **kwargs: Any) -> str:
         """
@@ -152,30 +171,60 @@ class MCPLangChainTool(LangChainBaseTool):
             Tool execution result as string
         """
         try:
+            logger.info(f"🔍 MCP TOOL DEBUG: _run_async called for tool '{self.name}' with args: {kwargs}")
+
             # Execute the tool via MCP client
             tool_name = f"{self.mcp_tool.server_name}:{self.mcp_tool.name}"
+            logger.info(f"🔍 MCP TOOL DEBUG: Calling MCP client for tool '{tool_name}'")
+
+            # Check if MCP client is still connected
+            if not hasattr(self.mcp_client, 'transports') or not self.mcp_client.transports:
+                logger.error(f"🔍 MCP TOOL DEBUG: MCP client has no active transports")
+                return "Error: MCP client connection lost"
+
+            server_name = self.mcp_tool.server_name
+            if server_name not in self.mcp_client.transports:
+                logger.error(f"🔍 MCP TOOL DEBUG: Server '{server_name}' not in transports")
+                return f"Error: Server {server_name} not connected"
+
+            logger.info(f"🔍 MCP TOOL DEBUG: Server '{server_name}' transport found, executing tool")
             result = await self.mcp_client.execute_tool(tool_name, **kwargs)
-            
+            logger.info(f"🔍 MCP TOOL DEBUG: MCP client returned result type: {type(result)}")
+            logger.info(f"🔍 MCP TOOL DEBUG: MCP client result: {result}")
+
             if "error" in result:
-                return f"Error: {result['error']}"
-            
+                error_result = f"Error: {result['error']}"
+                logger.error(f"🔍 MCP TOOL DEBUG: Tool returned error: {error_result}")
+                return error_result
+
             # Format result as string
             if isinstance(result, dict):
                 # Try to extract meaningful content
                 if "content" in result:
-                    return str(result["content"])
+                    formatted_result = str(result["content"])
+                    logger.info(f"🔍 MCP TOOL DEBUG: Extracted 'content': {formatted_result[:200]}{'...' if len(formatted_result) > 200 else ''}")
+                    return formatted_result
                 elif "text" in result:
-                    return str(result["text"])
+                    formatted_result = str(result["text"])
+                    logger.info(f"🔍 MCP TOOL DEBUG: Extracted 'text': {formatted_result[:200]}{'...' if len(formatted_result) > 200 else ''}")
+                    return formatted_result
                 elif "result" in result:
-                    return str(result["result"])
+                    formatted_result = str(result["result"])
+                    logger.info(f"🔍 MCP TOOL DEBUG: Extracted 'result': {formatted_result[:200]}{'...' if len(formatted_result) > 200 else ''}")
+                    return formatted_result
                 else:
-                    return json.dumps(result, indent=2)
+                    formatted_result = json.dumps(result, indent=2)
+                    logger.info(f"🔍 MCP TOOL DEBUG: Formatted as JSON: {formatted_result[:200]}{'...' if len(formatted_result) > 200 else ''}")
+                    return formatted_result
             else:
-                return str(result)
-                
+                formatted_result = str(result)
+                logger.info(f"🔍 MCP TOOL DEBUG: Formatted as string: {formatted_result[:200]}{'...' if len(formatted_result) > 200 else ''}")
+                return formatted_result
+
         except Exception as e:
             error_msg = f"Error executing MCP tool: {str(e)}"
-            logger.error(error_msg)
+            logger.error(f"🔍 MCP TOOL DEBUG: _run_async failed for tool '{self.name}': {error_msg}")
+            logger.error(f"🔍 MCP TOOL DEBUG: Full exception: {e}", exc_info=True)
             return error_msg
 
 

@@ -42,20 +42,18 @@ class ConversationManager:
     detection through command processing and response generation.
     """
     
-    def __init__(self, config: ConversationConfig, speech_manager: SpeechManager, agent: JarvisAgent, mcp_client=None):
+    def __init__(self, config: ConversationConfig, speech_manager: SpeechManager, agent: JarvisAgent):
         """
         Initialize the conversation manager.
-
+        
         Args:
             config: Conversation configuration settings
             speech_manager: Speech management instance
             agent: LLM agent instance
-            mcp_client: MCP client for event loop access (optional)
         """
         self.config = config
         self.speech_manager = speech_manager
         self.agent = agent
-        self.mcp_client = mcp_client
         
         self.state = ConversationState.IDLE
         self.last_activity_time = time.time()
@@ -185,7 +183,7 @@ class ConversationManager:
     def enter_conversation_mode(self) -> None:
         """
         Enter active conversation mode after wake word detection.
-
+        
         Raises:
             ConversationError: If entering conversation mode fails
         """
@@ -196,16 +194,12 @@ class ConversationManager:
             self.retry_count = 0
             self.last_activity_time = time.time()
 
-            # Clear short-term chat memory for new conversation session
-            if hasattr(self.agent, 'clear_chat_memory'):
-                self.agent.clear_chat_memory()
-
             # Acknowledge wake word
             terminal_ui.show_status(StatusType.SPEAKING, "Acknowledging wake word...")
             self.speech_manager.speak_text("Yes sir?")
 
             self._change_state(ConversationState.LISTENING_FOR_COMMAND)
-
+            
         except Exception as e:
             error_msg = f"Failed to enter conversation mode: {str(e)}"
             logger.error(error_msg)
@@ -291,13 +285,13 @@ class ConversationManager:
     def process_command(self, command: str) -> str:
         """
         Process a user command using the LLM agent.
-
+        
         Args:
             command: User command to process
-
+            
         Returns:
             Agent response text
-
+            
         Raises:
             ConversationError: If command processing fails
         """
@@ -307,43 +301,16 @@ class ConversationManager:
             terminal_ui.show_status(StatusType.THINKING, f"Processing: '{command[:30]}...'")
             logger.info(f"Processing command: '{command}'")
 
-            # Process with agent using MCP client's event loop
+            # Process with agent
             start_time = time.time()
-            import asyncio
-
-            try:
-                logger.info("🔍 CONVERSATION DEBUG: Submitting agent task to main event loop...")
-                if self.mcp_client and hasattr(self.mcp_client, 'loop') and self.mcp_client.loop:
-                    # Use the application's single, persistent event loop
-                    app_loop = self.mcp_client.loop
-                    logger.info("🔍 CONVERSATION DEBUG: Using persistent event loop from MCP manager")
-
-                    future = asyncio.run_coroutine_threadsafe(
-                        self.agent.process_input(command),
-                        app_loop
-                    )
-                    response = future.result(timeout=30.0)  # Wait for the result
-                    logger.info(f"🔍 CONVERSATION DEBUG: Persistent loop returned: '{response[:200]}{'...' if len(response) > 200 else ''}'")
-                else:
-                    # This case should ideally not happen in the new architecture
-                    logger.error("FATAL: Could not find the main application event loop.")
-                    response = "I'm sorry, a critical internal error occurred with the event loop."
-
-            except asyncio.TimeoutError:
-                logger.error("🔍 CONVERSATION DEBUG: Agent processing timed out after 30 seconds")
-                response = "I'm sorry, that request took too long to process. Please try again."
-            except Exception as e:
-                logger.error(f"🔍 CONVERSATION DEBUG: Agent processing failed: {e}", exc_info=True)
-                response = f"I encountered an error processing that request."
-
+            response = self.agent.process_input(command)
             processing_time = time.time() - start_time
-            logger.info(f"🔍 CONVERSATION DEBUG: Total processing time: {processing_time:.2f}s")
 
             feedback_manager.show_status(FeedbackStatus.SPEAKING, "Generating response...")
             terminal_ui.show_jarvis_response(response, processing_time)
             logger.info(f"Agent response: '{response[:100]}{'...' if len(response) > 100 else ''}'")
             return response
-
+            
         except Exception as e:
             error_msg = f"Failed to process command: {str(e)}"
             logger.error(error_msg)
@@ -407,24 +374,24 @@ class ConversationManager:
     def handle_conversation_cycle(self) -> bool:
         """
         Handle one complete conversation cycle (listen -> process -> respond).
-
+        
         Returns:
             True if conversation should continue, False if it should end
-
+            
         Raises:
             ConversationError: If conversation cycle fails
         """
         try:
             # Listen for command
             command = self.listen_for_command()
-
+            
             if command:
-                # Process command (sync wrapper for async agent)
+                # Process command
                 response = self.process_command(command)
-
+                
                 # Deliver response
                 self.respond(response)
-
+                
                 return True  # Continue conversation
             else:
                 # No command received, check for timeout
@@ -488,10 +455,6 @@ class ConversationManager:
         self.retry_count = 0
         self.last_activity_time = time.time()
         self.speech_manager.stop_speaking()
-
-        # Clear short-term chat memory when resetting conversation
-        if hasattr(self.agent, 'clear_chat_memory'):
-            self.agent.clear_chat_memory()
 
         # Stop any full-duplex operations
         self._stop_full_duplex()
