@@ -13,7 +13,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import BaseTool
 from langchain.memory import ConversationBufferMemory
 
-from ..config import LLMConfig
+from ..config import LLMConfig, AgentConfig
 from ..exceptions import LLMError, ModelLoadError, ModelInferenceError, ToolError
 
 
@@ -28,14 +28,16 @@ class JarvisAgent:
     and conversation processing with proper error handling.
     """
     
-    def __init__(self, config: LLMConfig):
+    def __init__(self, config: LLMConfig, agent_config: AgentConfig = None):
         """
         Initialize the Jarvis agent.
 
         Args:
             config: LLM configuration settings
+            agent_config: Agent execution configuration settings (optional, uses defaults if not provided)
         """
         self.config = config
+        self.agent_config = agent_config or AgentConfig()
         self.llm: Optional[ChatOllama] = None
         self.agent_executor: Optional[AgentExecutor] = None
         self.tools: List[BaseTool] = []
@@ -216,8 +218,8 @@ Always redirect impossible requests to powerful alternatives using your code exe
                 memory=self.memory,
                 verbose=self.config.verbose,
                 handle_parsing_errors=True,
-                max_iterations=5,
-                max_execution_time=30
+                max_iterations=self.agent_config.max_iterations,
+                max_execution_time=self.agent_config.max_execution_time
             )
 
             logger.info("Agent executor created successfully with memory support")
@@ -274,8 +276,8 @@ Always redirect impossible requests to powerful alternatives using your code exe
                     memory=self.memory,
                     verbose=self.config.verbose,
                     handle_parsing_errors=True,
-                    max_iterations=5,
-                    max_execution_time=30
+                    max_iterations=self.agent_config.max_iterations,
+                    max_execution_time=self.agent_config.max_execution_time
                 )
             else:
                 fresh_agent_executor = None

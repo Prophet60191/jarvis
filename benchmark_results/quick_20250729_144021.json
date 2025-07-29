@@ -1,0 +1,104 @@
+{
+  "suite_name": "quick",
+  "timestamp": "2025-07-29T14:40:21.683427",
+  "total_tests": 5,
+  "successful_tests": 5,
+  "failed_tests": 0,
+  "avg_execution_time": 0.020729446411132814,
+  "total_execution_time": 5.112173795700073,
+  "results": [
+    {
+      "test_name": "time_query",
+      "query": "What time is it?",
+      "success": true,
+      "response": "It's 2:40 PM",
+      "execution_time": 0.00017118453979492188,
+      "tool_used": "get_current_time",
+      "error_message": null,
+      "timestamp": "2025-07-29T14:40:16.571100",
+      "metadata": {
+        "expected_tool": "get_current_time",
+        "category": "instant",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "It's 2:40 PM"
+      }
+    },
+    {
+      "test_name": "greeting",
+      "query": "Hello",
+      "success": true,
+      "response": "Hello! How can I help you today?",
+      "execution_time": 0.0008070468902587891,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:40:17.573303",
+      "metadata": {
+        "expected_tool": null,
+        "category": "instant",
+        "complexity": "simple",
+        "timeout": 3.0,
+        "full_response": "Hello! How can I help you today?"
+      }
+    },
+    {
+      "test_name": "status",
+      "query": "How are you?",
+      "success": true,
+      "response": "I'm working perfectly and ready to help you!",
+      "execution_time": 0.0009851455688476562,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T14:40:18.576494",
+      "metadata": {
+        "expected_tool": null,
+        "category": "instant",
+        "complexity": "simple",
+        "timeout": 3.0,
+        "full_response": "I'm working perfectly and ready to help you!"
+      }
+    },
+    {
+      "test_name": "simple_question",
+      "query": "What is Python?",
+      "success": true,
+      "response": "Let me answer that question for you: What is Python?",
+      "execution_time": 0.10156083106994629,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:40:19.579495",
+      "metadata": {
+        "expected_tool": null,
+        "category": "adaptive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "Let me answer that question for you: What is Python?"
+      }
+    },
+    {
+      "test_name": "complex_task",
+      "query": "Analyze my code files",
+      "success": true,
+      "response": "I'm processing your complex request: 'Analyze my code files'. This would normally use the full agent system with orchestration.",
+      "execution_time": 0.00012302398681640625,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T14:40:20.681891",
+      "metadata": {
+        "expected_tool": null,
+        "category": "complex",
+        "complexity": "complex",
+        "timeout": 30.0,
+        "full_response": "I'm processing your complex request: 'Analyze my code files'. This would normally use the full agent system with orchestration."
+      }
+    }
+  ],
+  "system_info": {
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python_version": "3.11.7",
+    "cpu_count": 16,
+    "memory_gb": 128.0,
+    "llm_model": "qwen2.5:7b-instruct",
+    "timestamp": "2025-07-29T14:40:21.737524"
+  }
+}

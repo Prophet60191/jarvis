@@ -98,9 +98,9 @@ def get_config_notifier() -> ConfigChangeNotifier:
 @dataclass
 class AudioConfig:
     """Audio-related configuration settings."""
-    mic_index: int = 0  # Default microphone
-    mic_name: str = ". . . Microphone"
-    energy_threshold: int = 100
+    mic_index: int = 2  # MacBook Pro Microphone (working microphone)
+    mic_name: str = "MacBook Pro Microphone"
+    energy_threshold: int = 100  # Optimized for wake word detection sensitivity
     timeout: float = 3.0  # Balanced for responsiveness and reliability
     phrase_time_limit: float = 5.0  # Optimized for natural speech patterns
 
@@ -168,6 +168,15 @@ class LLMConfig:
     reasoning: bool = False
     temperature: float = 0.7
     max_tokens: Optional[int] = None
+
+
+@dataclass
+class AgentConfig:
+    """Agent execution configuration settings."""
+    max_iterations: int = 15  # Increased from 5 for tool creation and complex tasks
+    max_execution_time: int = 120  # Increased from 30 for complex operations (2 minutes)
+    enable_memory: bool = True
+    handle_parsing_errors: bool = True
 
 
 @dataclass
@@ -278,6 +287,7 @@ class JarvisConfig:
     audio: AudioConfig = field(default_factory=AudioConfig)
     conversation: ConversationConfig = field(default_factory=ConversationConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
+    agent: AgentConfig = field(default_factory=AgentConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     general: GeneralConfig = field(default_factory=GeneralConfig)
     mcp: MCPConfig = field(default_factory=MCPConfig)
@@ -348,7 +358,13 @@ class JarvisConfig:
         max_tokens_str = os.getenv("JARVIS_MAX_TOKENS")
         if max_tokens_str:
             config.llm.max_tokens = int(max_tokens_str)
-        
+
+        # Agent configuration
+        config.agent.max_iterations = _get_env_int("JARVIS_MAX_ITERATIONS", config.agent.max_iterations)
+        config.agent.max_execution_time = _get_env_int("JARVIS_MAX_EXECUTION_TIME", config.agent.max_execution_time)
+        config.agent.enable_memory = _get_env_bool("JARVIS_ENABLE_MEMORY", config.agent.enable_memory)
+        config.agent.handle_parsing_errors = _get_env_bool("JARVIS_HANDLE_PARSING_ERRORS", config.agent.handle_parsing_errors)
+
         # Logging configuration
         config.logging.level = _get_env_str("JARVIS_LOG_LEVEL", config.logging.level)
         config.logging.file = _get_env_str("JARVIS_LOG_FILE", config.logging.file)
@@ -420,7 +436,13 @@ class JarvisConfig:
             raise ValueError("LLM temperature must be between 0 and 2")
         if self.llm.max_tokens is not None and self.llm.max_tokens <= 0:
             raise ValueError("Max tokens must be positive if specified")
-        
+
+        # Validate agent settings
+        if self.agent.max_iterations <= 0:
+            raise ValueError("Max iterations must be positive")
+        if self.agent.max_execution_time <= 0:
+            raise ValueError("Max execution time must be positive")
+
         # Validate logging settings
         valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if self.logging.level.upper() not in valid_log_levels:

@@ -114,6 +114,12 @@ class ConfigurationManager:
                     "temperature": config.llm.temperature,
                     "max_tokens": config.llm.max_tokens,
                 },
+                "agent": {
+                    "max_iterations": config.agent.max_iterations,
+                    "max_execution_time": config.agent.max_execution_time,
+                    "enable_memory": config.agent.enable_memory,
+                    "handle_parsing_errors": config.agent.handle_parsing_errors,
+                },
                 "logging": {
                     "level": config.logging.level,
                     "file": config.logging.file,
@@ -241,6 +247,17 @@ class ConfigurationManager:
                 if "max_tokens" in llm:
                     env_vars["JARVIS_MAX_TOKENS"] = str(llm["max_tokens"]) if llm["max_tokens"] else ""
 
+            if "agent" in updates:
+                agent = updates["agent"]
+                if "max_iterations" in agent:
+                    env_vars["JARVIS_MAX_ITERATIONS"] = str(agent["max_iterations"])
+                if "max_execution_time" in agent:
+                    env_vars["JARVIS_MAX_EXECUTION_TIME"] = str(agent["max_execution_time"])
+                if "enable_memory" in agent:
+                    env_vars["JARVIS_ENABLE_MEMORY"] = str(agent["enable_memory"]).lower()
+                if "handle_parsing_errors" in agent:
+                    env_vars["JARVIS_HANDLE_PARSING_ERRORS"] = str(agent["handle_parsing_errors"]).lower()
+
             if "logging" in updates:
                 log = updates["logging"]
                 if "level" in log:
@@ -306,6 +323,7 @@ class ConfigurationManager:
                 "Audio Configuration": [k for k in existing_vars.keys() if k.startswith("JARVIS_") and any(x in k for x in ["MIC", "TTS", "AUDIO", "COQUI"])],
                 "Conversation Configuration": [k for k in existing_vars.keys() if k.startswith("JARVIS_") and any(x in k for x in ["WAKE", "CONVERSATION", "RETRIES", "DUPLEX"])],
                 "LLM Configuration": [k for k in existing_vars.keys() if k.startswith("JARVIS_") and any(x in k for x in ["MODEL", "VERBOSE", "REASONING", "TEMPERATURE", "TOKENS"])],
+                "Agent Configuration": [k for k in existing_vars.keys() if k.startswith("JARVIS_") and any(x in k for x in ["ITERATIONS", "EXECUTION", "MEMORY", "PARSING"])],
                 "Logging Configuration": [k for k in existing_vars.keys() if k.startswith("JARVIS_") and any(x in k for x in ["LOG"])],
                 "General Configuration": [k for k in existing_vars.keys() if k.startswith("JARVIS_") and any(x in k for x in ["DEBUG", "DATA", "CONFIG"])]
             }
@@ -383,6 +401,8 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.serve_audio_config_page()
         elif path == "/llm":
             self.serve_llm_config_page()
+        elif path == "/agent":
+            self.serve_agent_config_page()
         elif path == "/conversation":
             self.serve_conversation_config_page()
         elif path == "/logging":
@@ -545,6 +565,14 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
     def serve_llm_config_page(self):
         """Serve the LLM configuration page."""
         html = self.get_html_template("LLM Configuration", self.get_llm_config_content())
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html.encode())
+
+    def serve_agent_config_page(self):
+        """Serve the agent configuration page."""
+        html = self.get_html_template("Agent Configuration", self.get_agent_config_content())
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
@@ -2168,6 +2196,9 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 <a href="/llm" class="nav-link" data-page="llm">
                     <span class="icon">🤖</span>LLM Config
                 </a>
+                <a href="/agent" class="nav-link" data-page="agent">
+                    <span class="icon">⚙️</span>Agent Config
+                </a>
                 <a href="/conversation" class="nav-link" data-page="conversation">
                     <span class="icon">💬</span>Conversation
                 </a>
@@ -2413,6 +2444,12 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 <h3>LLM Configuration</h3>
                 <p>Set up language model parameters, temperature, token limits, and reasoning capabilities.</p>
                 <a href="/llm" class="btn">Configure LLM</a>
+            </div>
+
+            <div class="status-card">
+                <h3>Agent Configuration</h3>
+                <p>Configure agent execution settings including iteration limits, timeouts, and tool creation capabilities.</p>
+                <a href="/agent" class="btn">Configure Agent</a>
             </div>
 
             <div class="status-card">
@@ -3123,6 +3160,124 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
         }
 
         loadLLMConfig();
+        </script>
+        """
+
+    def get_agent_config_content(self) -> str:
+        """Get the agent configuration content."""
+        return """
+        <div class="page-header">
+            <h1>Agent Configuration</h1>
+            <div class="breadcrumb">
+                <a href="/">Home</a> / <a href="/settings">Settings</a> / <a href="/agent">Agent</a>
+            </div>
+        </div>
+
+        <form id="agent-config-form" class="config-form">
+            <div class="config-section">
+                <h3>Execution Settings</h3>
+                <p>Configure how the AI agent processes complex requests and creates tools.</p>
+
+                <div class="form-group">
+                    <label for="max_iterations">Max Iterations</label>
+                    <input type="number" id="max_iterations" name="max_iterations" min="1" max="50" step="1">
+                    <small>Maximum number of thinking steps for complex tasks (default: 15, increased from 5 for tool creation)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_execution_time">Max Execution Time (seconds)</label>
+                    <input type="number" id="max_execution_time" name="max_execution_time" min="10" max="600" step="10">
+                    <small>Maximum time allowed for complex operations (default: 120 seconds, increased from 30 for tool creation)</small>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Memory & Error Handling</h3>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enable_memory" name="enable_memory">
+                        <label for="enable_memory">Enable Conversation Memory</label>
+                    </div>
+                    <small>Allow the agent to remember conversation context</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="handle_parsing_errors" name="handle_parsing_errors">
+                        <label for="handle_parsing_errors">Handle Parsing Errors</label>
+                    </div>
+                    <small>Automatically recover from tool calling errors</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Save Agent Configuration</button>
+                <button type="button" class="btn btn-secondary" onclick="loadAgentConfig()">Reset to Current</button>
+            </div>
+        </form>
+
+        <div class="info-section">
+            <h3>Performance Impact</h3>
+            <div class="info-card">
+                <h4>🚀 Tool Creation Capability</h4>
+                <p>Higher iteration limits (15+) enable Jarvis to create custom tools and handle complex multi-step requests.</p>
+            </div>
+            <div class="info-card">
+                <h4>⏱️ Response Time</h4>
+                <p>Longer execution times (120s+) allow for complex operations like code generation and tool development.</p>
+            </div>
+            <div class="info-card">
+                <h4>🎯 Recommended Settings</h4>
+                <p><strong>Tool Creation:</strong> 15+ iterations, 120+ seconds<br>
+                   <strong>Fast Responses:</strong> 5-10 iterations, 30-60 seconds</p>
+            </div>
+        </div>
+
+        <script>
+        function loadAgentConfig() {
+            fetch('/api/config')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.agent) {
+                        const agent = data.agent;
+                        document.getElementById('max_iterations').value = agent.max_iterations || 15;
+                        document.getElementById('max_execution_time').value = agent.max_execution_time || 120;
+                        document.getElementById('enable_memory').checked = agent.enable_memory !== false;
+                        document.getElementById('handle_parsing_errors').checked = agent.handle_parsing_errors !== false;
+                    }
+                })
+                .catch(error => console.error('Error loading agent config:', error));
+        }
+
+        document.getElementById('agent-config-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const agentConfig = {
+                max_iterations: parseInt(formData.get('max_iterations')) || 15,
+                max_execution_time: parseInt(formData.get('max_execution_time')) || 120,
+                enable_memory: formData.get('enable_memory') === 'on',
+                handle_parsing_errors: formData.get('handle_parsing_errors') === 'on'
+            };
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({agent: agentConfig})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Agent configuration saved successfully! Restart Jarvis to apply changes.');
+                } else {
+                    alert('Error saving configuration: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => alert('Error saving configuration: ' + error.message));
+        });
+
+        loadAgentConfig();
         </script>
         """
 

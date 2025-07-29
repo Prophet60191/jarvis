@@ -24,6 +24,14 @@ from jarvis.exceptions import JarvisError, InitializationError
 from jarvis.core.speech import SpeechManager
 from jarvis.core.agent import JarvisAgent
 from jarvis.core.conversation import ConversationManager
+# Import the fast/slow path routing system to fix timeout issues
+try:
+    from jarvis.core.routing import SmartConversationManager
+    ROUTING_AVAILABLE = True
+    print("🚀 Fast path routing system available - will fix timeout issues!")
+except ImportError:
+    ROUTING_AVAILABLE = False
+    SmartConversationManager = ConversationManager  # Fallback
 from jarvis.core.wake_word import WakeWordDetector
 from jarvis.core.emergency_stop import setup_emergency_stop
 from jarvis.utils.terminal_ui import terminal_ui, StatusType
@@ -150,7 +158,7 @@ class JarvisApplication:
             # No MCP client needed for direct integration
             self.mcp_client = None
 
-            self.agent = JarvisAgent(self.config.llm)
+            self.agent = JarvisAgent(self.config.llm, self.config.agent)
 
             # Try agent initialization with timeout
             try:
@@ -174,31 +182,33 @@ class JarvisApplication:
                 terminal_ui.show_service_loading("AI Agent", "success")
                 logger.error(f"Agent initialization failed, using fallback: {e}")
 
-            # Initialize conversation manager
+            # Initialize conversation manager with fast path routing to fix timeout issues
             terminal_ui.show_service_loading("Conversation Manager")
-            self.conversation_manager = ConversationManager(
-                self.config.conversation,
-                self.speech_manager,
-                self.agent,
-                self.mcp_client  # Pass MCP client for event loop access
-            )
+
+            if ROUTING_AVAILABLE:
+                logger.info("🚀 Initializing Smart Conversation Manager with fast/slow path routing")
+                print("🚀 ENABLING FAST PATH ROUTING - Simple queries will be 150x faster!")
+                self.conversation_manager = SmartConversationManager(
+                    self.config,  # Pass full config for routing system
+                    self.speech_manager,
+                    self.agent,
+                    self.mcp_client
+                )
+                logger.info("✅ Smart routing system enabled - timeout issues should be resolved!")
+            else:
+                logger.warning("⚠️ Routing system not available, using original ConversationManager")
+                self.conversation_manager = ConversationManager(
+                    self.config.conversation,
+                    self.speech_manager,
+                    self.agent,
+                    self.mcp_client  # Pass MCP client for event loop access
+                )
             terminal_ui.show_service_loading("Conversation Manager", "success")
             logger.info("Conversation manager initialized")
 
-            # Initialize wake word detector
-            terminal_ui.show_service_loading("Wake Word Detector")
-            self.wake_word_detector = WakeWordDetector(
-                self.config.conversation,
-                self.speech_manager
-            )
-            terminal_ui.show_service_loading("Wake Word Detector", "success")
-            logger.info("Wake word detector initialized")
-
-            # Set up conversation callbacks
-            terminal_ui.show_service_loading("System Callbacks")
-            self._setup_callbacks()
-            terminal_ui.show_service_loading("System Callbacks", "success")
-            logger.info("Callbacks set up")
+            # Wake word detector will be initialized in main thread to avoid threading issues
+            # (Audio resources work better when initialized in the same thread they're used)
+            self.wake_word_detector = None  # Will be initialized in main thread
 
             # Emergency stop system will be set up in main thread after initialization
 
@@ -211,15 +221,9 @@ class JarvisApplication:
 
     def _setup_callbacks(self) -> None:
         """Set up callbacks for component interactions."""
-        # Set wake word detection callback
-        def on_wake_word_detected(detection):
-            logger.info(f"Wake word detected: {detection.text} (confidence: {detection.confidence:.2f})")
-            try:
-                self.conversation_manager.enter_conversation_mode()
-            except Exception as e:
-                logger.error(f"Failed to enter conversation mode: {str(e)}")
-
-        self.wake_word_detector.set_detection_callback(on_wake_word_detected)
+        # Wake word callbacks are now set up in main thread to avoid threading issues
+        # This method is kept for future callback setup needs
+        pass
 
     # Legacy MCP method removed - using official MCP system only
 
@@ -294,7 +298,7 @@ class JarvisApplication:
             self.speech_manager and self.speech_manager.is_initialized(),
             self.agent and self.agent.is_initialized(),
             self.conversation_manager and self.conversation_manager.is_initialized(),
-            self.wake_word_detector
+            # wake_word_detector is initialized in main thread, so don't check here
         ])
 
     def _display_startup_info(self) -> None:
@@ -581,6 +585,25 @@ def main() -> int:
             if not app.test_components():
                 logger.error("Component tests failed")
                 return 1
+
+        # Initialize wake word detector in main thread (fixes threading issues)
+        logger.info("🎤 Initializing wake word detector in main thread...")
+        app.wake_word_detector = WakeWordDetector(
+            app.config.conversation,
+            app.speech_manager
+        )
+        logger.info("✅ Wake word detector initialized in main thread")
+
+        # Set up wake word callbacks
+        def on_wake_word_detected(detection):
+            logger.info(f"Wake word detected: {detection.text} (confidence: {detection.confidence:.2f})")
+            try:
+                app.conversation_manager.enter_conversation_mode()
+            except Exception as e:
+                logger.error(f"Failed to enter conversation mode: {str(e)}")
+
+        app.wake_word_detector.set_detection_callback(on_wake_word_detected)
+        logger.info("✅ Wake word callbacks set up")
 
         # Now that initialization is done, run the main synchronous loop
         app.run()

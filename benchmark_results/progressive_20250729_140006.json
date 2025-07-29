@@ -1,0 +1,528 @@
+{
+  "suite_name": "progressive",
+  "timestamp": "2025-07-29T14:00:06.882221",
+  "total_tests": 30,
+  "successful_tests": 8,
+  "failed_tests": 22,
+  "avg_execution_time": 0.2347771406173706,
+  "total_execution_time": 37.108344078063965,
+  "results": [
+    {
+      "test_name": "prog_01_time",
+      "query": "What time is it?",
+      "success": true,
+      "response": "It's 1:59 PM",
+      "execution_time": 0.00017189979553222656,
+      "tool_used": "get_current_time",
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:29.773541",
+      "metadata": {
+        "expected_tool": "get_current_time",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "It's 1:59 PM"
+      }
+    },
+    {
+      "test_name": "prog_02_greeting",
+      "query": "Hello",
+      "success": true,
+      "response": "Hello! How can I help you today?",
+      "execution_time": 0.0007669925689697266,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:30.775746",
+      "metadata": {
+        "expected_tool": null,
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 3.0,
+        "full_response": "Hello! How can I help you today?"
+      }
+    },
+    {
+      "test_name": "prog_03_status",
+      "query": "How are you?",
+      "success": true,
+      "response": "I'm working perfectly and ready to help you!",
+      "execution_time": 0.0005970001220703125,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:31.777522",
+      "metadata": {
+        "expected_tool": null,
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 3.0,
+        "full_response": "I'm working perfectly and ready to help you!"
+      }
+    },
+    {
+      "test_name": "prog_04_set_name",
+      "query": "My name is TestUser",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.1017909049987793,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:32.779602",
+      "metadata": {
+        "expected_tool": "set_my_name",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_05_get_name",
+      "query": "What is my name?",
+      "success": true,
+      "response": "Let me answer that question for you: What is my name?",
+      "execution_time": 0.10124611854553223,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:33.883453",
+      "metadata": {
+        "expected_tool": "get_my_name",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "Let me answer that question for you: What is my name?"
+      }
+    },
+    {
+      "test_name": "prog_06_set_pronouns",
+      "query": "My pronouns are they/them",
+      "success": false,
+      "response": "Hello! How can I help you today?",
+      "execution_time": 0.0008111000061035156,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:34.986025",
+      "metadata": {
+        "expected_tool": "set_my_pronouns",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "Hello! How can I help you today?"
+      }
+    },
+    {
+      "test_name": "prog_07_show_profile",
+      "query": "Show my profile",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10210299491882324,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:35.989029",
+      "metadata": {
+        "expected_tool": "show_my_profile",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_08_remember_fact",
+      "query": "Remember that I like coffee",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.101837158203125,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:37.093835",
+      "metadata": {
+        "expected_tool": "remember_fact",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_09_remember_work",
+      "query": "Remember that I work as a software engineer",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10203313827514648,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:38.198766",
+      "metadata": {
+        "expected_tool": "remember_fact",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_10_search_memory",
+      "query": "What do you remember about me?",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10191106796264648,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:39.302811",
+      "metadata": {
+        "expected_tool": "search_long_term_memory",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 15.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_11_system_status",
+      "query": "Show system status",
+      "success": false,
+      "response": "I'm working perfectly and ready to help you!",
+      "execution_time": 0.0009553432464599609,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:40.407813",
+      "metadata": {
+        "expected_tool": "show_jarvis_status",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "I'm working perfectly and ready to help you!"
+      }
+    },
+    {
+      "test_name": "prog_12_open_logs",
+      "query": "Open logs",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10181975364685059,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:41.410715",
+      "metadata": {
+        "expected_tool": "open_logs_terminal",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_13_logs_status",
+      "query": "Show logs status",
+      "success": false,
+      "response": "",
+      "execution_time": 5.002434015274048,
+      "tool_used": null,
+      "error_message": "Timeout after 5.0s",
+      "timestamp": "2025-07-29T13:59:42.514466",
+      "metadata": {
+        "expected_tool": "show_logs_status",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0
+      }
+    },
+    {
+      "test_name": "prog_14_open_vault",
+      "query": "Open vault",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10172796249389648,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:48.522217",
+      "metadata": {
+        "expected_tool": "open_rag_manager",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_15_vault_status",
+      "query": "Show vault status",
+      "success": false,
+      "response": "I'm working perfectly and ready to help you!",
+      "execution_time": 0.000537872314453125,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:49.627015",
+      "metadata": {
+        "expected_tool": "show_rag_status",
+        "category": "progressive",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "I'm working perfectly and ready to help you!"
+      }
+    },
+    {
+      "test_name": "prog_16_search_conversations",
+      "query": "Search my conversations for programming topics",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10168910026550293,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:50.629752",
+      "metadata": {
+        "expected_tool": "search_conversations",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 15.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_17_search_documents",
+      "query": "Search my documents for technical information",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10132908821105957,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:51.733888",
+      "metadata": {
+        "expected_tool": "search_documents",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 15.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_18_search_all",
+      "query": "Search all my information about work and preferences",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10167479515075684,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:52.837305",
+      "metadata": {
+        "expected_tool": "search_all_memory",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 20.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_19_intelligent_search",
+      "query": "Find everything related to my professional development",
+      "success": false,
+      "response": "Hello! How can I help you today?",
+      "execution_time": 0.0006890296936035156,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:53.941381",
+      "metadata": {
+        "expected_tool": "search_long_term_memory_intelligent",
+        "category": "progressive",
+        "complexity": "complex",
+        "timeout": 25.0,
+        "full_response": "Hello! How can I help you today?"
+      }
+    },
+    {
+      "test_name": "prog_20_aider_status",
+      "query": "Is Aider working?",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10195207595825195,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:54.943843",
+      "metadata": {
+        "expected_tool": "check_aider_status",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_21_test_system",
+      "query": "Is the test system ready?",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10207891464233398,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:56.048014",
+      "metadata": {
+        "expected_tool": "validate_test_system",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_22_list_tests",
+      "query": "What tests are available?",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10159897804260254,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:57.152154",
+      "metadata": {
+        "expected_tool": "list_available_tests",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_23_web_status",
+      "query": "Is web automation working?",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10210490226745605,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:58.255955",
+      "metadata": {
+        "expected_tool": "check_lavague_status",
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_24_web_scraping",
+      "query": "Get the title from example.com",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10184025764465332,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T13:59:59.360324",
+      "metadata": {
+        "expected_tool": "web_scraping_task",
+        "category": "progressive",
+        "complexity": "complex",
+        "timeout": 25.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_25_profile_memory",
+      "query": "Show my profile and search my memory",
+      "success": true,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10219788551330566,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:00:00.464775",
+      "metadata": {
+        "expected_tool": null,
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 25.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_26_ui_workflow",
+      "query": "Open settings, show status, then close settings",
+      "success": true,
+      "response": "I'm working perfectly and ready to help you!",
+      "execution_time": 0.00015401840209960938,
+      "tool_used": "get_my_name",
+      "error_message": null,
+      "timestamp": "2025-07-29T14:00:01.568795",
+      "metadata": {
+        "expected_tool": null,
+        "category": "progressive",
+        "complexity": "moderate",
+        "timeout": 25.0,
+        "full_response": "I'm working perfectly and ready to help you!"
+      }
+    },
+    {
+      "test_name": "prog_27_memory_workflow",
+      "query": "Remember I like Python, then search for my programming preferences",
+      "success": true,
+      "response": "I'll search for information about: Remember I like Python, then search for my programming preferences",
+      "execution_time": 0.10145902633666992,
+      "tool_used": "search_long_term_memory",
+      "error_message": null,
+      "timestamp": "2025-07-29T14:00:02.570460",
+      "metadata": {
+        "expected_tool": null,
+        "category": "progressive",
+        "complexity": "complex",
+        "timeout": 30.0,
+        "full_response": "I'll search for information about: Remember I like Python, then search for my programming preferences"
+      }
+    },
+    {
+      "test_name": "prog_28_aider_edit",
+      "query": "Use Aider to help with code editing",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10193991661071777,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:00:03.673263",
+      "metadata": {
+        "expected_tool": "aider_code_edit",
+        "category": "progressive",
+        "complexity": "complex",
+        "timeout": 30.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_29_run_tests",
+      "query": "Run basic system tests",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.1012411117553711,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:00:04.776740",
+      "metadata": {
+        "expected_tool": "run_robot_tests",
+        "category": "progressive",
+        "complexity": "complex",
+        "timeout": 60.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "prog_30_comprehensive",
+      "query": "Show my profile, search my memory, open vault, check system status, and summarize everything",
+      "success": true,
+      "response": "Hello! How can I help you today?",
+      "execution_time": 0.000621795654296875,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:00:05.879731",
+      "metadata": {
+        "expected_tool": null,
+        "category": "progressive",
+        "complexity": "complex",
+        "timeout": 60.0,
+        "full_response": "Hello! How can I help you today?"
+      }
+    }
+  ],
+  "system_info": {
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python_version": "3.11.7",
+    "cpu_count": 16,
+    "memory_gb": 128.0,
+    "llm_model": "qwen2.5:7b-instruct",
+    "timestamp": "2025-07-29T14:00:06.926438"
+  }
+}

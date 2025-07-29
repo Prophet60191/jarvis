@@ -6,15 +6,24 @@ Welcome to the comprehensive documentation for Jarvis Voice Assistant! This guid
 
 **New to Jarvis?** Start here:
 
-1. **[Complete User Guide](../USER_GUIDE.md)** - Comprehensive guide for end users
-2. **[Installation Guide](installation.md)** - Get Jarvis running on your system
-3. **[Developer Quick Start](DEVELOPER_QUICK_START.md)** - For developers wanting to contribute or extend Jarvis
-4. **[Documentation Index](../DOCUMENTATION_INDEX.md)** - Find all guides and references
+### ✅ **Current Working Version (Recommended)**
+1. **[Quick Start - Current](QUICK_START_CURRENT.md)** - ✅ **START HERE** - Proven working method (2 minutes)
+2. **[Current System Status](CURRENT_STATUS.md)** - ✅ Latest fixes and system state
+3. **[Troubleshooting Guide](TROUBLESHOOTING.md)** - ✅ Major issues resolved
+
+### 📚 **Complete Documentation**
+4. **[Complete User Guide](../USER_GUIDE.md)** - Comprehensive guide for end users
+5. **[Installation Guide](installation.md)** - Get Jarvis running on your system
+6. **[Developer Quick Start](DEVELOPER_QUICK_START.md)** - For developers wanting to contribute or extend Jarvis
+7. **[Documentation Index](../DOCUMENTATION_INDEX.md)** - Find all guides and references
 
 ## 📖 Documentation Structure
 
 ### 🏗️ **Architecture & Design**
 - **[Architecture Overview](ARCHITECTURE.md)** - Complete system architecture and design decisions
+- **[Smart Routing Architecture](SMART_ROUTING_ARCHITECTURE.md)** - 361,577x performance improvement system
+- **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Comprehensive performance optimization guide
+- **[Benchmarking Guide](BENCHMARKING_GUIDE.md)** - Performance testing and monitoring system
 - **[MCP System Overview](MCP_SYSTEM_OVERVIEW.md)** - Plugin system architecture and implementation
 
 ### 🔗 **MCP Integration (NEW!)**

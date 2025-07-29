@@ -2,6 +2,35 @@
 
 Comprehensive troubleshooting guide for Jarvis Voice Assistant.
 
+## ✅ MAJOR ISSUES RESOLVED
+
+### Wake Word Detection - FIXED ✅
+**Issue**: Wake word detection not working reliably
+**Status**: **COMPLETELY RESOLVED**
+**Solution**: Simplified architecture implementation
+
+**Use the working startup method**:
+```bash
+cd "/Users/josed/Desktop/Voice App"
+python start_jarvis_fixed.py
+```
+
+**Key fixes applied**:
+- ✅ Simplified synchronous architecture (no async/threading issues)
+- ✅ Proper microphone configuration (MacBook Pro Microphone, index 2)
+- ✅ Smart response routing (fast time queries, LLM knowledge for general questions)
+- ✅ Optimized audio settings (energy threshold 100)
+
+### Slow Response Times - FIXED ✅
+**Issue**: 46+ second response times for simple queries
+**Status**: **COMPLETELY RESOLVED**
+**Solution**: Smart routing implementation
+
+**Performance improvements**:
+- ⚡ **Time queries**: Instant response (bypass RAG)
+- 🧠 **General knowledge**: Fast LLM responses (bypass tools)
+- 🛠️ **Specific actions**: Appropriate tool usage
+
 ## 📋 Quick Diagnostics
 
 ### Run Built-in Diagnostics

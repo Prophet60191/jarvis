@@ -1,0 +1,297 @@
+{
+  "suite_name": "tool_focused",
+  "timestamp": "2025-07-29T14:30:04.255807",
+  "total_tests": 17,
+  "successful_tests": 1,
+  "failed_tests": 16,
+  "avg_execution_time": 5.325871313319487,
+  "total_execution_time": 107.60245704650879,
+  "results": [
+    {
+      "test_name": "tool_time",
+      "query": "What time is it?",
+      "success": true,
+      "response": "It's 2:28 PM",
+      "execution_time": 0.0002429485321044922,
+      "tool_used": "get_current_time",
+      "error_message": null,
+      "timestamp": "2025-07-29T14:28:16.653113",
+      "metadata": {
+        "expected_tool": "get_current_time",
+        "category": "tools",
+        "complexity": "simple",
+        "timeout": 5.0,
+        "full_response": "It's 2:28 PM"
+      }
+    },
+    {
+      "test_name": "tool_system_status",
+      "query": "Show system status",
+      "success": false,
+      "response": "",
+      "execution_time": 5.001942157745361,
+      "tool_used": null,
+      "error_message": "Timeout after 5.0s",
+      "timestamp": "2025-07-29T14:28:17.655077",
+      "metadata": {
+        "expected_tool": "show_jarvis_status",
+        "category": "tools",
+        "complexity": "simple",
+        "timeout": 5.0
+      }
+    },
+    {
+      "test_name": "tool_profile_name",
+      "query": "What is my name?",
+      "success": false,
+      "response": "",
+      "execution_time": 5.002798080444336,
+      "tool_used": null,
+      "error_message": "Timeout after 5.0s",
+      "timestamp": "2025-07-29T14:28:23.659568",
+      "metadata": {
+        "expected_tool": "get_my_name",
+        "category": "tools",
+        "complexity": "simple",
+        "timeout": 5.0
+      }
+    },
+    {
+      "test_name": "tool_profile_set",
+      "query": "My name is TestUser",
+      "success": false,
+      "response": "",
+      "execution_time": 5.003020763397217,
+      "tool_used": null,
+      "error_message": "Timeout after 5.0s",
+      "timestamp": "2025-07-29T14:28:29.668018",
+      "metadata": {
+        "expected_tool": "set_my_name",
+        "category": "tools",
+        "complexity": "simple",
+        "timeout": 5.0
+      }
+    },
+    {
+      "test_name": "tool_profile_show",
+      "query": "Show my profile",
+      "success": false,
+      "response": "",
+      "execution_time": 5.002249002456665,
+      "tool_used": null,
+      "error_message": "Timeout after 5.0s",
+      "timestamp": "2025-07-29T14:28:35.675653",
+      "metadata": {
+        "expected_tool": "show_my_profile",
+        "category": "tools",
+        "complexity": "simple",
+        "timeout": 5.0
+      }
+    },
+    {
+      "test_name": "tool_memory_remember",
+      "query": "Remember I like pizza",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10190105438232422,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:28:41.681800",
+      "metadata": {
+        "expected_tool": "remember_fact",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "tool_memory_search",
+      "query": "Search my conversations",
+      "success": false,
+      "response": "",
+      "execution_time": 10.002521991729736,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:28:42.785321",
+      "metadata": {
+        "expected_tool": "search_conversations",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_memory_documents",
+      "query": "Search my documents",
+      "success": false,
+      "response": "",
+      "execution_time": 10.002819061279297,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:28:53.793237",
+      "metadata": {
+        "expected_tool": "search_documents",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_ui_open",
+      "query": "Open settings",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10155296325683594,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:29:04.801567",
+      "metadata": {
+        "expected_tool": "open_jarvis_ui",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "tool_logs_open",
+      "query": "Open logs",
+      "success": false,
+      "response": "",
+      "execution_time": 10.0036940574646,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:29:05.904803",
+      "metadata": {
+        "expected_tool": "open_logs_terminal",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_rag_open",
+      "query": "Open vault",
+      "success": false,
+      "response": "",
+      "execution_time": 10.002982139587402,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:29:16.914033",
+      "metadata": {
+        "expected_tool": "open_rag_manager",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_aider_status",
+      "query": "Is Aider working?",
+      "success": false,
+      "response": "",
+      "execution_time": 10.003653049468994,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:29:27.921528",
+      "metadata": {
+        "expected_tool": "check_aider_status",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_aider_edit",
+      "query": "Use Aider to edit code",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10150289535522461,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:29:38.929868",
+      "metadata": {
+        "expected_tool": "aider_code_edit",
+        "category": "tools",
+        "complexity": "complex",
+        "timeout": 30.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "tool_web_status",
+      "query": "Is web automation working?",
+      "success": false,
+      "response": "",
+      "execution_time": 10.002599954605103,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:29:40.033144",
+      "metadata": {
+        "expected_tool": "check_lavague_status",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_web_scrape",
+      "query": "Scrape information from a website",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10161423683166504,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:29:51.040645",
+      "metadata": {
+        "expected_tool": "web_scraping_task",
+        "category": "tools",
+        "complexity": "complex",
+        "timeout": 25.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    },
+    {
+      "test_name": "tool_test_validate",
+      "query": "Is the test system ready?",
+      "success": false,
+      "response": "",
+      "execution_time": 10.002641916275024,
+      "tool_used": null,
+      "error_message": "Timeout after 10.0s",
+      "timestamp": "2025-07-29T14:29:52.144010",
+      "metadata": {
+        "expected_tool": "validate_test_system",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0
+      }
+    },
+    {
+      "test_name": "tool_test_list",
+      "query": "What tests are available?",
+      "success": false,
+      "response": "I'll do my best to help you with that.",
+      "execution_time": 0.10207605361938477,
+      "tool_used": null,
+      "error_message": null,
+      "timestamp": "2025-07-29T14:30:03.151521",
+      "metadata": {
+        "expected_tool": "list_available_tests",
+        "category": "tools",
+        "complexity": "moderate",
+        "timeout": 10.0,
+        "full_response": "I'll do my best to help you with that."
+      }
+    }
+  ],
+  "system_info": {
+    "platform": "macOS-15.5-arm64-arm-64bit",
+    "python_version": "3.11.7",
+    "cpu_count": 16,
+    "memory_gb": 128.0,
+    "llm_model": "qwen2.5:7b-instruct",
+    "timestamp": "2025-07-29T14:30:04.256077"
+  }
+}
