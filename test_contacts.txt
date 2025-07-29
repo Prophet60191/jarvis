@@ -1,0 +1,45 @@
+Contact Information Database - Updated January 2024
+
+John Doe
+Email: john.doe@example.com
+Phone: (555) 123-4567
+Department: Engineering
+Role: Senior Developer
+Notes: Primary contact for backend systems
+
+Mary Smith
+Email: mary.smith@company.com
+Phone: (555) 987-6543
+Department: Marketing
+Role: Marketing Manager
+Notes: Handles all promotional campaigns
+
+Bob Johnson
+Email: bob.johnson@corp.net
+Phone: (555) 456-7890
+Department: Sales
+Role: Sales Representative
+Notes: West coast territory specialist
+
+Alice Brown
+Email: alice.brown@business.org
+Phone: (555) 321-0987
+Department: HR
+Role: Human Resources Director
+Notes: Employee relations and recruitment
+
+Project Information:
+- Q1 2024 Product Launch
+- Team size: 25 people
+- Budget: $500,000
+- Timeline: 6 months
+
+Important Dates:
+- Kickoff Meeting: February 15, 2024
+- Milestone Review: April 1, 2024
+- Final Delivery: June 30, 2024
+
+This document contains structured contact information and project data
+that should be processed intelligently by the Database Agent for
+entity extraction, relationship mapping, and intelligent integration
+with existing knowledge base information.

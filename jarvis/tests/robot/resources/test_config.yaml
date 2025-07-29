@@ -1,0 +1,70 @@
+# Test Configuration for Jarvis Voice Assistant
+# This configuration is used during Robot Framework testing
+
+# Test mode settings
+test_mode:
+  enabled: true
+  api_endpoint: "http://localhost:8080"
+  mock_audio: true
+  fast_response: true
+  log_level: DEBUG
+  timeout: 30
+
+# Audio configuration for testing
+audio:
+  test_mode: true
+  mock_microphone: true
+  mock_speaker: true
+  wake_word: "jarvis"
+  confidence_threshold: 0.7
+  sample_rate: 16000
+
+# LLM configuration for testing
+llm:
+  provider: "ollama"
+  model: "llama3.1:8b"
+  api_base: "http://localhost:11434"
+  temperature: 0.1  # Lower temperature for consistent test results
+  max_tokens: 500   # Shorter responses for faster tests
+  timeout: 30
+
+# Memory configuration for testing
+memory:
+  short_term:
+    enabled: true
+    max_messages: 10
+  long_term:
+    enabled: true
+    storage_path: "/tmp/jarvis_test_memory"
+    
+# Plugin configuration for testing
+plugins:
+  auto_discover: true
+  test_mode: true
+  mock_external_apis: true
+
+# Open Interpreter configuration for testing
+open_interpreter:
+  enabled: true
+  test_mode: true
+  safe_mode: true
+  auto_run: false
+  timeout: 30
+
+# Conversation configuration for testing
+conversation:
+  max_history: 5
+  response_timeout: 10
+  test_mode: true
+
+# UI configuration for testing
+ui:
+  enabled: false  # Disable UI during testing
+  debug_mode: true
+
+# Logging configuration for testing
+logging:
+  level: DEBUG
+  file: "/tmp/jarvis_test.log"
+  console: true
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

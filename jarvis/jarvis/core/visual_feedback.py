@@ -48,55 +48,55 @@ class VisualFeedbackManager:
         self._lock = Lock()
         self._animation_frame = 0
         
-        # Status indicators with colors and animations
+        # Status indicators with colors (no emojis for clean output)
         self.status_indicators = {
             FeedbackStatus.IDLE: {
-                "icon": "💤",
+                "icon": "",
                 "text": "Idle",
                 "color": "\033[90m",  # Gray
-                "animation": ["💤", "😴"]
+                "animation": ["", ""]
             },
             FeedbackStatus.LISTENING_WAKE_WORD: {
-                "icon": "👂",
+                "icon": "",
                 "text": "Listening for wake word",
                 "color": "\033[94m",  # Blue
-                "animation": ["👂", "🎧", "👂", "🔊"]
+                "animation": ["", "", "", ""]
             },
             FeedbackStatus.WAKE_WORD_DETECTED: {
-                "icon": "✨",
+                "icon": "",
                 "text": "Wake word detected!",
                 "color": "\033[92m",  # Green
-                "animation": ["✨", "⭐", "🌟", "✨"]
+                "animation": ["", "", "", ""]
             },
             FeedbackStatus.LISTENING_COMMAND: {
-                "icon": "🎤",
+                "icon": "",
                 "text": "Listening for command",
                 "color": "\033[93m",  # Yellow
-                "animation": ["🎤", "🎙️", "🎤", "📢"]
+                "animation": ["", "", "", ""]
             },
             FeedbackStatus.PROCESSING: {
-                "icon": "🧠",
+                "icon": "",
                 "text": "Processing",
                 "color": "\033[95m",  # Magenta
-                "animation": ["🧠", "💭", "🤔", "💡"]
+                "animation": ["", "", "", ""]
             },
             FeedbackStatus.THINKING: {
-                "icon": "🤔",
+                "icon": "",
                 "text": "Thinking",
                 "color": "\033[96m",  # Cyan
-                "animation": ["🤔", "💭", "🧠", "💡"]
+                "animation": ["", "", "", ""]
             },
             FeedbackStatus.SPEAKING: {
-                "icon": "🗣️",
+                "icon": "",
                 "text": "Speaking",
                 "color": "\033[91m",  # Red
-                "animation": ["🗣️", "💬", "🗨️", "💭"]
+                "animation": ["", "", "", ""]
             },
             FeedbackStatus.ERROR: {
-                "icon": "❌",
+                "icon": "",
                 "text": "Error occurred",
                 "color": "\033[91m",  # Red
-                "animation": ["❌", "⚠️", "🚫", "❗"]
+                "animation": ["", "", "", ""]
             }
         }
         
@@ -181,13 +181,13 @@ class VisualFeedbackManager:
             icon = indicator["icon"]
             text = message or indicator["text"]
             
-            # Confidence indicator
+            # Confidence indicator (text-based, no emojis)
             if confidence >= 0.8:
-                conf_icon = "🟢"
+                conf_icon = "HIGH"
             elif confidence >= 0.6:
-                conf_icon = "🟡"
+                conf_icon = "MED"
             else:
-                conf_icon = "🔴"
+                conf_icon = "LOW"
             
             if self.enable_colors:
                 color = indicator["color"]

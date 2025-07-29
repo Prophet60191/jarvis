@@ -52,11 +52,11 @@ def check_requirements():
             print("✅ Ollama running")
             
             # Check for required model
-            if "llama3.1:8b" in result.stdout:
-                print("✅ llama3.1:8b model available")
+            if "qwen2.5:7b-instruct" in result.stdout:
+                print("✅ qwen2.5:7b-instruct model available")
             else:
-                print("⚠️  llama3.1:8b model not found")
-                print("   Run: ollama pull llama3.1:8b")
+                print("⚠️  qwen2.5:7b-instruct model not found")
+                print("   Run: ollama pull qwen2.5:7b-instruct")
         else:
             print("❌ Ollama not running")
             print("   Start Ollama first")

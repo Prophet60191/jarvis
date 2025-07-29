@@ -94,30 +94,23 @@ class TerminalUI:
         
         timestamp = datetime.now().strftime("%H:%M:%S")
         
-        # Choose color and icon based on status type
+        # Choose color based on status type (no icons for clean output)
         if status_type == StatusType.LISTENING:
-            icon = "👂"
             color = self.colors.BLUE
         elif status_type == StatusType.THINKING:
-            icon = "🧠"
             color = self.colors.YELLOW
         elif status_type == StatusType.SPEAKING:
-            icon = "🔊"
             color = self.colors.GREEN
         elif status_type == StatusType.SUCCESS:
-            icon = "✅"
             color = self.colors.GREEN
         elif status_type == StatusType.WARNING:
-            icon = "⚠️"
             color = self.colors.YELLOW
         elif status_type == StatusType.ERROR:
-            icon = "❌"
             color = self.colors.RED
         else:  # INFO
-            icon = "ℹ️"
             color = self.colors.CYAN
             
-        status_line = f"{self.colors.GRAY}[{timestamp}]{self.colors.RESET} {icon} {color}{message}{self.colors.RESET}"
+        status_line = f"{self.colors.GRAY}[{timestamp}]{self.colors.RESET} {color}{message}{self.colors.RESET}"
         print(status_line)
         self.last_status_line = status_line
         
@@ -131,12 +124,12 @@ class TerminalUI:
     def show_user_input(self, text: str, confidence: Optional[float] = None):
         """Display user input in conversation format."""
         confidence_str = f" (confidence: {confidence:.2f})" if confidence else ""
-        print(f"\n{self.colors.BLUE}{self.colors.BOLD}👤 You:{self.colors.RESET} {text}{self.colors.GRAY}{confidence_str}{self.colors.RESET}")
-        
+        print(f"\n{self.colors.BLUE}{self.colors.BOLD}You:{self.colors.RESET} {text}{self.colors.GRAY}{confidence_str}{self.colors.RESET}")
+
     def show_jarvis_response(self, text: str, thinking_time: Optional[float] = None):
         """Display Jarvis response in conversation format."""
         thinking_str = f" (processed in {thinking_time:.1f}s)" if thinking_time else ""
-        print(f"{self.colors.GREEN}{self.colors.BOLD}🤖 Jarvis:{self.colors.RESET} {text}{self.colors.GRAY}{thinking_str}{self.colors.RESET}")
+        print(f"\n\n{self.colors.GREEN}{self.colors.BOLD}Jarvis:{self.colors.RESET} {text}{self.colors.GRAY}{thinking_str}{self.colors.RESET}")
         
     def show_conversation_end(self, reason: str = "timeout"):
         """Show conversation end indicator."""
@@ -146,7 +139,7 @@ class TerminalUI:
         
     def show_listening_prompt(self):
         """Show the main listening prompt."""
-        print(f"{self.colors.BLUE}👂 Listening for wake word...{self.colors.RESET}")
+        print(f"{self.colors.BLUE}Listening for wake word...{self.colors.RESET}")
         print(f"{self.colors.DIM}   Say 'jarvis' clearly and wait for response{self.colors.RESET}")
         
     def show_error(self, error_msg: str, suggestions: Optional[list] = None):
@@ -201,16 +194,21 @@ class TerminalUI:
         color = self.colors.GREEN if success else self.colors.RED
         print(f"   {icon} {color}{component}: {status}{self.colors.RESET}")
         
-    def show_tool_list(self, tools: list):
+    def show_tool_list(self, tools: list, show_full_list: bool = False):
         """Show available tools in a formatted way."""
         if not tools:
             print(f"{self.colors.YELLOW}   No tools available{self.colors.RESET}")
             return
-            
-        print(f"{self.colors.BLUE}🔧 Available Tools:{self.colors.RESET}")
-        for i, tool in enumerate(tools, 1):
-            print(f"   {i}. {self.colors.GREEN}{tool}{self.colors.RESET}")
-        print()
+
+        if show_full_list:
+            print(f"{self.colors.BLUE}🔧 Available Tools:{self.colors.RESET}")
+            for i, tool in enumerate(tools, 1):
+                print(f"   {i}. {self.colors.GREEN}{tool}{self.colors.RESET}")
+            print()
+        else:
+            # Show condensed tool summary
+            print(f"{self.colors.BLUE}🔧 Tools Available: {self.colors.GREEN}{len(tools)}{self.colors.RESET} {self.colors.GRAY}(vault, settings, memory, time, logs){self.colors.RESET}")
+            print()
         
     def prompt_user(self, message: str) -> str:
         """Prompt user for input with styling."""
@@ -222,6 +220,49 @@ class TerminalUI:
         for key, value in info.items():
             print(f"   {key}: {self.colors.YELLOW}{value}{self.colors.RESET}")
         print()
+
+    def show_clean_conversation_start(self, conversation_num: int):
+        """Show clean conversation start without verbose separators."""
+        print(f"\n{self.colors.CYAN}Conversation #{conversation_num}{self.colors.RESET}")
+
+    def show_clean_conversation_end(self, reason: str = "timeout"):
+        """Show clean conversation end."""
+        reason_text = {
+            "timeout": "ended (timeout)",
+            "user": "ended by user",
+            "error": "ended (error)"
+        }.get(reason, "ended")
+        print(f"{self.colors.GRAY}└─ {reason_text}{self.colors.RESET}\n")
+
+    def show_minimal_startup(self, config_info: dict):
+        """Show minimal startup information."""
+        print(f"\n{self.colors.CYAN}{self.colors.BOLD}")
+        print("╔══════════════════════════════════════════════════════════════╗")
+        print("║                     JARVIS VOICE ASSISTANT                   ║")
+        print("║                        Ready to Help                        ║")
+        print("╚══════════════════════════════════════════════════════════════╝")
+        print(f"{self.colors.RESET}")
+
+        # Show essential info only
+        print(f"{self.colors.GREEN}Model:{self.colors.RESET} {config_info.get('model', 'Unknown')}")
+        print(f"{self.colors.GREEN}Tools:{self.colors.RESET} {config_info.get('tool_count', 0)} available")
+        print(f"{self.colors.GREEN}Wake Word:{self.colors.RESET} '{config_info.get('wake_word', 'jarvis')}'")
+        print()
+
+        # Show simple controls
+        print(f"{self.colors.YELLOW}Say 'jarvis' to start • Press Ctrl+C to stop{self.colors.RESET}")
+        print(f"{self.colors.GRAY}{'─' * 60}{self.colors.RESET}")
+
+    def show_service_loading(self, service_name: str, status: str = "loading"):
+        """Show service loading status."""
+        if status == "loading":
+            print(f"{self.colors.BLUE}Loading {service_name}...{self.colors.RESET}")
+        elif status == "success":
+            print(f"{self.colors.GREEN}✓ {service_name} ready{self.colors.RESET}")
+        elif status == "failed":
+            print(f"{self.colors.RED}✗ {service_name} failed{self.colors.RESET}")
+        elif status == "skipped":
+            print(f"{self.colors.YELLOW}- {service_name} skipped{self.colors.RESET}")
 
 # Global instance
 terminal_ui = TerminalUI()

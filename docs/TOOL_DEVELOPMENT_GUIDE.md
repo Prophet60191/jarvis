@@ -6,6 +6,13 @@ This guide provides comprehensive instructions for creating tools that integrate
 
 Jarvis tools are Python functions that extend the assistant's capabilities using LangChain's `@tool` decorator and our MCP plugin architecture. Tools are automatically discovered and loaded without requiring changes to the core codebase.
 
+### Recent Enhancements (July 2025)
+
+- **Desktop Application Management**: Tools can now control desktop applications with robust lifecycle management
+- **User Profile Integration**: Tools can access and use stored user information for personalization
+- **Enhanced Error Handling**: Improved fallback mechanisms and graceful degradation
+- **Application Manager API**: New APIs for managing desktop application processes
+
 ## Tool Architecture
 
 ### Core Components
@@ -375,4 +382,188 @@ python manage_plugins.py info MyTool
 python manage_plugins.py reload MyTool
 ```
 
-This guide covers the modern MCP-based approach for Jarvis tool development with automatic discovery and LangChain integration.
+## Desktop Application Management
+
+### Using the Application Manager
+
+Tools can control desktop applications using the robust Application Manager:
+
+```python
+from langchain_core.tools import tool
+
+# Import with error handling
+try:
+    from jarvis.utils.app_manager import get_app_manager
+except ImportError:
+    def get_app_manager():
+        return None
+
+@tool
+def open_my_app(panel: str = "main") -> str:
+    """Open a custom desktop application."""
+    try:
+        app_manager = get_app_manager()
+        if app_manager:
+            # Use robust manager
+            app_manager.register_app(
+                name="my_app",
+                script_path="/path/to/my_app.py",
+                args=["--panel", panel]
+            )
+
+            if app_manager.start_app("my_app"):
+                return f"My App ({panel}) is now open."
+            else:
+                return "Failed to open My App."
+        else:
+            # Fallback to direct launch
+            import subprocess
+            subprocess.Popen(["python", "/path/to/my_app.py"])
+            return "Opening My App..."
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@tool
+def close_my_app() -> str:
+    """Close the custom desktop application."""
+    try:
+        app_manager = get_app_manager()
+        if app_manager and app_manager.is_app_running("my_app"):
+            if app_manager.stop_app("my_app"):
+                return "My App closed successfully."
+            else:
+                return "Failed to close My App."
+        else:
+            return "My App is not running."
+    except Exception as e:
+        return f"Error: {str(e)}"
+```
+
+## User Profile Integration
+
+### Accessing User Information
+
+Tools can access stored user information for personalization:
+
+```python
+from langchain_core.tools import tool
+
+# Import with error handling
+try:
+    from jarvis.core.user_profile import get_user_profile_manager
+except ImportError:
+    def get_user_profile_manager():
+        return None
+
+@tool
+def personalized_greeting() -> str:
+    """Provide a personalized greeting using stored user information."""
+    try:
+        manager = get_user_profile_manager()
+        if manager:
+            name = manager.get_name()
+            pronouns = manager.get_pronouns()
+
+            if name:
+                greeting = f"Hello, {name}!"
+                if pronouns:
+                    greeting += f" I'll use {pronouns} pronouns when referring to you."
+                return greeting
+            else:
+                return "Hello! I don't have your name stored yet. You can tell me by saying 'My name is...'"
+        else:
+            return "Hello there!"
+    except Exception as e:
+        return f"Hello! (Profile system unavailable: {str(e)})"
+
+@tool
+def check_user_preferences() -> str:
+    """Check user's stored preferences and settings."""
+    try:
+        manager = get_user_profile_manager()
+        if manager:
+            profile = manager.get_profile()
+
+            info = []
+            if profile.name:
+                info.append(f"Name: {profile.name}")
+            if profile.pronouns:
+                info.append(f"Pronouns: {profile.pronouns}")
+            info.append(f"Privacy level: {profile.privacy_level}")
+
+            if info:
+                return "Your preferences:\n" + "\n".join(f"• {item}" for item in info)
+            else:
+                return "No preferences stored yet."
+        else:
+            return "User profile system not available."
+    except Exception as e:
+        return f"Error checking preferences: {str(e)}"
+```
+
+## Enhanced Error Handling
+
+### Robust Tool Development
+
+Modern tools should include comprehensive error handling:
+
+```python
+from langchain_core.tools import tool
+import logging
+
+logger = logging.getLogger(__name__)
+
+@tool
+def robust_tool_example(input_data: str) -> str:
+    """Example of robust tool with comprehensive error handling."""
+    try:
+        # Validate input
+        if not input_data or not input_data.strip():
+            return "Error: Input data cannot be empty."
+
+        # Try primary functionality
+        try:
+            from some_optional_library import process_data
+            result = process_data(input_data)
+            logger.info(f"Successfully processed data: {input_data}")
+            return f"Processed: {result}"
+
+        except ImportError:
+            # Fallback when optional library unavailable
+            logger.warning("Optional library not available, using fallback")
+            result = input_data.upper()  # Simple fallback
+            return f"Fallback processing: {result}"
+
+        except Exception as e:
+            # Handle processing errors
+            logger.error(f"Processing error: {e}")
+            return f"Processing failed: {str(e)}"
+
+    except Exception as e:
+        # Handle unexpected errors
+        logger.error(f"Unexpected error in robust_tool_example: {e}")
+        return f"Tool error: {str(e)}"
+```
+
+## Best Practices (Updated)
+
+1. **Clear Documentation**: Write comprehensive docstrings with examples
+2. **Error Handling**: Always handle exceptions gracefully with fallbacks
+3. **Type Hints**: Use proper type annotations for all parameters
+4. **Validation**: Validate inputs before processing
+5. **Logging**: Use appropriate logging levels for debugging
+6. **Testing**: Test tools thoroughly before deployment
+7. **Performance**: Consider performance implications for long-running operations
+8. **Fallback Mechanisms**: Provide graceful degradation when dependencies unavailable
+9. **User Personalization**: Use stored user information when appropriate
+10. **Resource Cleanup**: Properly clean up resources in desktop applications
+11. **Import Safety**: Handle import errors gracefully with try/except blocks
+12. **Path Resolution**: Use robust path finding for file and application locations
+
+## See Also
+
+- [Desktop Applications Guide](DESKTOP_APPLICATIONS.md) - Complete guide to desktop app management
+- [Application Manager](APPLICATION_MANAGER.md) - Process lifecycle management documentation
+- [User Profile System](USER_PROFILE_SYSTEM.md) - User personalization and profile management
+
+This guide covers the modern MCP-based approach for Jarvis tool development with automatic discovery, LangChain integration, and enhanced system capabilities.

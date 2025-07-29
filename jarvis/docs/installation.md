@@ -86,8 +86,8 @@ sudo yum install portaudio-devel espeak espeak-devel
 ### 4. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/jarvis-assistant.git
-cd jarvis-assistant
+git clone https://github.com/Prophet60191/jarvis.git
+cd jarvis
 ```
 
 ### 5. Create Virtual Environment
@@ -120,28 +120,30 @@ pip install -r requirements.txt
 # Start Ollama service
 ollama serve &
 
-# Pull a model (choose based on your hardware)
-# For low-end systems:
-ollama pull qwen2.5:1.5b
+# Pull the recommended model (optimized for tool calling)
+ollama pull llama3.1:8b
 
-# For mid-range systems:
-ollama pull qwen2.5:7b
+# Alternative models based on your hardware:
+# For low-end systems (4GB RAM):
+# ollama pull qwen2.5:1.5b
 
-# For high-end systems:
-ollama pull qwen2.5:14b
+# For high-end systems (16GB+ RAM):
+# ollama pull qwen2.5:14b
 
 # Verify installation
 ollama list
 ```
 
-### 8. Configure Jarvis
+### 8. Configure Jarvis (Optional)
 
 ```bash
-# Copy configuration template
+# Copy configuration template (if it exists)
 cp .env.example .env
 
 # Edit configuration (optional)
 nano .env  # or your preferred editor
+
+# Note: Jarvis works with default settings, configuration is optional
 ```
 
 ### 9. Test Installation
@@ -172,7 +174,14 @@ except Exception as e:
 ### 10. Run Jarvis
 
 ```bash
+# Recommended: Use the startup script
+python start_jarvis.py
+
+# Alternative: Direct module execution
 python -m jarvis.main
+
+# Or use the shell script (macOS/Linux)
+./start_jarvis.sh
 ```
 
 ## Troubleshooting Installation Issues
@@ -402,6 +411,6 @@ Plugins are automatically discovered and loaded, making it easy to extend Jarvis
 
 If you encounter issues not covered here:
 
-1. Check the [Troubleshooting Guide](troubleshooting.md)
-2. Search [GitHub Issues](https://github.com/your-username/jarvis-assistant/issues)
+1. Check the [Troubleshooting Guide](TROUBLESHOOTING.md)
+2. Search [GitHub Issues](https://github.com/Prophet60191/jarvis/issues)
 3. Create a new issue with detailed information about your system and the problem

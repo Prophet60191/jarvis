@@ -6,9 +6,10 @@ Welcome to the comprehensive documentation for Jarvis Voice Assistant! This guid
 
 **New to Jarvis?** Start here:
 
-1. **[Installation Guide](installation.md)** - Get Jarvis running on your system
-2. **[Developer Quick Start](DEVELOPER_QUICK_START.md)** - For developers wanting to contribute or extend Jarvis
-3. **[Main README](../README.md)** - Project overview and basic usage
+1. **[Complete User Guide](../USER_GUIDE.md)** - Comprehensive guide for end users
+2. **[Installation Guide](installation.md)** - Get Jarvis running on your system
+3. **[Developer Quick Start](DEVELOPER_QUICK_START.md)** - For developers wanting to contribute or extend Jarvis
+4. **[Documentation Index](../DOCUMENTATION_INDEX.md)** - Find all guides and references
 
 ## 📖 Documentation Structure
 

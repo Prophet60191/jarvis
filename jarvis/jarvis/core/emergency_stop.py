@@ -196,9 +196,6 @@ def setup_emergency_stop(speech_manager=None, agent=None,
         tts_manager=tts_manager
     )
     
-    print("🛑 Emergency stop system active:")
-    print("   - Ctrl+C (enhanced - works in all states)")
-    print("   💡 Press Ctrl+C anytime to immediately stop Jarvis")
-    print("   ✅ Works during TTS, LLM processing, and audio recording")
+    # Emergency stop system is now active (silent setup)
     
     return manager

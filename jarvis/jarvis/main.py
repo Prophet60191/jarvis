@@ -87,90 +87,70 @@ class JarvisApplication:
             InitializationError: If initialization fails
         """
         try:
-            print("🚀 ASYNC INITIALIZE METHOD CALLED - PRINT STATEMENT")
-            logger.info("🚀 ASYNC INITIALIZE METHOD CALLED")
-            logger.info("🤖 Initializing Jarvis Voice Assistant...")
+            # Suppress verbose warnings globally
+            import warnings
+            import os
+            warnings.filterwarnings("ignore", category=UserWarning)
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            os.environ['PYTHONWARNINGS'] = 'ignore'
+
+            logger.info("Initializing Jarvis Voice Assistant...")
+
+            # Show clean startup header
+            from .utils.terminal_ui import terminal_ui
+            terminal_ui.clear_screen()
+            print("JARVIS VOICE ASSISTANT")
+            print("=" * 60)
 
             # Load configuration
+            terminal_ui.show_service_loading("Configuration")
             self.config = get_config()
-            logger.info("✅ Configuration loaded")
+            terminal_ui.show_service_loading("Configuration", "success")
+            logger.info("Configuration loaded")
 
             # Initialize speech manager
+            terminal_ui.show_service_loading("Speech System")
             self.speech_manager = SpeechManager(self.config.audio)
             self.speech_manager.initialize()
-            logger.info("✅ Speech system initialized")
+            terminal_ui.show_service_loading("Speech System", "success")
+            logger.info("Speech system initialized")
 
-            # Start MCP system (will be handled in async agent initialization)
-            from .tools import start_mcp_system, get_mcp_tool_manager, get_mcp_client
-            if start_mcp_system():
-                logger.info("✅ MCP system started")
-            else:
-                logger.warning("⚠️ MCP system failed to start, continuing without MCP tools")
+            # MCP system will be initialized in async agent initialization
+            terminal_ui.show_service_loading("MCP Tools")
+            terminal_ui.show_service_loading("MCP Tools", "pending")
+            logger.info("MCP system will be initialized with agent")
 
             # Initialize agent with all tools (built-in + MCP)
-            # Use the working synchronous approach since async causes MCP conflicts
-            logger.info("🔄 Initializing agent with all available tools...")
-            print("🔄 USING SYNCHRONOUS TOOL INITIALIZATION")
+            terminal_ui.show_service_loading("AI Agent")
+            logger.info("Initializing agent with all available tools...")
 
-            # Initialize RAG system if enabled
-            print("🧠 Initializing RAG memory system...")
-            from .tools.rag_memory_manager import RAGMemoryManager
-            from .tools.rag_tools import get_rag_tools
+            # RAG system is now handled as a plugin - no core integration needed
+            self.rag_manager = None  # No core RAG manager needed
 
-            rag_tools = []
-            if self.config.rag.enabled:
-                try:
-                    self.rag_manager = RAGMemoryManager(self.config)
-                    rag_tools = get_rag_tools(self.rag_manager, debug_mode=self.config.general.debug)
-                    print(f"✅ RAG system initialized with {len(rag_tools)} tools")
-                    logger.info(f"✅ RAG system initialized with {len(rag_tools)} tools")
-                except Exception as e:
-                    print(f"⚠️ RAG system initialization failed: {e}")
-                    logger.warning(f"RAG system initialization failed: {e}")
-                    self.rag_manager = None
+            # Use direct Open Interpreter integration (simpler and more reliable)
+            from .tools import plugin_manager
+            from .tools.open_interpreter_direct import get_open_interpreter_tools, is_open_interpreter_available
+
+            # Get plugin tools (includes all functionality including RAG)
+            plugin_tools = plugin_manager.get_all_tools()
+
+            # Get Open Interpreter tools if available
+            if is_open_interpreter_available():
+                open_interpreter_tools = get_open_interpreter_tools()
+                terminal_ui.show_service_loading("Open Interpreter", "success")
+                logger.info(f"Open Interpreter loaded with {len(open_interpreter_tools)} tools")
             else:
-                print("⚠️ RAG system disabled in configuration")
-                self.rag_manager = None
+                open_interpreter_tools = []
+                terminal_ui.show_service_loading("Open Interpreter", "failed")
+                logger.warning("Open Interpreter not available, continuing without code execution tools")
 
-            # Use official MCP adapters for proper tool conversion
-            print("🔄 Starting official MCP system...")
-            from .core.mcp_official_adapter import start_official_mcp_system, get_official_mcp_tools
-            from .tools import tool_registry, plugin_manager
+            # Combine all tools (RAG is included in plugin_tools)
+            all_tools = plugin_tools + open_interpreter_tools
 
-            # Start official MCP system
-            mcp_success = await start_official_mcp_system(self.config)
+            # No MCP client needed for direct integration
+            self.mcp_client = None
 
-            if mcp_success:
-                print("✅ Official MCP system started successfully")
-
-                # Get tools using official adapters
-                mcp_tools = await get_official_mcp_tools()
-                print(f"🎉 Official MCP adapters loaded {len(mcp_tools)} tools")
-
-                # Get plugin tools (includes all functionality - no built-in tools)
-                plugin_tools = plugin_manager.get_all_tools()
-
-                # Combine all tools including RAG tools
-                all_tools = plugin_tools + mcp_tools + rag_tools
-                print(f"📊 Total tools: {len(all_tools)} (plugin: {len(plugin_tools)}, MCP: {len(mcp_tools)}, RAG: {len(rag_tools)})")
-
-                # Store MCP manager for conversation manager access
-                from .core.mcp_official_adapter import get_official_mcp_manager
-                self.mcp_client = get_official_mcp_manager()
-                if self.mcp_client:
-                    self.mcp_client.loop = self.loop  # Pass the persistent event loop
-            else:
-                print("⚠️ Official MCP system failed - using plugin tools only")
-                # Fallback to plugin tools + RAG tools (no built-in tools)
-                plugin_tools = plugin_manager.get_all_tools()
-                all_tools = plugin_tools + rag_tools
-                print(f"📊 Fallback tools: {len(all_tools)} (plugin: {len(plugin_tools)}, RAG: {len(rag_tools)})")
-                # Set MCP client to None in fallback case
-                self.mcp_client = None
-
-            print("🤖 Creating JarvisAgent...")
             self.agent = JarvisAgent(self.config.llm)
-            print("🔧 Initializing agent with tools...")
 
             # Try agent initialization with timeout
             try:
@@ -179,52 +159,46 @@ class JarvisApplication:
                     asyncio.to_thread(self.agent.initialize, all_tools),
                     timeout=30.0  # 30 second timeout
                 )
-                print(f"✅ Agent initialized with {len(all_tools)} tools")
-                print(f"🛠️ Agent tool names: {[tool.name for tool in all_tools]}")
-                logger.info(f"✅ AI agent initialized with {len(all_tools)} tools")
+                terminal_ui.show_service_loading("AI Agent", "success")
+                logger.info(f"AI agent initialized with {len(all_tools)} tools")
             except asyncio.TimeoutError:
-                print("❌ Agent initialization timed out - falling back to plugin tools")
-                # Fallback to plugin tools + RAG tools if MCP tools cause issues
-                from .tools import plugin_manager
-                basic_tools = plugin_manager.get_all_tools() + rag_tools
+                # Fallback to plugin tools only if initialization times out
+                basic_tools = plugin_tools
                 self.agent.initialize(tools=basic_tools)
-                print(f"✅ Agent initialized with {len(basic_tools)} plugin tools (fallback)")
-                logger.info(f"✅ Agent initialized with {len(basic_tools)} plugin tools (fallback)")
+                terminal_ui.show_service_loading("AI Agent", "success")
+                logger.info(f"Agent initialized with {len(basic_tools)} tools (timeout fallback)")
             except Exception as e:
-                print(f"❌ Agent initialization failed: {e}")
-                # Fallback to plugin tools + RAG tools
-                from .tools import plugin_manager
-                basic_tools = plugin_manager.get_all_tools() + rag_tools
+                # Fallback to plugin tools only
+                basic_tools = plugin_tools
                 self.agent.initialize(tools=basic_tools)
-                print(f"✅ Agent initialized with {len(basic_tools)} plugin tools (error fallback)")
+                terminal_ui.show_service_loading("AI Agent", "success")
                 logger.error(f"Agent initialization failed, using fallback: {e}")
 
-            # MCP tools are now handled in the async agent initialization above
-
             # Initialize conversation manager
-            print("💬 Initializing conversation manager...")
+            terminal_ui.show_service_loading("Conversation Manager")
             self.conversation_manager = ConversationManager(
                 self.config.conversation,
                 self.speech_manager,
                 self.agent,
                 self.mcp_client  # Pass MCP client for event loop access
             )
-            print("✅ Conversation manager initialized")
-            logger.info("✅ Conversation manager initialized")
+            terminal_ui.show_service_loading("Conversation Manager", "success")
+            logger.info("Conversation manager initialized")
 
             # Initialize wake word detector
-            print("👂 Initializing wake word detector...")
+            terminal_ui.show_service_loading("Wake Word Detector")
             self.wake_word_detector = WakeWordDetector(
                 self.config.conversation,
                 self.speech_manager
             )
-            print("✅ Wake word detector initialized")
-            logger.info("✅ Wake word detector initialized")
+            terminal_ui.show_service_loading("Wake Word Detector", "success")
+            logger.info("Wake word detector initialized")
 
             # Set up conversation callbacks
-            print("🔗 Setting up callbacks...")
+            terminal_ui.show_service_loading("System Callbacks")
             self._setup_callbacks()
-            print("✅ Callbacks set up")
+            terminal_ui.show_service_loading("System Callbacks", "success")
+            logger.info("Callbacks set up")
 
             # Emergency stop system will be set up in main thread after initialization
 
@@ -247,90 +221,7 @@ class JarvisApplication:
 
         self.wake_word_detector.set_detection_callback(on_wake_word_detected)
 
-    async def _initialize_agent_with_mcp_tools(self) -> JarvisAgent:
-        """
-        Initialize the agent with both built-in and MCP tools using proper async pattern.
-
-        Returns:
-            JarvisAgent: Fully initialized agent with all tools
-        """
-        print("🚀 _initialize_agent_with_mcp_tools() called - PRINT STATEMENT")
-        logger.info("🚀 _initialize_agent_with_mcp_tools() called")
-        try:
-            # Get built-in tools first (using the proper conversion method)
-            from .tools import tool_registry, plugin_manager
-            builtin_tools = tool_registry.get_langchain_tools()
-            plugin_tools = plugin_manager.get_all_tools()
-            base_tools = builtin_tools + plugin_tools
-
-            print(f"📦 FOUND: {len(builtin_tools)} built-in tools and {len(plugin_tools)} plugin tools")
-            logger.info(f"📦 Found {len(builtin_tools)} built-in tools and {len(plugin_tools)} plugin tools")
-
-            # Check if MCP system is available and wait for servers to be ready
-            print("🔍 GETTING MCP TOOL MANAGER...")
-            mcp_tool_manager = get_mcp_tool_manager()
-            print(f"🔍 MCP TOOL MANAGER: {mcp_tool_manager is not None}")
-
-            print("🔍 GETTING MCP CLIENT...")
-            mcp_client = get_mcp_client()
-            print(f"🔍 MCP CLIENT: {mcp_client is not None}")
-
-            # Store MCP client for conversation manager access
-            self.mcp_client = mcp_client
-
-            logger.info(f"🔍 MCP tool manager available: {mcp_tool_manager is not None}")
-            logger.info(f"🔍 MCP client available: {mcp_client is not None}")
-
-            if mcp_tool_manager and mcp_client:
-                # Wait for MCP servers to be connected and tools discovered
-                logger.info("⏳ Waiting for MCP servers to be ready...")
-
-                # Use the new wait method to properly wait for server connections
-                servers_ready = mcp_client.wait_for_servers_ready_sync(timeout=10.0)
-
-                if servers_ready:
-                    # Get MCP tools after servers are ready
-                    mcp_tools = mcp_tool_manager.get_langchain_tools()
-                    mcp_count = len(mcp_tools)
-                    print(f"🎉 MCP SERVERS READY! Retrieved {mcp_count} MCP tools")
-                    logger.info(f"🎉 MCP servers ready! Retrieved {mcp_count} MCP tools")
-
-                    # Log MCP tool names for debugging
-                    if mcp_tools:
-                        mcp_tool_names = [tool.name for tool in mcp_tools]
-                        print(f"🛠️ MCP TOOL NAMES: {mcp_tool_names}")
-                        logger.info(f"🛠️ MCP tool names: {mcp_tool_names}")
-
-                    # Combine all tools
-                    all_tools = base_tools + mcp_tools
-                    print(f"📊 TOTAL TOOLS COMBINED: {len(all_tools)} (base: {len(base_tools)} + mcp: {len(mcp_tools)})")
-                else:
-                    print("⚠️ MCP SERVERS NOT READY - using only base tools")
-                    logger.warning("⚠️ MCP servers not ready after timeout, using only base tools")
-                    all_tools = base_tools
-            else:
-                print("⚠️ MCP SYSTEM NOT AVAILABLE - using only base tools")
-                logger.warning("⚠️ MCP system not available, using only base tools")
-                all_tools = base_tools
-
-            # Create and initialize agent with all tools
-            agent = JarvisAgent(self.config.llm)
-            agent.initialize(tools=all_tools)
-
-            print(f"✅ AGENT INITIALIZED WITH {len(all_tools)} TOTAL TOOLS")
-            print(f"🛠️ TOOL NAMES: {[tool.name for tool in all_tools]}")
-            logger.info(f"✅ Agent initialized with {len(all_tools)} total tools")
-            logger.debug(f"🛠️ Tool names: {[tool.name for tool in all_tools]}")
-
-            return agent
-
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize agent with MCP tools: {e}")
-            # Fallback to base tools only
-            logger.info("🔄 Falling back to base tools only")
-            agent = JarvisAgent(self.config.llm)
-            agent.initialize(tools=base_tools)
-            return agent
+    # Legacy MCP method removed - using official MCP system only
 
     def _refresh_agent_tools(self) -> None:
         """Refresh agent tools when MCP tools are updated."""
@@ -379,8 +270,11 @@ class JarvisApplication:
             self.running = True
             logger.info("🚀 Starting Jarvis Voice Assistant")
 
-            # Display startup information
-            self._display_startup_info()
+            # Show final startup status
+            print()
+            print("System ready - listening for wake word...")
+            print("Say 'jarvis' to start • Press Ctrl+C to stop")
+            print("─" * 60)
 
             # Start main loop (synchronous for wake word detection)
             self._main_loop()
@@ -405,9 +299,8 @@ class JarvisApplication:
 
     def _display_startup_info(self) -> None:
         """Display startup information to user."""
-        # Clear screen and show header
+        # Clear screen and show minimal header
         terminal_ui.clear_screen()
-        terminal_ui.print_header()
 
         # Get all available tools (plugin-based architecture)
         from .tools import plugin_manager
@@ -428,26 +321,14 @@ class JarvisApplication:
             mcp_tools = []
 
         all_tools = plugin_tools + mcp_tools
-        tool_names = [tool.name for tool in all_tools]
 
-        # Show configuration
+        # Show minimal configuration
         config_info = {
-            'microphone': self.config.audio.mic_name or 'Default',
             'model': self.config.llm.model,
             'tool_count': len(all_tools),
             'wake_word': self.config.conversation.wake_word,
-            'timeout': self.config.conversation.conversation_timeout
         }
-        terminal_ui.print_startup_info(config_info)
-
-        # Show available tools
-        terminal_ui.show_tool_list(tool_names)
-
-        # Show controls
-        terminal_ui.print_controls()
-
-        # Show separator
-        terminal_ui.print_separator()
+        terminal_ui.show_minimal_startup(config_info)
 
     def _main_loop(self) -> None:
         """Main application loop."""

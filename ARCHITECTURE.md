@@ -2,17 +2,23 @@
 
 ## 🎯 **Core Design Principles**
 
-### **1. Zero Built-in Tools**
-- **No hard-coded functionality** in the core application
-- **Everything is plugin-based** for maximum flexibility
-- **Hot-swappable tools** without app restarts
-- **User control** over all functionality
+### **1. True Separation of Concerns**
+- **Independent Components**: Core system, plugins, UIs, and integrations operate independently
+- **Fault Isolation**: Component failures don't cascade to other parts
+- **Clean Interfaces**: Well-defined boundaries between all system components
+- **Modular Development**: Each component can be developed, tested, and deployed separately
 
-### **2. Plugin-First Architecture**
+### **2. Zero Built-in Functionality**
+- **No hard-coded tools** in the core application (even time queries are plugins)
+- **Everything is plugin-based** for maximum flexibility and customization
+- **Hot-swappable components** without system restarts
+- **User control** over all functionality and system behavior
+
+### **3. Plugin-First Architecture**
 - **Single tool source**: Plugin system handles all functionality
 - **Dynamic discovery**: Tools automatically loaded from plugins directory
-- **Clean separation**: Core app focuses on conversation, tools are external
-- **Extensible**: Add unlimited tools without touching core code
+- **Clean separation**: Core app focuses on conversation orchestration only
+- **Unlimited extensibility**: Add tools without touching core code
 
 ### **3. Dual Memory System**
 - **Short-term memory**: Current conversation context (clears between sessions)
@@ -39,13 +45,22 @@
 │                 (Dynamic Tool Loading)                     │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │   Time Plugin   │  │  UI Control     │  │ RAG Memory  │ │
-│  │                 │  │  Plugins        │  │ System      │ │
-│  │ • get_current   │  │ • open_jarvis   │  │ • remember  │ │
-│  │   _time         │  │   _ui           │  │   _fact     │ │
-│  │                 │  │ • close_jarvis  │  │ • search_   │ │
-│  │                 │  │   _ui           │  │   long_term │ │
-│  │                 │  │ • show_status   │  │   _memory   │ │
+│  │   Time Plugin   │  │ Desktop Apps    │  │ RAG Memory  │ │
+│  │                 │  │ Management      │  │ System      │ │
+│  │ • get_current   │  │ • open_vault    │  │ • remember  │ │
+│  │   _time         │  │ • close_vault   │  │   _fact     │ │
+│  │                 │  │ • open_settings │  │ • search_   │ │
+│  │                 │  │ • close_settings│  │   long_term │ │
+│  │                 │  │                 │  │   _memory   │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │ User Profile    │  │ Application     │  │ Custom      │ │
+│  │ Management      │  │ Lifecycle       │  │ Plugins     │ │
+│  │ • set_my_name   │  │ Manager         │  │ • [User     │ │
+│  │ • get_my_name   │  │ • Process       │  │   Defined]  │ │
+│  │ • set_pronouns  │  │   Groups        │  │             │ │
+│  │ • show_profile  │  │ • Signal        │  │             │ │
+│  │ • privacy_ctrl  │  │   Handling      │  │             │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -174,6 +189,27 @@ plugin = MyToolPlugin()
 - ✅ **Maintainable**: Clear separation of concerns
 - ✅ **Flexible**: Support for multiple tool sources (plugins + MCP)
 - ✅ **Robust**: Fallback mechanisms for tool failures
+
+## 🆕 **Recent Architectural Improvements (July 2025)**
+
+### **Desktop Application Management**
+- **Robust Lifecycle System**: Complete process management with signal handling
+- **Application Manager**: Centralized control for desktop app startup/shutdown
+- **Process Groups**: Proper isolation and cleanup of background processes
+- **Signal Handling**: Graceful termination with SIGTERM/SIGINT support
+- **Path Resolution**: Dynamic path finding for reliable app location
+
+### **User Personalization System**
+- **Profile Management**: Persistent storage of user name, pronouns, preferences
+- **Privacy-Conscious Design**: Names excluded from PII filtering, user-controlled storage
+- **Voice Integration**: Natural language commands for profile management
+- **System Integration**: Personalized responses using stored user information
+
+### **Enhanced Tool Reliability**
+- **Import Error Handling**: Graceful degradation when components unavailable
+- **Fallback Mechanisms**: Multiple layers of error recovery
+- **Path Robustness**: Dynamic resolution of application and resource paths
+- **Thread Safety**: Lock-based synchronization for concurrent operations
 
 ## 🚀 **Future Enhancements**
 

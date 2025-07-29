@@ -107,7 +107,6 @@ class AudioConfig:
     # Legacy TTS settings (kept for compatibility)
     tts_rate: int = 180
     tts_volume: float = 0.8
-    tts_voice_preference: str = "Daniel"  # Preferred voice name (British male voice)
     response_delay: float = 0.5  # Delay after speech completion
 
     # Whisper Speech Recognition settings - Optimized for speed
@@ -116,12 +115,12 @@ class AudioConfig:
     whisper_language: str = "en"  # Fixed language for speed
     whisper_compute_type: str = "int8"  # Quantized for faster inference
 
-    # Coqui TTS settings
-    coqui_model: str = "tts_models/multilingual/multi-dataset/xtts_v2"
+    # Coqui TTS settings - Using LJSpeech Tacotron2 (works without voice cloning)
+    coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"
     coqui_language: str = "en"
-    coqui_device: str = "auto"  # auto, cpu, cuda, mps
-    coqui_use_gpu: bool = True
-    coqui_speaker_wav: Optional[str] = None  # Path to voice cloning audio
+    coqui_device: str = "cpu"  # Force CPU to avoid MPS tensor issues
+    coqui_use_gpu: bool = False
+    coqui_speaker_wav: Optional[str] = None  # Not needed for LJSpeech model
     coqui_temperature: float = 0.75
     coqui_length_penalty: float = 1.0
     coqui_repetition_penalty: float = 5.0
@@ -129,12 +128,19 @@ class AudioConfig:
     coqui_top_p: float = 0.85
     coqui_streaming: bool = False  # Enable streaming mode (future feature)
 
-    # TTS Fallback settings (configurable through settings UI)
-    tts_fallback_voices: List[str] = field(default_factory=lambda: [
-        "daniel", "alex", "samantha", "victoria", "karen"
-    ])  # Priority order for voice selection
-    tts_fallback_rate_cap: int = 200  # Maximum TTS rate for clarity
-    tts_fallback_enabled: bool = True  # Enable enhanced fallback TTS
+    # Advanced Coqui TTS settings
+    coqui_voice_preset: str = "ljspeech_tacotron2"  # Voice preset selection
+    coqui_voice_speed: float = 1.0  # Speech speed multiplier
+    coqui_speaker_id: Optional[str] = None  # Speaker ID for multi-speaker models
+    coqui_voice_conditioning_latents: Optional[str] = None  # Pre-computed latents
+    coqui_emotion: str = "neutral"  # Emotion/style for synthesis
+    coqui_sample_rate: int = 22050  # Audio sample rate
+    coqui_vocoder_model: str = "auto"  # Vocoder model selection
+    coqui_speed_factor: float = 1.0  # Fine-tune speed factor
+    coqui_enable_text_splitting: bool = True  # Split long texts
+    coqui_do_trim_silence: bool = True  # Trim silence from audio
+
+
 
 
 @dataclass
@@ -143,7 +149,15 @@ class ConversationConfig:
     wake_word: str = "jarvis"
     conversation_timeout: int = 30  # seconds
     max_retries: int = 3
-    enable_full_duplex: bool = False  # DISABLED: Full-duplex was too sensitive, causing cutoffs
+    enable_full_duplex: bool = False  # REMOVED: Full-duplex mode removed due to TTS cutoff issues
+
+    # Chat session persistence settings
+    chat_history_enabled: bool = True
+    chat_history_path: Path = field(default_factory=lambda: Path("data/chat_sessions"))
+    auto_save_sessions: bool = True
+    max_session_history: int = 100  # Maximum number of sessions to keep
+    session_cleanup_days: int = 30  # Delete sessions older than this many days
+    auto_start_session: bool = True  # Automatically start new session on first interaction
 
 
 @dataclass
@@ -199,18 +213,63 @@ class GeneralConfig:
     data_dir: Path = field(default_factory=lambda: Path.home() / ".jarvis")
     config_file: Optional[Path] = None
 
+    # User profile settings
+    enable_user_profile: bool = True
+    allow_name_storage: bool = True
+    privacy_level: str = "standard"  # minimal, standard, full
+
 
 @dataclass
 class RAGConfig:
     """RAG (Retrieval-Augmented Generation) memory system configuration."""
+    # Core system settings
     enabled: bool = True
+
+    # Storage paths (all configurable)
     vector_store_path: str = "data/chroma_db"
     documents_path: str = "data/documents"
     backup_path: str = "data/backups"
+    chat_history_path: str = "data/chat_history"
+    temp_processing_path: str = "data/temp"
+    logs_path: str = "data/logs"
+
+    # Database settings
     collection_name: str = "jarvis_memory"
+    backup_collection_prefix: str = "backup_"
+
+    # Document processing settings
     chunk_size: int = 1000
     chunk_overlap: int = 150
+    max_document_size_mb: int = 50
+    supported_formats: list = field(default_factory=lambda: ['.txt', '.pdf', '.doc', '.docx', '.md'])
+
+    # Search and retrieval settings
     search_k: int = 5
+    max_search_results: int = 10
+    similarity_threshold: float = 0.7
+
+    # Backup settings
+    auto_backup_enabled: bool = True
+    backup_frequency_hours: int = 24
+    max_backup_files: int = 30
+    compress_backups: bool = True
+
+    # Performance settings
+    batch_size: int = 100
+    max_concurrent_processing: int = 4
+    cache_enabled: bool = True
+    cache_size_mb: int = 100
+
+    # Security settings
+    enable_pii_detection: bool = True
+    sanitize_inputs: bool = True
+    max_memory_length: int = 10000
+
+    # Intelligence settings (for RAGService)
+    intelligent_processing: bool = True
+    document_llm_model: str = "qwen2.5:3b-instruct"
+    query_optimization: bool = True
+    result_synthesis: bool = True
 
 
 @dataclass
@@ -242,7 +301,7 @@ class JarvisConfig:
         config.audio.phrase_time_limit = _get_env_float("JARVIS_PHRASE_TIME_LIMIT", config.audio.phrase_time_limit)
         config.audio.tts_rate = _get_env_int("JARVIS_TTS_RATE", config.audio.tts_rate)
         config.audio.tts_volume = _get_env_float("JARVIS_TTS_VOLUME", config.audio.tts_volume)
-        config.audio.tts_voice_preference = _get_env_str("JARVIS_TTS_VOICE", config.audio.tts_voice_preference)
+
         config.audio.response_delay = _get_env_float("JARVIS_RESPONSE_DELAY", config.audio.response_delay)
 
         # Whisper Speech Recognition configuration
@@ -263,13 +322,18 @@ class JarvisConfig:
         config.audio.coqui_top_k = _get_env_int("JARVIS_COQUI_TOP_K", config.audio.coqui_top_k)
         config.audio.coqui_top_p = _get_env_float("JARVIS_COQUI_TOP_P", config.audio.coqui_top_p)
         config.audio.coqui_streaming = _get_env_bool("JARVIS_COQUI_STREAMING", config.audio.coqui_streaming)
+        config.audio.coqui_voice_preset = _get_env_str("JARVIS_COQUI_VOICE_PRESET", config.audio.coqui_voice_preset)
+        config.audio.coqui_voice_speed = _get_env_float("JARVIS_COQUI_VOICE_SPEED", config.audio.coqui_voice_speed)
+        config.audio.coqui_speaker_id = _get_env_str("JARVIS_COQUI_SPEAKER_ID", config.audio.coqui_speaker_id)
+        config.audio.coqui_voice_conditioning_latents = _get_env_str("JARVIS_COQUI_VOICE_CONDITIONING_LATENTS", config.audio.coqui_voice_conditioning_latents)
+        config.audio.coqui_emotion = _get_env_str("JARVIS_COQUI_EMOTION", config.audio.coqui_emotion)
+        config.audio.coqui_sample_rate = _get_env_int("JARVIS_COQUI_SAMPLE_RATE", config.audio.coqui_sample_rate)
+        config.audio.coqui_vocoder_model = _get_env_str("JARVIS_COQUI_VOCODER_MODEL", config.audio.coqui_vocoder_model)
+        config.audio.coqui_speed_factor = _get_env_float("JARVIS_COQUI_SPEED_FACTOR", config.audio.coqui_speed_factor)
+        config.audio.coqui_enable_text_splitting = _get_env_bool("JARVIS_COQUI_ENABLE_TEXT_SPLITTING", config.audio.coqui_enable_text_splitting)
+        config.audio.coqui_do_trim_silence = _get_env_bool("JARVIS_COQUI_DO_TRIM_SILENCE", config.audio.coqui_do_trim_silence)
 
-        # TTS Fallback configuration
-        fallback_voices_str = os.getenv("JARVIS_TTS_FALLBACK_VOICES")
-        if fallback_voices_str:
-            config.audio.tts_fallback_voices = [v.strip() for v in fallback_voices_str.split(",") if v.strip()]
-        config.audio.tts_fallback_rate_cap = _get_env_int("JARVIS_TTS_FALLBACK_RATE_CAP", config.audio.tts_fallback_rate_cap)
-        config.audio.tts_fallback_enabled = _get_env_bool("JARVIS_TTS_FALLBACK_ENABLED", config.audio.tts_fallback_enabled)
+
 
         # Conversation configuration
         config.conversation.wake_word = _get_env_str("JARVIS_WAKE_WORD", config.conversation.wake_word)
@@ -299,6 +363,11 @@ class JarvisConfig:
         config_file_str = os.getenv("JARVIS_CONFIG_FILE")
         if config_file_str:
             config.general.config_file = Path(config_file_str)
+
+        # User profile configuration
+        config.general.enable_user_profile = _get_env_bool("JARVIS_ENABLE_USER_PROFILE", config.general.enable_user_profile)
+        config.general.allow_name_storage = _get_env_bool("JARVIS_ALLOW_NAME_STORAGE", config.general.allow_name_storage)
+        config.general.privacy_level = _get_env_str("JARVIS_PRIVACY_LEVEL", config.general.privacy_level)
 
         # MCP configuration
         config.mcp.enabled = _get_env_bool("JARVIS_MCP_ENABLED", config.mcp.enabled)

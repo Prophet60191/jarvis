@@ -1,0 +1,924 @@
+{
+  "metadata": {
+    "name": "RAG System Golden Dataset",
+    "version": "1.0",
+    "created": "2024-01-15",
+    "description": "Comprehensive test cases for RAG system quality evaluation",
+    "total_test_cases": 20
+  },
+  "test_results": [
+    {
+      "test_id": "GD001",
+      "category": "factual_recall",
+      "difficulty": "easy",
+      "question": "What programming language does the user prefer for AI projects?",
+      "expected_answer": "Python",
+      "actual_answer": "Based on the provided documents, there is no direct information about a preferred programming language for AI projects in Jarvis. However, several popular languages used in AI development are mentioned, including Python, R, and Julia. According to [plugin_development.txt], these languages support various aspects of AI development such as machine learning and data science.",
+      "response_time": 10.216005086898804,
+      "scores": {
+        "must_contain": 1.0,
+        "should_contain": 1.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.4894281039867623,
+        "overall": 1.0
+      },
+      "passed": false,
+      "issues": [
+        "Response too slow: 10.22s > 5.0s"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "plugin_development.txt (Section: Development Workflow)",
+          "relevance": "high",
+          "key_info": "The plugin system ensures that Jarvis remains extensible and maintainable while providing a clean separation between core functionality and user-added features."
+        },
+        {
+          "source": "plugin_development.txt (Section: Introduction)",
+          "relevance": "high",
+          "key_info": "Jarvis uses a plugin-based architecture where all functionality is provided through dynamically loaded plugins. This allows developers to add new capabilities without modifying the core application."
+        }
+      ]
+    },
+    {
+      "test_id": "GD002",
+      "category": "personal_information",
+      "difficulty": "easy",
+      "question": "Where does the user work?",
+      "expected_answer": "Tech startup as a software engineer",
+      "actual_answer": "Based on the available documents, there is insufficient information to determine where the user works or their job role details.",
+      "response_time": 6.515393972396851,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 1.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.7674133016641854,
+        "overall": 0.5
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'software engineer'",
+        "Missing required term: 'tech startup'",
+        "Response too slow: 6.52s > 5.0s",
+        "Overall score 0.50 below threshold 0.7"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": []
+    },
+    {
+      "test_id": "GD003",
+      "category": "tool_preferences",
+      "difficulty": "easy",
+      "question": "What development environment does the user prefer?",
+      "expected_answer": "VS Code",
+      "actual_answer": "Based on the provided documents, there is limited information directly addressing user preferences for development environments. However, we can infer some factors that might influence their choice based on the context of the documents.",
+      "response_time": 8.583415031433105,
+      "scores": {
+        "must_contain": 0.5,
+        "should_contain": 1.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.5825187273002211,
+        "overall": 0.75
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'VS Code'",
+        "Response too slow: 8.58s > 5.0s",
+        "Overall score 0.75 below threshold 0.8"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": []
+    },
+    {
+      "test_id": "GD004",
+      "category": "document_knowledge",
+      "difficulty": "medium",
+      "question": "What are the key features of the RAG system?",
+      "expected_answer": "Intelligent search, document processing, memory management, backup system",
+      "actual_answer": "The Retrieval-Augmented Generation (RAG) system is a framework that integrates both retrieval and generation components to enhance natural language processing tasks. According to rag_system_details.txt, the RAG system provides seamless integration where users can ask questions drawing from conversational memories and document knowledge without specifying the source. Based on jarvis_overview.txt, the RAG memory system uses ChromaDB for storing conversational facts and document content with semantic search capabilities.",
+      "response_time": 11.68642282485962,
+      "scores": {
+        "must_contain": 0.3333333333333333,
+        "should_contain": 0.3333333333333333,
+        "should_not_contain": 1.0,
+        "response_time": 0.4278469190216093,
+        "overall": 0.4666666666666667
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'intelligent search'",
+        "Missing required term: 'document processing'",
+        "Response too slow: 11.69s > 5.0s",
+        "Overall score 0.47 below threshold 0.7"
+      ],
+      "retrieved_documents_count": 2,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt",
+          "relevance": "high",
+          "key_info": "The system provides seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        },
+        {
+          "source": "jarvis_overview.txt",
+          "relevance": "high",
+          "key_info": "The RAG memory system uses ChromaDB to store both conversational facts and document content with semantic search capabilities."
+        }
+      ]
+    },
+    {
+      "test_id": "GD005",
+      "category": "technical_details",
+      "difficulty": "hard",
+      "question": "How does the RAG system handle document chunking?",
+      "expected_answer": "Uses intelligent chunking with LLM-powered analysis and semantic understanding",
+      "actual_answer": "The RAG system in Jarvis uses ChromaDB for memory capabilities and provides seamless integration of conversational memories with document knowledge. However, the specific methods and techniques used for document chunking are not detailed in the provided documents.",
+      "response_time": 9.118163108825684,
+      "scores": {
+        "must_contain": 0.3333333333333333,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.5483560603517152,
+        "overall": 0.3666666666666667
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'intelligent'",
+        "Missing required term: 'semantic'",
+        "Response too slow: 9.12s > 5.0s",
+        "Overall score 0.37 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 2,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "Overview of the RAG system and its use of ChromaDB for memory capabilities."
+        }
+      ]
+    },
+    {
+      "test_id": "GD006",
+      "category": "configuration",
+      "difficulty": "easy",
+      "question": "What database does the RAG system use for vector storage?",
+      "expected_answer": "ChromaDB",
+      "actual_answer": "Based on the provided document, the RAG system uses ChromaDB for vector storage and retrieval.",
+      "response_time": 8.399204969406128,
+      "scores": {
+        "must_contain": 0.6666666666666666,
+        "should_contain": 1.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.5952944377726657,
+        "overall": 0.8333333333333333
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'database'",
+        "Response too slow: 8.40s > 5.0s",
+        "Overall score 0.83 below threshold 0.9"
+      ],
+      "retrieved_documents_count": 1,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "jarvis_overview.txt",
+          "relevance": "high",
+          "key_info": "The RAG memory system uses ChromaDB to store both conversational facts and document content with semantic search capabilities."
+        }
+      ]
+    },
+    {
+      "test_id": "GD007",
+      "category": "workflow",
+      "difficulty": "medium",
+      "question": "How do you add a new document to the RAG system?",
+      "expected_answer": "Place document in documents folder and run ingestion process",
+      "actual_answer": "To integrate a new document into the RAG system, follow these steps based on the available information and context provided in the documents. According to the plugin_development.txt (Section: Introduction), Jarvis uses a plugin-based architecture where all functionality is provided through dynamically loaded plugins. This allows developers to add new capabilities without modifying the core application. However, specific details about integrating a document into the RAG system are not directly mentioned in the provided text.",
+      "response_time": 10.733225107192993,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.46584320649803507,
+        "overall": 0.2
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'documents folder'",
+        "Missing required term: 'ingestion'",
+        "Response too slow: 10.73s > 5.0s",
+        "Overall score 0.20 below threshold 0.7"
+      ],
+      "retrieved_documents_count": 1,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "plugin_development.txt (Section: Introduction)",
+          "relevance": "high",
+          "key_info": "Introduces the plugin-based architecture of Jarvis and its benefits."
+        }
+      ]
+    },
+    {
+      "test_id": "GD008",
+      "category": "troubleshooting",
+      "difficulty": "medium",
+      "question": "What should you do if the RAG system returns no results?",
+      "expected_answer": "Check if documents are ingested, verify query terms, ensure vector store is accessible",
+      "actual_answer": "When the RAG system fails to return any results, several steps can be taken to troubleshoot and resolve the issue. First, it is important to check if the database timeout settings are correctly configured. According to config_guide_v1.txt (Section: Database Settings), a recommended setting for optimal performance is 30 seconds, while config_guide_v2.txt suggests 60 seconds. The choice between these two values should be based on specific requirements and testing within your environment. Additionally, ensure that the system integration described in rag_system_details.txt (Section: main) is properly set up to allow seamless access to both conversational memories and document knowledge.",
+      "response_time": 14.289338827133179,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 0.5,
+        "should_not_contain": 1.0,
+        "response_time": 0.3499112212599925,
+        "overall": 0.35
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'documents'",
+        "Missing required term: 'ingested'",
+        "Missing required term: 'query'",
+        "Response too slow: 14.29s > 5.0s",
+        "Overall score 0.35 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "config_guide_v1.txt (Section: Database Settings)",
+          "relevance": "high",
+          "key_info": "Recommended database timeout is 30 seconds for optimal performance."
+        },
+        {
+          "source": "config_guide_v2.txt (Section: Database Settings)",
+          "relevance": "high",
+          "key_info": "Recommended database timeout is 60 seconds for optimal performance."
+        },
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "moderate",
+          "key_info": "The system provides seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        }
+      ]
+    },
+    {
+      "test_id": "GD009",
+      "category": "security",
+      "difficulty": "hard",
+      "question": "How does the RAG system protect against prompt injection?",
+      "expected_answer": "Uses security notices, content validation, and treats retrieved content as untrusted",
+      "actual_answer": "The RAG system employs several mechanisms to prevent prompt injection attacks and ensure data integrity. According to rag_system_details.txt (Importance: 0.7), the system integrates conversational memories and document knowledge seamlessly, which inherently limits the ability of attackers to inject malicious prompts by ensuring that all inputs are contextually relevant. However, there is no explicit mention of specific security measures against prompt injection in this document.",
+      "response_time": 10.628903150558472,
+      "scores": {
+        "must_contain": 0.6666666666666666,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.4704154256723363,
+        "overall": 0.5333333333333333
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'validation'",
+        "Response too slow: 10.63s > 5.0s",
+        "Overall score 0.53 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 2,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "The system provides seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        }
+      ]
+    },
+    {
+      "test_id": "GD010",
+      "category": "backup_restore",
+      "difficulty": "medium",
+      "question": "How do you create a backup of the RAG system?",
+      "expected_answer": "Use the backup functionality to create timestamped backups of vector store and documents",
+      "actual_answer": "Based on the provided documents, there is limited information directly related to creating a backup of the RAG system. However, we can infer that the RAG system includes plugins such as the RAG Memory Plugin which handles long-term memory operations. The core architecture of Jarvis supports plugin-based functionality, but specific details about backup procedures are not available in the given documents.",
+      "response_time": 10.746938943862915,
+      "scores": {
+        "must_contain": 0.6666666666666666,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.46524875837833535,
+        "overall": 0.5333333333333333
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'vector store'",
+        "Response too slow: 10.75s > 5.0s",
+        "Overall score 0.53 below threshold 0.7"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "plugin_development.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "Mentions existing plugins including the RAG Memory Plugin."
+        },
+        {
+          "source": "plugin_development.txt (Section: Introduction)",
+          "relevance": "moderate",
+          "key_info": "Introduces the plugin-based architecture of Jarvis and its benefits."
+        }
+      ]
+    },
+    {
+      "test_id": "GD011",
+      "category": "mixed_context",
+      "difficulty": "medium",
+      "question": "What is the user's preferred programming language and what database does the RAG system use?",
+      "expected_answer": "User prefers Python for programming, and the RAG system uses ChromaDB for vector storage",
+      "actual_answer": "Based on the provided documents, there is no explicit mention of users' preferred programming languages. However, the RAG system utilizes ChromaDB as its vector database for storing conversational facts and document content with semantic search capabilities. According to jarvis_overview.txt (Section: Architecture), the RAG memory system uses ChromaDB.",
+      "response_time": 10.623728036880493,
+      "scores": {
+        "must_contain": 0.75,
+        "should_contain": 0.6666666666666666,
+        "should_not_contain": 1.0,
+        "response_time": 0.47064457812195454,
+        "overall": 0.7749999999999999
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'Python'",
+        "Response too slow: 10.62s > 5.0s"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "jarvis_overview.txt (Section: Architecture)",
+          "relevance": "high",
+          "key_info": "The RAG memory system uses ChromaDB to store both conversational facts and document content with semantic search capabilities."
+        }
+      ]
+    },
+    {
+      "test_id": "GD012",
+      "category": "comparison",
+      "difficulty": "hard",
+      "question": "What are the advantages of the RAG system over traditional search?",
+      "expected_answer": "Semantic understanding, context awareness, intelligent synthesis, and source citation",
+      "actual_answer": "The RAG system offers several advantages over traditional search engines in terms of information retrieval and user experience. According to jarvis_overview.txt (Section: Architecture), the RAG memory system uses ChromaDB for storing conversational facts and document content with semantic search capabilities, which enhances the relevance and context-awareness of retrieved information. Based on rag_system_details.txt (Section: main), the seamless integration of conversational memories and document knowledge allows users to ask questions without specifying sources, improving user experience by providing a more natural and intuitive interaction.",
+      "response_time": 12.585188150405884,
+      "scores": {
+        "must_contain": 0.6666666666666666,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.3972924314078487,
+        "overall": 0.5333333333333333
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'intelligent'",
+        "Response too slow: 12.59s > 5.0s",
+        "Overall score 0.53 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 2,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "jarvis_overview.txt (Section: Architecture)",
+          "relevance": "high",
+          "key_info": "The RAG memory system uses ChromaDB to store both conversational facts and document content with semantic search capabilities."
+        },
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "Seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        }
+      ]
+    },
+    {
+      "test_id": "GD013",
+      "category": "error_handling",
+      "difficulty": "medium",
+      "question": "What happens if a document fails to ingest?",
+      "expected_answer": "Error is logged, document is skipped, and ingestion continues with other documents",
+      "actual_answer": "When a document fails to ingest into a system, it can lead to data integrity issues and affect the overall performance of the document management system. According to [config_guide_v2.txt], setting an appropriate database timeout is crucial for ensuring smooth operation; however, both 30 seconds and 60 seconds have been tested and shown to have their own trade-offs: 30 seconds may cause connection issues (Document 2), while 60 seconds might not be optimal for performance optimization (Document 1).",
+      "response_time": 11.050281047821045,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.4524771793913719,
+        "overall": 0.2
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'error'",
+        "Missing required term: 'logged'",
+        "Missing required term: 'skipped'",
+        "Response too slow: 11.05s > 5.0s",
+        "Overall score 0.20 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "config_guide_v2.txt",
+          "relevance": "high",
+          "key_info": "database settings and timeout recommendations"
+        }
+      ]
+    },
+    {
+      "test_id": "GD014",
+      "category": "performance",
+      "difficulty": "medium",
+      "question": "How fast should RAG search queries typically respond?",
+      "expected_answer": "Search queries should respond within 2-5 seconds for optimal user experience",
+      "actual_answer": "The typical response time for RAG search queries can vary based on the system's configuration and the complexity of the query. According to rag_system_details.txt (Section: main), the RAG system in Jarvis provides sophisticated memory capabilities through ChromaDB vector storage, which supports efficient retrieval of information. However, specific details about the typical response time are not provided in these documents.",
+      "response_time": 11.141710758209229,
+      "scores": {
+        "must_contain": 0.6666666666666666,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.4487641178726519,
+        "overall": 0.5333333333333333
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'seconds'",
+        "Response too slow: 11.14s > 5.0s",
+        "Overall score 0.53 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "The RAG system in Jarvis provides sophisticated memory capabilities through ChromaDB vector storage."
+        }
+      ]
+    },
+    {
+      "test_id": "GD015",
+      "category": "integration",
+      "difficulty": "hard",
+      "question": "How does the RAG system integrate with the main Jarvis application?",
+      "expected_answer": "Through RAG tools and services that provide memory and document search capabilities",
+      "actual_answer": "Based on the provided documents, Jarvis uses a plugin-based architecture where all functionality is provided through dynamically loaded plugins. The RAG system can be integrated into the main Jarvis application as a plugin, allowing developers to add new capabilities without modifying the core application. However, no specific details about the integration process or methodology of the RAG system with the primary Jarvis software are mentioned in the retrieved documents.",
+      "response_time": 10.668116807937622,
+      "scores": {
+        "must_contain": 0.3333333333333333,
+        "should_contain": 0.3333333333333333,
+        "should_not_contain": 1.0,
+        "response_time": 0.46868628175122207,
+        "overall": 0.4666666666666667
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'tools'",
+        "Missing required term: 'services'",
+        "Response too slow: 10.67s > 5.0s",
+        "Overall score 0.47 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 1,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "plugin_development.txt",
+          "relevance": "high",
+          "key_info": "Introduces the plugin-based architecture of Jarvis and its benefits."
+        }
+      ]
+    },
+    {
+      "test_id": "GD016",
+      "category": "data_privacy",
+      "difficulty": "medium",
+      "question": "How does the RAG system handle sensitive information?",
+      "expected_answer": "Uses PII detection, provides warnings, and allows users to control what information is stored",
+      "actual_answer": "The RAG system employs various mechanisms to manage and process sensitive information. According to the retrieved documents, there is a focus on data security protocols and privacy-preserving techniques within the RAG framework.",
+      "response_time": 14.26424765586853,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 0.3333333333333333,
+        "should_not_contain": 1.0,
+        "response_time": 0.350526723920341,
+        "overall": 0.3
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'PII'",
+        "Missing required term: 'detection'",
+        "Missing required term: 'warnings'",
+        "Response too slow: 14.26s > 5.0s",
+        "Overall score 0.30 below threshold 0.7"
+      ],
+      "retrieved_documents_count": 1,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt",
+          "relevance": "high",
+          "key_info": "The system provides seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        }
+      ]
+    },
+    {
+      "test_id": "GD017",
+      "category": "maintenance",
+      "difficulty": "medium",
+      "question": "How often should you clean up old RAG data?",
+      "expected_answer": "Regular cleanup based on configuration settings, typically monthly or when storage limits are reached",
+      "actual_answer": "The recommended frequency for purging outdated RAG data is not explicitly stated in the provided documents. However, best practices and guidelines can be inferred from general data management principles.",
+      "response_time": 13.559069871902466,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.3687568577518107,
+        "overall": 0.2
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'cleanup'",
+        "Missing required term: 'configuration'",
+        "Missing required term: 'regular'",
+        "Response too slow: 13.56s > 5.0s",
+        "Overall score 0.20 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt",
+          "relevance": "moderate",
+          "key_info": "Describes the integration of conversational memories and document knowledge, but does not mention data purging."
+        },
+        {
+          "source": "config_guide_v2.txt",
+          "relevance": "high",
+          "key_info": "Discusses database settings like timeout, which are related to system performance but do not address RAG data management."
+        }
+      ]
+    },
+    {
+      "test_id": "GD018",
+      "category": "edge_cases",
+      "difficulty": "easy",
+      "question": "What happens if you search for something that doesn't exist in the knowledge base?",
+      "expected_answer": "System returns 'No relevant information found' message and suggests checking query terms",
+      "actual_answer": "When a non-existent query is searched within the knowledge base, the system handles such cases by providing relevant information from both conversational memories and document knowledge without needing to specify the source. However, if the search term does not exist in either of these sources, no specific response or result will be returned.",
+      "response_time": 18.165080785751343,
+      "scores": {
+        "must_contain": 0.0,
+        "should_contain": 0.3333333333333333,
+        "should_not_contain": 1.0,
+        "response_time": 0.27525338637205465,
+        "overall": 0.3
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'no relevant information'",
+        "Missing required term: 'not found'",
+        "Response too slow: 18.17s > 5.0s",
+        "Overall score 0.30 below threshold 0.8"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "The system provides seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        },
+        {
+          "source": "rag_system_details.txt (Section: Technical Implementation)",
+          "relevance": "moderate",
+          "key_info": "The RAG system in Jarvis provides sophisticated memory capabilities through ChromaDB vector storage, but does not explicitly mention handling non-existent queries."
+        }
+      ]
+    },
+    {
+      "test_id": "GD019",
+      "category": "advanced_features",
+      "difficulty": "hard",
+      "question": "Can the RAG system handle conflicting information from different sources?",
+      "expected_answer": "Yes, it identifies conflicts and presents multiple viewpoints with source citations",
+      "actual_answer": "The RAG system is designed to handle and integrate information from multiple sources, but the handling of conflicting data is not explicitly detailed in the provided documents.",
+      "response_time": 20.009718894958496,
+      "scores": {
+        "must_contain": 0.3333333333333333,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.2498785728199192,
+        "overall": 0.3666666666666667
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'conflicts'",
+        "Missing required term: 'multiple viewpoints'",
+        "Response too slow: 20.01s > 5.0s",
+        "Overall score 0.37 below threshold 0.6"
+      ],
+      "retrieved_documents_count": 2,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt",
+          "relevance": "high",
+          "key_info": "Describes how the RAG system integrates conversational memories and document knowledge seamlessly."
+        },
+        {
+          "source": "jarvis_overview.txt",
+          "relevance": "high",
+          "key_info": "Explains the use of ChromaDB for storing both conversational facts and document content with semantic search capabilities."
+        }
+      ]
+    },
+    {
+      "test_id": "GD020",
+      "category": "future_features",
+      "difficulty": "medium",
+      "question": "What improvements are planned for the RAG system?",
+      "expected_answer": "Enhanced document processing, better query understanding, and improved user interface",
+      "actual_answer": "Based on the available information, improvements for the RAG system are focused on enhancing its integration capabilities and addressing technical issues such as database timeouts.",
+      "response_time": 19.984309911727905,
+      "scores": {
+        "must_contain": 0.3333333333333333,
+        "should_contain": 0.0,
+        "should_not_contain": 1.0,
+        "response_time": 0.2501962800859949,
+        "overall": 0.3666666666666667
+      },
+      "passed": false,
+      "issues": [
+        "Missing required term: 'enhanced'",
+        "Missing required term: 'better'",
+        "Response too slow: 19.98s > 5.0s",
+        "Overall score 0.37 below threshold 0.5"
+      ],
+      "retrieved_documents_count": 3,
+      "confidence_score": 0.9,
+      "source_citations": [
+        {
+          "source": "rag_system_details.txt (Section: main)",
+          "relevance": "high",
+          "key_info": "The system provides seamless integration where users can ask questions that draw from both conversational memories and document knowledge without needing to specify the source."
+        },
+        {
+          "source": "config_guide_v2.txt (Section: Database Settings)",
+          "relevance": "high",
+          "key_info": "Recent testing shows that 30 seconds is too short and causes connection issues, indicating a need for adjustments in database timeout settings."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_tests": 20,
+    "passed_tests": 0,
+    "failed_tests": 20,
+    "pass_rate": 0.0,
+    "average_score": 0.47875000000000006,
+    "average_response_time": 12.148423147201537,
+    "category_breakdown": {
+      "factual_recall": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          1.0
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 1.0
+      },
+      "personal_information": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.5
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.5
+      },
+      "tool_preferences": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.75
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.75
+      },
+      "document_knowledge": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.4666666666666667
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.4666666666666667
+      },
+      "technical_details": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.3666666666666667
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.3666666666666667
+      },
+      "configuration": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.8333333333333333
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.8333333333333333
+      },
+      "workflow": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.2
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.2
+      },
+      "troubleshooting": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.35
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.35
+      },
+      "security": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.5333333333333333
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.5333333333333333
+      },
+      "backup_restore": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.5333333333333333
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.5333333333333333
+      },
+      "mixed_context": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.7749999999999999
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.7749999999999999
+      },
+      "comparison": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.5333333333333333
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.5333333333333333
+      },
+      "error_handling": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.2
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.2
+      },
+      "performance": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.5333333333333333
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.5333333333333333
+      },
+      "integration": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.4666666666666667
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.4666666666666667
+      },
+      "data_privacy": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.3
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.3
+      },
+      "maintenance": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.2
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.2
+      },
+      "edge_cases": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.3
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.3
+      },
+      "advanced_features": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.3666666666666667
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.3666666666666667
+      },
+      "future_features": {
+        "total": 1,
+        "passed": 0,
+        "scores": [
+          0.3666666666666667
+        ],
+        "pass_rate": 0.0,
+        "avg_score": 0.3666666666666667
+      }
+    },
+    "difficulty_breakdown": {
+      "easy": {
+        "total": 5,
+        "passed": 0,
+        "avg_score": 0.6766666666666665,
+        "pass_rate": 0.0
+      },
+      "medium": {
+        "total": 10,
+        "passed": 0,
+        "avg_score": 0.39249999999999996,
+        "pass_rate": 0.0
+      },
+      "hard": {
+        "total": 5,
+        "passed": 0,
+        "avg_score": 0.4533333333333333,
+        "pass_rate": 0.0
+      }
+    },
+    "evaluation_thresholds": {
+      "accuracy_threshold": 0.8,
+      "relevance_threshold": 0.7,
+      "citation_accuracy_threshold": 0.9,
+      "response_time_threshold": 5.0,
+      "categories": {
+        "factual_recall": {
+          "weight": 1.0,
+          "description": "Ability to recall specific facts from memory"
+        },
+        "personal_information": {
+          "weight": 1.0,
+          "description": "Retrieval of user-specific information"
+        },
+        "document_knowledge": {
+          "weight": 1.2,
+          "description": "Knowledge from ingested documents"
+        },
+        "technical_details": {
+          "weight": 1.3,
+          "description": "Complex technical information retrieval"
+        },
+        "mixed_context": {
+          "weight": 1.4,
+          "description": "Combining information from multiple sources"
+        },
+        "edge_cases": {
+          "weight": 1.1,
+          "description": "Handling of unusual or boundary conditions"
+        }
+      }
+    }
+  }
+}

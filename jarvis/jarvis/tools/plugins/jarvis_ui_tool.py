@@ -16,6 +16,14 @@ from typing import List, Optional
 from langchain_core.tools import tool
 from jarvis.plugins.base import PluginBase, PluginMetadata
 
+# Import app manager with proper error handling
+try:
+    from jarvis.utils.app_manager import get_app_manager
+except ImportError:
+    # Fallback if app_manager not available
+    def get_app_manager():
+        return None
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,49 +48,108 @@ def open_jarvis_ui(panel: str = "main") -> str:
         Status message about opening the UI
     """
     try:
-        # Get the project root directory (where jarvis_app.py is located)
-        # Plugin is in jarvis/tools/plugins/, so go up 4 levels to get to project root
-        jarvis_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        # Get the correct path to the settings app
+        # Use a more reliable approach - find the project root and locate the settings app
+        current_file = os.path.abspath(__file__)
+
+        # Walk up the directory tree to find the project root (contains rag_app.py)
+        search_dir = os.path.dirname(current_file)
+        project_root = None
+
+        for _ in range(10):  # Limit search to prevent infinite loop
+            if os.path.exists(os.path.join(search_dir, "rag_app.py")):
+                project_root = search_dir
+                break
+            parent = os.path.dirname(search_dir)
+            if parent == search_dir:  # Reached filesystem root
+                break
+            search_dir = parent
+
+        if not project_root:
+            # Fallback: assume we're in the project root
+            project_root = os.getcwd()
 
         # Try desktop app first (preferred)
-        desktop_script = os.path.join(jarvis_dir, "jarvis_app.py")
+        desktop_script = os.path.join(project_root, "jarvis", "jarvis_settings_app.py")
 
         if os.path.exists(desktop_script):
-            # Check if pywebview is available for desktop app
-            try:
-                import webview
-                # Launch the desktop application with the specified panel
-                cmd = [sys.executable, desktop_script, "--panel", panel]
+            # Try to use the robust application manager, fallback to direct launch
+            app_manager = get_app_manager()
 
-                # Launch in background (non-blocking)
-                subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True
-                )
+            if app_manager:
+                # Use robust application manager
+                try:
+                    import webview
+                    logger.info(f"Attempting to launch desktop app: {desktop_script}")
 
-                logger.info(f"Launched Jarvis Desktop App with panel: {panel}")
+                    app_name = "settings"
+                    app_manager.register_app(
+                        name=app_name,
+                        script_path=desktop_script,
+                        args=["--panel", panel]
+                    )
 
-                panel_names = {
-                    "main": "Main Dashboard",
-                    "settings": "Settings Panel",
-                    "audio": "Audio Configuration",
-                    "llm": "LLM Configuration",
-                    "conversation": "Conversation Settings",
-                    "logging": "Logging Configuration",
-                    "general": "General Settings",
-                    "voice-profiles": "Voice Profiles",
-                    "device": "Device Information"
-                }
+                    if app_manager.start_app(app_name):
+                        panel_names = {
+                            "main": "Main Dashboard",
+                            "settings": "Settings Panel",
+                            "audio": "Audio Configuration",
+                            "llm": "LLM Configuration",
+                            "conversation": "Conversation Settings",
+                            "logging": "Logging Configuration",
+                            "general": "General Settings",
+                            "voice-profiles": "Voice Profiles",
+                            "device": "Device Information"
+                        }
 
-                panel_name = panel_names.get(panel, f"'{panel}' panel")
-                return f"Opening Jarvis {panel_name} in the desktop app. The window should appear on your screen shortly."
+                        panel_name = panel_names.get(panel, f"'{panel}' panel")
+                        return f"The Jarvis {panel_name} is now open in the desktop app."
+                    else:
+                        return "I encountered an error while trying to open the Jarvis settings. Please try again."
 
-            except ImportError:
-                logger.warning("pywebview not available, falling back to web interface")
-                # Fall through to web interface
-                pass
+                except ImportError:
+                    logger.warning("pywebview not available, falling back to web interface")
+                    # Fall through to web interface
+                except Exception as e:
+                    logger.error(f"Desktop app launch failed: {e}")
+                    logger.warning("Falling back to web interface")
+                    # Fall through to web interface
+            else:
+                # Fallback to direct launch
+                try:
+                    import webview
+                    logger.info(f"Attempting to launch desktop app: {desktop_script}")
+
+                    cmd = [sys.executable, desktop_script, "--panel", panel]
+                    subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        start_new_session=True
+                    )
+
+                    panel_names = {
+                        "main": "Main Dashboard",
+                        "settings": "Settings Panel",
+                        "audio": "Audio Configuration",
+                        "llm": "LLM Configuration",
+                        "conversation": "Conversation Settings",
+                        "logging": "Logging Configuration",
+                        "general": "General Settings",
+                        "voice-profiles": "Voice Profiles",
+                        "device": "Device Information"
+                    }
+
+                    panel_name = panel_names.get(panel, f"'{panel}' panel")
+                    return f"Opening Jarvis {panel_name} in the native desktop app. The window should appear on your screen shortly."
+
+                except ImportError:
+                    logger.warning("pywebview not available, falling back to web interface")
+                    # Fall through to web interface
+                except Exception as e:
+                    logger.error(f"Desktop app launch failed: {e}")
+                    logger.warning("Falling back to web interface")
+                    # Fall through to web interface
 
         # Fallback to web interface
         ui_script = os.path.join(jarvis_dir, "ui", "jarvis_ui.py")
@@ -117,7 +184,7 @@ def open_jarvis_ui(panel: str = "main") -> str:
         }
 
         panel_name = panel_names.get(panel, f"'{panel}' panel")
-        return f"Opening Jarvis {panel_name} in the desktop app. The interface should appear shortly."
+        return f"Opening Jarvis {panel_name} in the web interface. You can access it at http://localhost:8080 or it will open automatically."
         
     except Exception as e:
         logger.error(f"Failed to open Jarvis UI: {e}")
@@ -133,55 +200,53 @@ def close_jarvis_ui() -> str:
         Status message about closing the UI
     """
     try:
-        # Try to close via API first (works for both desktop and web)
-        try:
-            import requests
+        logger.info("Attempting to close Jarvis settings app")
 
-            # First try to trigger window close for desktop app
-            try:
-                close_response = requests.post("http://localhost:8080/api/close-window", timeout=3)
-                if close_response.status_code == 200:
-                    logger.info("Desktop window close signal sent")
-            except:
-                pass  # Not critical if this fails
+        # Try to use the robust application manager, fallback to process termination
+        app_manager = get_app_manager()
 
-            # Then shutdown the server
-            response = requests.post("http://localhost:8080/api/shutdown", timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("success"):
-                    return "Jarvis UI has been closed successfully."
-        except:
-            # API shutdown failed, try process termination
-            pass
-
-        # Find and terminate Jarvis UI processes
-        import psutil
-
-        closed_count = 0
-        ui_processes = ['jarvis_ui.py', 'jarvis_app.py', 'start_desktop.py']
-
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-            try:
-                cmdline = proc.info['cmdline']
-                if cmdline:
-                    cmdline_str = ' '.join(cmdline)
-                    for ui_process in ui_processes:
-                        if ui_process in cmdline_str:
-                            proc.terminate()
-                            closed_count += 1
-                            logger.info(f"Terminated Jarvis UI process: {proc.info['pid']} ({ui_process})")
-                            break
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-
-        if closed_count > 0:
-            return f"Closed {closed_count} Jarvis UI window(s)."
+        if app_manager:
+            # Use robust application manager
+            app_name = "settings"
+            if app_manager.is_app_running(app_name):
+                if app_manager.stop_app(app_name):
+                    return "I've successfully closed the Jarvis settings app."
+                else:
+                    return "I encountered an error while trying to close the Jarvis settings app. Please try closing it manually."
+            else:
+                return "The Jarvis settings app doesn't appear to be running, or it's already closed."
         else:
-            return "No Jarvis UI windows were found running."
-            
-    except ImportError:
-        return "Cannot close UI automatically. Please close the Jarvis UI window manually."
+            # Fallback to direct process termination
+            try:
+                import psutil
+                terminated_count = 0
+                ui_processes = ['jarvis_settings_app.py', 'jarvis_ui.py', 'jarvis_app.py']
+
+                for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                    try:
+                        cmdline = proc.info['cmdline']
+                        if cmdline:
+                            cmdline_str = ' '.join(cmdline)
+                            for ui_process in ui_processes:
+                                if ui_process in cmdline_str:
+                                    proc.terminate()
+                                    terminated_count += 1
+                                    try:
+                                        proc.wait(timeout=3)
+                                    except psutil.TimeoutExpired:
+                                        proc.kill()
+                                    break
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        continue
+
+                if terminated_count > 0:
+                    return f"I've successfully closed the Jarvis settings app."
+                else:
+                    return "The Jarvis settings app doesn't appear to be running, or it's already closed."
+
+            except ImportError:
+                return "Cannot close UI automatically. Please close the Jarvis UI window manually."
+
     except Exception as e:
         logger.error(f"Failed to close Jarvis UI: {e}")
         return f"Error closing Jarvis UI: {str(e)}"

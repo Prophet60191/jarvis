@@ -1,0 +1,335 @@
+{
+  "metadata": {
+    "name": "RAG System Golden Dataset",
+    "version": "1.0",
+    "created": "2024-01-15",
+    "description": "Comprehensive test cases for RAG system quality evaluation",
+    "total_test_cases": 20
+  },
+  "test_cases": [
+    {
+      "id": "GD001",
+      "category": "factual_recall",
+      "question": "What programming language does the user prefer for AI projects?",
+      "expected_answer": "Python",
+      "context_required": "User preference about programming languages",
+      "difficulty": "easy",
+      "expected_sources": ["conversational_memory"],
+      "evaluation_criteria": {
+        "must_contain": ["python", "programming", "AI"],
+        "should_not_contain": ["java", "javascript", "c++"],
+        "min_confidence": 0.8
+      }
+    },
+    {
+      "id": "GD002", 
+      "category": "personal_information",
+      "question": "Where does the user work?",
+      "expected_answer": "Tech startup as a software engineer",
+      "context_required": "User's employment information",
+      "difficulty": "easy",
+      "expected_sources": ["conversational_memory"],
+      "evaluation_criteria": {
+        "must_contain": ["software engineer", "tech startup"],
+        "should_not_contain": ["unemployed", "student"],
+        "min_confidence": 0.7
+      }
+    },
+    {
+      "id": "GD003",
+      "category": "tool_preferences", 
+      "question": "What development environment does the user prefer?",
+      "expected_answer": "VS Code",
+      "context_required": "User's development tool preferences",
+      "difficulty": "easy",
+      "expected_sources": ["conversational_memory"],
+      "evaluation_criteria": {
+        "must_contain": ["VS Code", "development"],
+        "should_not_contain": ["vim", "emacs", "intellij"],
+        "min_confidence": 0.8
+      }
+    },
+    {
+      "id": "GD004",
+      "category": "document_knowledge",
+      "question": "What are the key features of the RAG system?",
+      "expected_answer": "Intelligent search, document processing, memory management, backup system",
+      "context_required": "RAG system documentation",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["intelligent search", "document processing", "memory"],
+        "should_contain": ["backup", "ChromaDB", "vector"],
+        "min_confidence": 0.7
+      }
+    },
+    {
+      "id": "GD005",
+      "category": "technical_details",
+      "question": "How does the RAG system handle document chunking?",
+      "expected_answer": "Uses intelligent chunking with LLM-powered analysis and semantic understanding",
+      "context_required": "Technical documentation about document processing",
+      "difficulty": "hard",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["chunking", "intelligent", "semantic"],
+        "should_contain": ["LLM", "analysis"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD006",
+      "category": "configuration",
+      "question": "What database does the RAG system use for vector storage?",
+      "expected_answer": "ChromaDB",
+      "context_required": "RAG system configuration information",
+      "difficulty": "easy",
+      "expected_sources": ["documents", "conversational_memory"],
+      "evaluation_criteria": {
+        "must_contain": ["ChromaDB", "vector", "database"],
+        "should_not_contain": ["PostgreSQL", "MongoDB", "Redis"],
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "id": "GD007",
+      "category": "workflow",
+      "question": "How do you add a new document to the RAG system?",
+      "expected_answer": "Place document in documents folder and run ingestion process",
+      "context_required": "Document ingestion workflow",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["documents folder", "ingestion"],
+        "should_contain": ["process", "ingest"],
+        "min_confidence": 0.7
+      }
+    },
+    {
+      "id": "GD008",
+      "category": "troubleshooting",
+      "question": "What should you do if the RAG system returns no results?",
+      "expected_answer": "Check if documents are ingested, verify query terms, ensure vector store is accessible",
+      "context_required": "Troubleshooting guidance",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["documents", "ingested", "query"],
+        "should_contain": ["vector store", "check"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD009",
+      "category": "security",
+      "question": "How does the RAG system protect against prompt injection?",
+      "expected_answer": "Uses security notices, content validation, and treats retrieved content as untrusted",
+      "context_required": "Security implementation details",
+      "difficulty": "hard",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["security", "prompt injection", "validation"],
+        "should_contain": ["untrusted", "protection"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD010",
+      "category": "backup_restore",
+      "question": "How do you create a backup of the RAG system?",
+      "expected_answer": "Use the backup functionality to create timestamped backups of vector store and documents",
+      "context_required": "Backup system documentation",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["backup", "vector store", "documents"],
+        "should_contain": ["timestamped", "create"],
+        "min_confidence": 0.7
+      }
+    },
+    {
+      "id": "GD011",
+      "category": "mixed_context",
+      "question": "What is the user's preferred programming language and what database does the RAG system use?",
+      "expected_answer": "User prefers Python for programming, and the RAG system uses ChromaDB for vector storage",
+      "context_required": "Both personal preferences and technical documentation",
+      "difficulty": "medium",
+      "expected_sources": ["conversational_memory", "documents"],
+      "evaluation_criteria": {
+        "must_contain": ["Python", "ChromaDB", "programming", "vector"],
+        "should_contain": ["user", "prefers", "database"],
+        "min_confidence": 0.7
+      }
+    },
+    {
+      "id": "GD012",
+      "category": "comparison",
+      "question": "What are the advantages of the RAG system over traditional search?",
+      "expected_answer": "Semantic understanding, context awareness, intelligent synthesis, and source citation",
+      "context_required": "RAG system benefits and features",
+      "difficulty": "hard",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["semantic", "context", "intelligent"],
+        "should_contain": ["synthesis", "citation", "understanding"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD013",
+      "category": "error_handling",
+      "question": "What happens if a document fails to ingest?",
+      "expected_answer": "Error is logged, document is skipped, and ingestion continues with other documents",
+      "context_required": "Error handling in document ingestion",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["error", "logged", "skipped"],
+        "should_contain": ["continues", "other documents"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD014",
+      "category": "performance",
+      "question": "How fast should RAG search queries typically respond?",
+      "expected_answer": "Search queries should respond within 2-5 seconds for optimal user experience",
+      "context_required": "Performance expectations and benchmarks",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["seconds", "search", "response"],
+        "should_contain": ["fast", "performance", "user experience"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD015",
+      "category": "integration",
+      "question": "How does the RAG system integrate with the main Jarvis application?",
+      "expected_answer": "Through RAG tools and services that provide memory and document search capabilities",
+      "context_required": "System integration architecture",
+      "difficulty": "hard",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["tools", "services", "integration"],
+        "should_contain": ["memory", "search", "capabilities"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD016",
+      "category": "data_privacy",
+      "question": "How does the RAG system handle sensitive information?",
+      "expected_answer": "Uses PII detection, provides warnings, and allows users to control what information is stored",
+      "context_required": "Privacy and data protection features",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["PII", "detection", "warnings"],
+        "should_contain": ["sensitive", "control", "stored"],
+        "min_confidence": 0.7
+      }
+    },
+    {
+      "id": "GD017",
+      "category": "maintenance",
+      "question": "How often should you clean up old RAG data?",
+      "expected_answer": "Regular cleanup based on configuration settings, typically monthly or when storage limits are reached",
+      "context_required": "Maintenance and cleanup procedures",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["cleanup", "configuration", "regular"],
+        "should_contain": ["monthly", "storage", "limits"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD018",
+      "category": "edge_cases",
+      "question": "What happens if you search for something that doesn't exist in the knowledge base?",
+      "expected_answer": "System returns 'No relevant information found' message and suggests checking query terms",
+      "context_required": "Empty result handling",
+      "difficulty": "easy",
+      "expected_sources": ["documents", "conversational_memory"],
+      "evaluation_criteria": {
+        "must_contain": ["no relevant information", "not found"],
+        "should_contain": ["query", "terms", "check"],
+        "min_confidence": 0.8
+      }
+    },
+    {
+      "id": "GD019",
+      "category": "advanced_features",
+      "question": "Can the RAG system handle conflicting information from different sources?",
+      "expected_answer": "Yes, it identifies conflicts and presents multiple viewpoints with source citations",
+      "context_required": "Conflict resolution capabilities",
+      "difficulty": "hard",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["conflicts", "multiple viewpoints", "sources"],
+        "should_contain": ["identifies", "citations", "presents"],
+        "min_confidence": 0.6
+      }
+    },
+    {
+      "id": "GD020",
+      "category": "future_features",
+      "question": "What improvements are planned for the RAG system?",
+      "expected_answer": "Enhanced document processing, better query understanding, and improved user interface",
+      "context_required": "Future development plans",
+      "difficulty": "medium",
+      "expected_sources": ["documents"],
+      "evaluation_criteria": {
+        "must_contain": ["improvements", "enhanced", "better"],
+        "should_contain": ["document processing", "query", "interface"],
+        "min_confidence": 0.5
+      }
+    }
+  ],
+  "evaluation_metrics": {
+    "accuracy_threshold": 0.8,
+    "relevance_threshold": 0.7,
+    "citation_accuracy_threshold": 0.9,
+    "response_time_threshold": 5.0,
+    "categories": {
+      "factual_recall": {
+        "weight": 1.0,
+        "description": "Ability to recall specific facts from memory"
+      },
+      "personal_information": {
+        "weight": 1.0,
+        "description": "Retrieval of user-specific information"
+      },
+      "document_knowledge": {
+        "weight": 1.2,
+        "description": "Knowledge from ingested documents"
+      },
+      "technical_details": {
+        "weight": 1.3,
+        "description": "Complex technical information retrieval"
+      },
+      "mixed_context": {
+        "weight": 1.4,
+        "description": "Combining information from multiple sources"
+      },
+      "edge_cases": {
+        "weight": 1.1,
+        "description": "Handling of unusual or boundary conditions"
+      }
+    }
+  },
+  "test_data_setup": {
+    "required_memories": [
+      "User prefers Python programming language for AI projects",
+      "User works as a software engineer at a tech startup",
+      "User uses VS Code as primary development environment"
+    ],
+    "required_documents": [
+      "RAG system documentation",
+      "Technical architecture guide",
+      "User manual and troubleshooting guide"
+    ]
+  }
+}

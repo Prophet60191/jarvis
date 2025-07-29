@@ -267,3 +267,8 @@ uvicorn==0.35.0
 websockets==15.0.1
 yarl==1.20.1
 zstandard==0.23.0
+
+# Open Interpreter integration
+open-interpreter>=0.2.0
+matplotlib>=3.7.0
+beautifulsoup4>=4.12.0

@@ -1,0 +1,30 @@
+# Jarvis Voice Assistant Configuration
+# Copy this file to .env and customize the values
+
+# Audio Configuration
+JARVIS_MIC_INDEX=2
+JARVIS_MIC_NAME="MacBook Pro Microphone"
+JARVIS_ENERGY_THRESHOLD=100
+JARVIS_TTS_RATE=180
+JARVIS_TTS_VOLUME=0.8
+JARVIS_TTS_VOICE="Daniel"
+JARVIS_RESPONSE_DELAY=0.5
+
+# Conversation Configuration
+JARVIS_WAKE_WORD="jarvis"
+JARVIS_CONVERSATION_TIMEOUT=30
+
+# LLM Configuration
+JARVIS_MODEL="llama3.1:8b"
+JARVIS_VERBOSE=false
+
+# Logging Configuration
+JARVIS_LOG_LEVEL="INFO"
+JARVIS_LOG_FILE=""
+
+# General Configuration
+JARVIS_DEBUG=false
+JARVIS_DATA_DIR=""
+
+# MCP Configuration
+JARVIS_MCP_ENABLED=true

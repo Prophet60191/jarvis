@@ -1,8 +1,8 @@
 """
 Text-to-Speech management for Jarvis Voice Assistant.
 
-This module handles text-to-speech operations using Apple's high-quality
-system voices for reliable, fast, and compatible speech synthesis.
+This module handles text-to-speech operations using Coqui TTS for
+high-quality neural speech synthesis.
 """
 
 import logging
@@ -10,10 +10,7 @@ from typing import List, Dict, Any
 
 from ..config import AudioConfig
 from ..exceptions import TextToSpeechError
-from .apple_tts import AppleTTSManager
 from .coqui_tts import CoquiTTSManager
-from .streaming_tts import StreamingTTSManager
-from .multilang_tts import MultiLanguageTTSManager
 
 
 logger = logging.getLogger(__name__)
@@ -23,28 +20,22 @@ class TextToSpeechManager:
     """
     Manages text-to-speech operations for the Jarvis voice assistant.
 
-    This class uses Apple's system TTS for reliable, high-quality speech synthesis
-    that's perfectly compatible with Apple Silicon Macs.
+    This class uses Coqui TTS for high-quality neural speech synthesis.
     """
 
     def __init__(self, config: AudioConfig):
         """
-        Initialize the text-to-speech manager.
+        Initialize the text-to-speech manager with Coqui TTS only.
 
         Args:
             config: Audio configuration settings
         """
         self.config = config
 
-        # Use Coqui TTS as primary backend (cross-platform, high quality)
+        # Use Coqui TTS as the only TTS backend
         self.coqui_tts = CoquiTTSManager(config)
 
-        # Keep other TTS systems available as alternatives
-        self.apple_tts = AppleTTSManager(config)  # macOS fallback
-        self.streaming_tts = StreamingTTSManager(config)
-        self.multilang_tts = MultiLanguageTTSManager(config)
-
-        logger.info(f"TextToSpeechManager initialized with Coqui TTS backend")
+        logger.info(f"TextToSpeechManager initialized with Coqui TTS only")
 
     def update_config(self, new_config: AudioConfig) -> None:
         """
@@ -69,21 +60,7 @@ class TextToSpeechManager:
                 if self.is_initialized():
                     self.coqui_tts.initialize()
 
-            # Update other TTS backends
-            if hasattr(self.apple_tts, 'update_config'):
-                self.apple_tts.update_config(new_config)
-            else:
-                self.apple_tts = AppleTTSManager(new_config)
-
-            if hasattr(self.streaming_tts, 'update_config'):
-                self.streaming_tts.update_config(new_config)
-            else:
-                self.streaming_tts = StreamingTTSManager(new_config)
-
-            if hasattr(self.multilang_tts, 'update_config'):
-                self.multilang_tts.update_config(new_config)
-            else:
-                self.multilang_tts = MultiLanguageTTSManager(new_config)
+            # Only Coqui TTS is used now
 
             logger.info("TTS configuration updated successfully")
 
@@ -98,13 +75,10 @@ class TextToSpeechManager:
             TextToSpeechError: If TTS engine initialization fails
         """
         try:
-            # Initialize Coqui TTS as primary backend
+            # Initialize Coqui TTS as the only TTS backend
             logger.info("Initializing Coqui TTS engine...")
             self.coqui_tts.initialize()
             logger.info("Coqui TTS engine initialized successfully")
-
-            # Note: Other TTS systems are available but not initialized by default
-            # Apple TTS kept as fallback for macOS users
 
         except Exception as e:
             error_msg = f"Failed to initialize Coqui TTS engine: {str(e)}"
@@ -122,26 +96,21 @@ class TextToSpeechManager:
 
     def speak(self, text: str, wait: bool = True) -> None:
         """
-        Convert text to speech and play it using Coqui TTS with Apple TTS fallback.
+        Convert text to speech and play it using Coqui TTS.
 
         Args:
             text: Text to convert to speech
             wait: Whether to wait for speech to complete
 
         Raises:
-            TextToSpeechError: If all TTS engines fail
+            TextToSpeechError: If TTS engine fails
         """
         try:
-            # Try Coqui TTS first (cross-platform, high quality)
+            # Use Coqui TTS only
             self.coqui_tts.speak(text, wait)
         except Exception as e:
-            logger.warning(f"Coqui TTS failed: {e}, falling back to Apple TTS")
-            try:
-                # Fallback to Apple TTS (macOS only, but very reliable)
-                self.apple_tts.speak(text, wait)
-            except Exception as fallback_error:
-                logger.error(f"All TTS engines failed. Coqui: {e}, Apple: {fallback_error}")
-                raise TextToSpeechError(f"All TTS engines failed: {fallback_error}") from fallback_error
+            logger.error(f"Coqui TTS failed: {e}")
+            raise TextToSpeechError(f"TTS failed: {e}") from e
 
     def speak_async(self, text: str) -> None:
         """

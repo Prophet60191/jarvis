@@ -85,6 +85,36 @@ voices/audio/
 voices/metadata/
 .jarvis/
 
+# RAG & Memory System Data
+# Exclude all user data, vector stores, and documents to protect privacy
+data/
+data/chroma_db/
+data/documents/
+data/backups/
+data/chat_history/
+
+# Vector store databases
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+vector_store/
+
+# Document processing temporary files
+*.processing
+*.tmp_doc
+document_cache/
+
+# Memory and conversation backups
+memory_backup_*.json
+chat_backup_*.json
+conversation_*.json
+
+# RAG system logs and metrics
+rag_metrics.json
+document_stats.json
+memory_stats.json
+
 # Environment variables (keep template)
 .env
 !.env.example

@@ -157,15 +157,27 @@ class SpeechManager:
             raise AudioError("SpeechManager not initialized. Call initialize() first.")
         
         try:
+            logger.debug(f"🔊 SPEECH_MANAGER: speak_text called with wait={wait}")
+            logger.debug(f"🔊 SPEECH_MANAGER: Text: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+
+            speech_start_time = time.time()
             self.tts_manager.speak(text, wait)
-            
+            speech_end_time = time.time()
+            speech_duration = speech_end_time - speech_start_time
+
+            logger.debug(f"🔊 SPEECH_MANAGER: TTS manager completed in {speech_duration:.2f} seconds")
+
             # Add small delay after speech for better user experience
             if wait:
+                logger.debug(f"🔊 SPEECH_MANAGER: Adding response delay of {self.config.response_delay}s")
                 time.sleep(self.config.response_delay)
-                
+                logger.debug(f"🔊 SPEECH_MANAGER: Response delay completed")
+
         except Exception as e:
-            error_msg = f"Failed to speak text: {str(e)}"
-            logger.error(error_msg)
+            speech_end_time = time.time()
+            speech_duration = speech_end_time - speech_start_time if 'speech_start_time' in locals() else 0
+            error_msg = f"Failed to speak text after {speech_duration:.2f}s: {str(e)}"
+            logger.error(f"🔊 SPEECH_MANAGER: {error_msg}")
             raise TextToSpeechError(error_msg, text=text) from e
     
     def speak_async(self, text: str) -> None:
