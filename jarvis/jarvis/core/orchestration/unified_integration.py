@@ -156,12 +156,12 @@ class UnifiedCodingIntegration:
 
         try:
             # Ensure RAG workflow is initialized before use
-        if not self._initialization_attempted:
-            try:
-                await self.initialize_rag_workflow()
-                self._initialization_attempted = True
-            except Exception as e:
-                logger.warning(f"Failed to initialize RAG workflow: {e}")
+            if not self._initialization_attempted:
+                try:
+                    await self.initialize_rag_workflow()
+                    self._initialization_attempted = True
+                except Exception as e:
+                    logger.warning(f"Failed to initialize RAG workflow: {e}")
 
         # Use RAG-powered workflow exclusively
             if not (self.use_rag_workflow and self.rag_workflow_builder):

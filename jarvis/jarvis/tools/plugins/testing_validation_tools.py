@@ -16,7 +16,7 @@ from langchain.tools import tool
 import importlib.util
 import tempfile
 
-from ...plugins.base import PluginBase, PluginMetadata
+from jarvis.plugins.base import PluginBase, PluginMetadata
 
 logger = logging.getLogger(__name__)
 

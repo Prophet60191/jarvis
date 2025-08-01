@@ -1,0 +1,52 @@
+Jarvis Plugin Development Guide
+
+Jarvis uses a plugin-based architecture where all functionality is provided through dynamically loaded plugins. This allows developers to add new capabilities without modifying the core application.
+
+Plugin Structure:
+All plugins are located in the jarvis/tools/plugins/ directory. Each plugin is a Python file that defines one or more tools using the LangChain @tool decorator.
+
+Basic Plugin Template:
+```python
+from langchain_core.tools import tool
+from jarvis.plugins.base import PluginBase, PluginMetadata
+
+@tool
+def my_awesome_function(query: str) -> str:
+    """Tool description for the agent."""
+    return f"Processed: {query}"
+
+class MyToolPlugin(PluginBase):
+    def get_metadata(self) -> PluginMetadata:
+        return PluginMetadata(
+            name="MyTool",
+            version="1.0.0", 
+            description="My awesome tool",
+            author="Developer"
+        )
+    
+    def get_tools(self) -> List[BaseTool]:
+        return [my_awesome_function]
+
+# Required for auto-discovery
+plugin = MyToolPlugin()
+```
+
+Key Principles:
+1. Zero Built-in Tools: Everything is plugin-based for maximum flexibility
+2. Auto-discovery: Plugins are automatically loaded from the plugins directory
+3. Hot-swappable: Tools can be modified without app restarts
+4. Self-contained: Each plugin is independent and testable
+
+Current Plugins:
+- Time Plugin: Provides current time functionality
+- UI Control Plugins: Manage Jarvis web interface
+- RAG Memory Plugin: Handle long-term memory operations
+
+Development Workflow:
+1. Create new plugin file in jarvis/tools/plugins/
+2. Define tool functions with @tool decorator
+3. Create plugin class extending PluginBase
+4. Test plugin independently
+5. Plugin is automatically discovered and loaded
+
+The plugin system ensures that Jarvis remains extensible and maintainable while providing a clean separation between core functionality and user-added features.

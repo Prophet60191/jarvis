@@ -266,11 +266,27 @@ class PluginManager:
     def get_loaded_plugin_names(self) -> List[str]:
         """
         Get names of all loaded plugins.
-        
+
         Returns:
             List[str]: List of loaded plugin names
         """
         return list(self._loaded_plugins.keys())
+
+    def get_available_plugins(self) -> List[str]:
+        """
+        Get names of all available plugins (loaded and discovered).
+
+        Returns:
+            List[str]: List of available plugin names
+        """
+        available = set(self._loaded_plugins.keys())
+
+        # Add discovered but not loaded plugins
+        if hasattr(self, 'discovery') and self.discovery:
+            discovered = self.discovery.discover_plugins()
+            available.update(discovered.keys())
+
+        return list(available)
     
     def get_plugin_metadata(self, plugin_name: str) -> Optional[PluginMetadata]:
         """

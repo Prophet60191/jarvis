@@ -17,7 +17,7 @@ from pathlib import Path
 from langchain.tools import tool
 import threading
 
-from ...plugins.base import PluginBase, PluginMetadata
+from jarvis.plugins.base import PluginBase, PluginMetadata
 
 logger = logging.getLogger(__name__)
 

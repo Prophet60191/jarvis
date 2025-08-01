@@ -14,7 +14,7 @@ import json
 import re
 from urllib.parse import urljoin, urlparse
 
-from ...plugins.base import PluginBase, PluginMetadata
+from jarvis.plugins.base import PluginBase, PluginMetadata
 
 logger = logging.getLogger(__name__)
 

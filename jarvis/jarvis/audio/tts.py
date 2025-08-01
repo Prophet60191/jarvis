@@ -351,3 +351,7 @@ class TextToSpeechManager:
                 self.coqui_tts.cleanup()
             except Exception as e:
                 logger.error(f"Error cleaning up Coqui TTS: {e}")
+
+
+# Alias for backward compatibility
+TTSManager = TextToSpeechManager

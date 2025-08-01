@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 from langchain.tools import tool
 
-from ...plugins.base import PluginBase, PluginMetadata
+from jarvis.plugins.base import PluginBase, PluginMetadata
 
 logger = logging.getLogger(__name__)
 

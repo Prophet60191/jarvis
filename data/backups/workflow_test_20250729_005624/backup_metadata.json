@@ -1,0 +1,53 @@
+{
+  "backup_info": {
+    "name": "workflow_test_20250729_005624",
+    "timestamp": "20250729_005624",
+    "created_by": "RAG Backup Manager",
+    "version": "1.0"
+  },
+  "system_info": {
+    "rag_enabled": true,
+    "collection_name": "jarvis_memory",
+    "chunk_size": 1000,
+    "chunk_overlap": 150
+  },
+  "backup_components": {
+    "vector_store": {
+      "status": "success",
+      "source_path": "/Users/josed/Desktop/Voice App/data/chroma_db",
+      "backup_path": "/Users/josed/Desktop/Voice App/data/backups/workflow_test_20250729_005624/vector_store",
+      "size_mb": 155.4,
+      "collection_name": "jarvis_memory"
+    },
+    "documents": {
+      "status": "success",
+      "source_path": "/Users/josed/Desktop/Voice App/data/documents",
+      "backup_path": "/Users/josed/Desktop/Voice App/data/backups/workflow_test_20250729_005624/documents",
+      "document_count": 3,
+      "size_mb": 0.0
+    },
+    "chat_history": {
+      "status": "success",
+      "source_path": "/Users/josed/Desktop/Voice App/data/chat_history",
+      "backup_path": "/Users/josed/Desktop/Voice App/data/backups/workflow_test_20250729_005624/chat_history",
+      "chat_file_count": 0,
+      "size_mb": 0.0
+    },
+    "configuration": {
+      "status": "success",
+      "backup_path": "/Users/josed/Desktop/Voice App/data/backups/workflow_test_20250729_005624/configuration",
+      "size_mb": 0.0,
+      "files_backed_up": [
+        "rag_config.json",
+        "main_config.yaml"
+      ]
+    }
+  },
+  "restore_instructions": {
+    "note": "Use RAGBackupManager.restore_backup() to restore this backup",
+    "requirements": [
+      "ChromaDB",
+      "RAG system configuration"
+    ]
+  }
+}
