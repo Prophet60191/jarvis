@@ -98,9 +98,9 @@ def get_config_notifier() -> ConfigChangeNotifier:
 @dataclass
 class AudioConfig:
     """Audio-related configuration settings."""
-    mic_index: int = 0  # MacBook Pro Microphone (working microphone)
+    mic_index: int = 0  # MacBook Pro Microphone (confirmed working device - index 0)
     mic_name: str = "MacBook Pro Microphone"
-    energy_threshold: int = 50  # Lowered for better microphone sensitivity
+    energy_threshold: int = 100  # Higher threshold from working commit for better detection
     timeout: float = 3.0  # Balanced for responsiveness and reliability
     phrase_time_limit: float = 5.0  # Optimized for natural speech patterns
 
@@ -115,12 +115,12 @@ class AudioConfig:
     whisper_language: str = "en"  # Fixed language for speed
     whisper_compute_type: str = "int8"  # Quantized for faster inference
 
-    # Coqui TTS settings - Using VCTK VITS for multi-speaker support (user's preferred voice)
-    coqui_model: str = "tts_models/en/vctk/vits"
+    # Coqui TTS settings - EXACT working configuration from git commit 5bb003c
+    coqui_model: str = "tts_models/multilingual/multi-dataset/xtts_v2"
     coqui_language: str = "en"
-    coqui_device: str = "cpu"  # Force CPU to avoid MPS tensor issues
-    coqui_use_gpu: bool = False
-    coqui_speaker_wav: Optional[str] = None  # Not needed for LJSpeech model
+    coqui_device: str = "auto"  # auto, cpu, cuda, mps
+    coqui_use_gpu: bool = True
+    coqui_speaker_wav: Optional[str] = None  # Path to voice cloning audio
     coqui_temperature: float = 0.75
     coqui_length_penalty: float = 1.0
     coqui_repetition_penalty: float = 5.0
@@ -128,10 +128,23 @@ class AudioConfig:
     coqui_top_p: float = 0.85
     coqui_streaming: bool = False  # Enable streaming mode (future feature)
 
-    # Advanced Coqui TTS settings
-    coqui_voice_preset: str = "vctk_p374"  # Voice preset selection (User's preferred voice)
+    # TTS Voice preference - EXACT working configuration from git
+    tts_voice_preference: str = "Daniel"  # Preferred voice name (British male voice)
+
+    # Advanced Coqui TTS settings - EXACT from working git commit aa88a13
+    coqui_voice_preset: str = "ljspeech_tacotron2"  # Voice preset selection
     coqui_voice_speed: float = 1.0  # Speech speed multiplier
-    coqui_speaker_id: Optional[str] = "p374"  # Speaker ID for multi-speaker models (user's preferred voice)
+    coqui_speaker_id: Optional[str] = None  # Speaker ID for multi-speaker models
+    coqui_voice_conditioning_latents: Optional[str] = None  # Pre-computed latents
+    coqui_emotion: str = "neutral"  # Emotion/style for synthesis
+    coqui_sample_rate: int = 22050  # Audio sample rate
+    coqui_vocoder_model: str = "auto"  # Vocoder model selection
+    coqui_speed_factor: float = 1.0  # Fine-tune speed factor
+    coqui_enable_text_splitting: bool = True  # Split long texts
+    coqui_do_trim_silence: bool = True  # Trim silence from audio
+
+    # TTS Voice preference - Jamie voice (from JARVIS_CAPABILITIES.md)
+    tts_voice_preference: str = "Jamie"  # Preferred voice name (Jamie voice)
     coqui_voice_conditioning_latents: Optional[str] = None  # Pre-computed latents
     coqui_emotion: str = "neutral"  # Emotion/style for synthesis
     coqui_sample_rate: int = 22050  # Audio sample rate
@@ -320,11 +333,8 @@ class JarvisConfig:
         config.audio.coqui_top_k = _get_env_int("JARVIS_COQUI_TOP_K", config.audio.coqui_top_k)
         config.audio.coqui_top_p = _get_env_float("JARVIS_COQUI_TOP_P", config.audio.coqui_top_p)
         config.audio.coqui_streaming = _get_env_bool("JARVIS_COQUI_STREAMING", config.audio.coqui_streaming)
-        config.audio.coqui_voice_preset = _get_env_str("JARVIS_COQUI_VOICE_PRESET", config.audio.coqui_voice_preset)
-        config.audio.coqui_voice_speed = _get_env_float("JARVIS_COQUI_VOICE_SPEED", config.audio.coqui_voice_speed)
         config.audio.coqui_speaker_id = _get_env_str("JARVIS_COQUI_SPEAKER_ID", config.audio.coqui_speaker_id)
-        config.audio.coqui_voice_conditioning_latents = _get_env_str("JARVIS_COQUI_VOICE_CONDITIONING_LATENTS", config.audio.coqui_voice_conditioning_latents)
-        config.audio.coqui_emotion = _get_env_str("JARVIS_COQUI_EMOTION", config.audio.coqui_emotion)
+        config.audio.tts_voice_preference = _get_env_str("JARVIS_TTS_VOICE", config.audio.tts_voice_preference)
         config.audio.coqui_sample_rate = _get_env_int("JARVIS_COQUI_SAMPLE_RATE", config.audio.coqui_sample_rate)
         config.audio.coqui_vocoder_model = _get_env_str("JARVIS_COQUI_VOCODER_MODEL", config.audio.coqui_vocoder_model)
         config.audio.coqui_speed_factor = _get_env_float("JARVIS_COQUI_SPEED_FACTOR", config.audio.coqui_speed_factor)

@@ -8,13 +8,11 @@ initialization, error handling, and graceful shutdown.
 import sys
 import signal
 import time
-import asyncio
-import threading
 from typing import Optional
 from pathlib import Path
 
 # Add project root to path for imports
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from jarvis.config import get_config, clear_config_cache
@@ -24,18 +22,8 @@ from jarvis.exceptions import JarvisError, InitializationError
 from jarvis.core.speech import SpeechManager
 from jarvis.core.agent import JarvisAgent
 from jarvis.core.conversation import ConversationManager
-# Import the fast/slow path routing system to fix timeout issues
-try:
-    from jarvis.core.routing import SmartConversationManager
-    ROUTING_AVAILABLE = True
-    print("🚀 Fast path routing system available - will fix timeout issues!")
-except ImportError:
-    ROUTING_AVAILABLE = False
-    SmartConversationManager = ConversationManager  # Fallback
 from jarvis.core.wake_word import WakeWordDetector
-from jarvis.core.emergency_stop import setup_emergency_stop
-from jarvis.utils.terminal_ui import terminal_ui, StatusType
-from jarvis.tools import get_langchain_tools
+from jarvis.tools import get_langchain_tools, tool_registry
 
 
 logger = get_logger(__name__)
@@ -55,8 +43,6 @@ class JarvisApplication:
         self.agent: Optional[JarvisAgent] = None
         self.conversation_manager: Optional[ConversationManager] = None
         self.wake_word_detector: Optional[WakeWordDetector] = None
-        self.mcp_client = None  # Store MCP client for event loop access
-        self.loop: Optional[asyncio.AbstractEventLoop] = None  # Persistent event loop
         self.running = False
 
         # Set up signal handlers for graceful shutdown
@@ -70,24 +56,8 @@ class JarvisApplication:
         logger.info(f"Received signal {signum}, initiating graceful shutdown...")
         self.running = False
 
-    def set_event_loop(self, loop: asyncio.AbstractEventLoop):
-        """Sets the single, persistent event loop for the application."""
-        self.loop = loop
-        logger.info("✅ Persistent event loop set for application")
-
-    async def shutdown_async(self):
-        """Perform asynchronous shutdown tasks."""
-        logger.info("Running async shutdown tasks...")
-        # Stop the official MCP system
-        try:
-            from .core.mcp_official_adapter import stop_official_mcp_system
-            await stop_official_mcp_system()
-            logger.info("✅ MCP system cleaned up")
-        except Exception as e:
-            logger.error(f"Error cleaning up MCP system: {str(e)}")
-
     @error_handler(reraise=True)
-    async def initialize(self) -> None:
+    def initialize(self) -> None:
         """
         Initialize all application components.
 
@@ -95,129 +65,40 @@ class JarvisApplication:
             InitializationError: If initialization fails
         """
         try:
-            # Suppress verbose warnings globally
-            import warnings
-            import os
-            warnings.filterwarnings("ignore", category=UserWarning)
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            os.environ['PYTHONWARNINGS'] = 'ignore'
-
-            logger.info("Initializing Jarvis Voice Assistant...")
-
-            # Show clean startup header
-            from .utils.terminal_ui import terminal_ui
-            terminal_ui.clear_screen()
-            print("JARVIS VOICE ASSISTANT")
-            print("=" * 60)
+            logger.info("🤖 Initializing Jarvis Voice Assistant...")
 
             # Load configuration
-            terminal_ui.show_service_loading("Configuration")
             self.config = get_config()
-            terminal_ui.show_service_loading("Configuration", "success")
-            logger.info("Configuration loaded")
+            logger.info("✅ Configuration loaded")
 
             # Initialize speech manager
-            terminal_ui.show_service_loading("Speech System")
             self.speech_manager = SpeechManager(self.config.audio)
             self.speech_manager.initialize()
-            terminal_ui.show_service_loading("Speech System", "success")
-            logger.info("Speech system initialized")
+            logger.info("✅ Speech system initialized")
 
-            # Initialize MCP tools
-            terminal_ui.show_service_loading("MCP Tools")
-            from .core.mcp_tool_integration import initialize_mcp_tools
-            try:
-                mcp_tools = await initialize_mcp_tools()
-                terminal_ui.show_service_loading("MCP Tools", "success")
-                logger.info(f"MCP system initialized with {len(mcp_tools)} tools")
-            except Exception as e:
-                mcp_tools = []
-                terminal_ui.show_service_loading("MCP Tools", "failed")
-                logger.warning(f"MCP system failed to initialize: {e}")
+            # Initialize LLM agent with tools (built-in + plugins)
+            self.agent = JarvisAgent(self.config.llm)
+            langchain_tools = get_langchain_tools()
+            self.agent.initialize(tools=langchain_tools)
+            logger.info(f"✅ AI agent initialized with {len(langchain_tools)} tools")
 
-            # Initialize agent with all tools (built-in + MCP)
-            terminal_ui.show_service_loading("AI Agent")
-            logger.info("Initializing agent with all available tools...")
+            # Initialize conversation manager
+            self.conversation_manager = ConversationManager(
+                self.config.conversation,
+                self.speech_manager,
+                self.agent
+            )
+            logger.info("✅ Conversation manager initialized")
 
-            # RAG system is now handled as a plugin - no core integration needed
-            self.rag_manager = None  # No core RAG manager needed
+            # Initialize wake word detector
+            self.wake_word_detector = WakeWordDetector(
+                self.config.conversation,
+                self.speech_manager
+            )
+            logger.info("✅ Wake word detector initialized")
 
-            # Use direct Open Interpreter integration (simpler and more reliable)
-            from .tools import plugin_manager
-            from .tools.open_interpreter_direct import get_open_interpreter_tools, is_open_interpreter_available
-
-            # Get plugin tools (includes all functionality including RAG)
-            plugin_tools = plugin_manager.get_all_tools()
-
-            # Get Open Interpreter tools if available
-            if is_open_interpreter_available():
-                open_interpreter_tools = get_open_interpreter_tools()
-                terminal_ui.show_service_loading("Open Interpreter", "success")
-                logger.info(f"Open Interpreter loaded with {len(open_interpreter_tools)} tools")
-            else:
-                open_interpreter_tools = []
-                terminal_ui.show_service_loading("Open Interpreter", "failed")
-                logger.warning("Open Interpreter not available, continuing without code execution tools")
-
-            # Combine all tools (RAG is included in plugin_tools, MCP tools are external)
-            all_tools = plugin_tools + open_interpreter_tools + mcp_tools
-
-            # No MCP client needed for direct integration
-            self.mcp_client = None
-
-            self.agent = JarvisAgent(self.config.llm, self.config.agent)
-
-            # Try agent initialization with timeout
-            try:
-                # Use asyncio.wait_for to add timeout to agent initialization
-                await asyncio.wait_for(
-                    asyncio.to_thread(self.agent.initialize, all_tools),
-                    timeout=30.0  # 30 second timeout
-                )
-                terminal_ui.show_service_loading("AI Agent", "success")
-                logger.info(f"AI agent initialized with {len(all_tools)} tools")
-            except asyncio.TimeoutError:
-                # Fallback to plugin tools only if initialization times out
-                basic_tools = plugin_tools
-                self.agent.initialize(tools=basic_tools)
-                terminal_ui.show_service_loading("AI Agent", "success")
-                logger.info(f"Agent initialized with {len(basic_tools)} tools (timeout fallback)")
-            except Exception as e:
-                # Fallback to plugin tools only
-                basic_tools = plugin_tools
-                self.agent.initialize(tools=basic_tools)
-                terminal_ui.show_service_loading("AI Agent", "success")
-                logger.error(f"Agent initialization failed, using fallback: {e}")
-
-            # Initialize conversation manager with fast path routing to fix timeout issues
-            terminal_ui.show_service_loading("Conversation Manager")
-
-            if ROUTING_AVAILABLE:
-                logger.info("🚀 Initializing Smart Conversation Manager with fast/slow path routing")
-                print("🚀 ENABLING FAST PATH ROUTING - Simple queries will be 150x faster!")
-                self.conversation_manager = SmartConversationManager(
-                    self.config,  # Pass full config for routing system
-                    self.speech_manager,
-                    self.agent,
-                    self.mcp_client
-                )
-                logger.info("✅ Smart routing system enabled - timeout issues should be resolved!")
-            else:
-                logger.warning("⚠️ Routing system not available, using original ConversationManager")
-                self.conversation_manager = ConversationManager(
-                    self.config.conversation,
-                    self.speech_manager,
-                    self.agent,
-                    self.mcp_client  # Pass MCP client for event loop access
-                )
-            terminal_ui.show_service_loading("Conversation Manager", "success")
-            logger.info("Conversation manager initialized")
-
-            # Wake word detector will be initialized in main thread to avoid threading issues
-            # (Audio resources work better when initialized in the same thread they're used)
-            self.wake_word_detector = None  # Will be initialized in main thread
-
-            # Emergency stop system will be set up in main thread after initialization
+            # Set up conversation callbacks
+            self._setup_callbacks()
 
             logger.info("🎉 Jarvis initialization completed successfully!")
 
@@ -228,44 +109,15 @@ class JarvisApplication:
 
     def _setup_callbacks(self) -> None:
         """Set up callbacks for component interactions."""
-        # Wake word callbacks are now set up in main thread to avoid threading issues
-        # This method is kept for future callback setup needs
-        pass
+        # Set wake word detection callback
+        def on_wake_word_detected(detection):
+            logger.info(f"Wake word detected: {detection.text} (confidence: {detection.confidence:.2f})")
+            try:
+                self.conversation_manager.enter_conversation_mode()
+            except Exception as e:
+                logger.error(f"Failed to enter conversation mode: {str(e)}")
 
-    # Legacy MCP method removed - using official MCP system only
-
-    def _refresh_agent_tools(self) -> None:
-        """Refresh agent tools when MCP tools are updated."""
-        try:
-            if self.agent and self.agent.is_initialized():
-                logger.info("🔄 MCP tools updated - refreshing agent tools...")
-
-                # Get updated tools (includes built-in + MCP tools)
-                updated_tools = get_langchain_tools()
-
-                # Force complete re-initialization of the agent with new tools
-                logger.info(f"🔧 Re-initializing agent with {len(updated_tools)} tools...")
-                self.agent.initialize(tools=updated_tools)
-
-                logger.info(f"✅ Agent completely re-initialized with {len(updated_tools)} total tools")
-
-                # Log the tool names for debugging
-                tool_names = [tool.name for tool in updated_tools]
-                logger.info(f"🛠️ Available tools: {', '.join(tool_names[:10])}{'...' if len(tool_names) > 10 else ''}")
-
-                # Verify the agent actually has the tools
-                if hasattr(self.agent, 'tools') and self.agent.tools:
-                    actual_count = len(self.agent.tools)
-                    logger.info(f"🔍 Agent reports {actual_count} tools available")
-                    if actual_count != len(updated_tools):
-                        logger.warning(f"⚠️ Tool count mismatch: expected {len(updated_tools)}, agent has {actual_count}")
-
-            else:
-                logger.warning("⚠️ Agent not initialized, cannot refresh tools")
-        except Exception as e:
-            logger.error(f"❌ Failed to refresh agent tools: {e}")
-            import traceback
-            logger.error(f"Full traceback: {traceback.format_exc()}")
+        self.wake_word_detector.set_detection_callback(on_wake_word_detected)
 
     def run(self) -> None:
         """
@@ -281,13 +133,10 @@ class JarvisApplication:
             self.running = True
             logger.info("🚀 Starting Jarvis Voice Assistant")
 
-            # Show final startup status
-            print()
-            print("System ready - listening for wake word...")
-            print("Say 'jarvis' to start • Press Ctrl+C to stop")
-            print("─" * 60)
+            # Display startup information
+            self._display_startup_info()
 
-            # Start main loop (synchronous for wake word detection)
+            # Start main loop
             self._main_loop()
 
         except KeyboardInterrupt:
@@ -305,53 +154,37 @@ class JarvisApplication:
             self.speech_manager and self.speech_manager.is_initialized(),
             self.agent and self.agent.is_initialized(),
             self.conversation_manager and self.conversation_manager.is_initialized(),
-            # wake_word_detector is initialized in main thread, so don't check here
+            self.wake_word_detector
         ])
 
     def _display_startup_info(self) -> None:
         """Display startup information to user."""
-        # Clear screen and show minimal header
-        terminal_ui.clear_screen()
-
-        # Get all available tools (plugin-based architecture)
-        from .tools import plugin_manager
-
-        # Get plugin tools (includes all functionality - no built-in tools)
-        plugin_tools = plugin_manager.get_all_tools()
-
-        # Get MCP tools using official adapters (if available)
-        try:
-            # Check if we have an active MCP manager
-            from .core.mcp_official_adapter import get_official_mcp_manager
-            manager = get_official_mcp_manager()
-            if manager:
-                mcp_tools = manager.get_tools()
-            else:
-                mcp_tools = []
-        except Exception:
-            mcp_tools = []
-
-        all_tools = plugin_tools + mcp_tools
-
-        # Show minimal configuration
-        config_info = {
-            'model': self.config.llm.model,
-            'tool_count': len(all_tools),
-            'wake_word': self.config.conversation.wake_word,
-        }
-        terminal_ui.show_minimal_startup(config_info)
+        print("\n" + "="*60)
+        print("🤖 JARVIS VOICE ASSISTANT")
+        print("="*60)
+        print(f"🎤 Microphone: {self.config.audio.mic_name}")
+        print(f"🧠 AI Model: {self.config.llm.model}")
+        print(f"🔧 Tools: {', '.join(tool_registry.list_tools(enabled_only=True))}")
+        print(f"👂 Wake Word: '{self.config.conversation.wake_word}'")
+        print(f"⏱️  Timeout: {self.config.conversation.conversation_timeout}s")
+        print("="*60)
+        print("💡 Say the wake word to start a conversation")
+        print("🛑 Press Ctrl+C to exit")
+        print("="*60 + "\n")
 
     def _main_loop(self) -> None:
-        """Main application loop."""
+        """Main application loop (using working backup approach)."""
         logger.info("Entering main application loop")
 
-        # Show listening prompt
-        terminal_ui.show_listening_prompt()
+        # Show user instructions
+        print("👂 Listening for wake word...")
+        print("💡 Say 'Jarvis' clearly and wait for response")
+        print("🔇 If no response, check microphone permissions and try again")
 
         consecutive_errors = 0
         max_consecutive_errors = 5
 
-        # Simple state management (like the working GitHub example)
+        # Simple state management (like the working backup)
         conversation_mode = False
         last_interaction_time = None
         TRIGGER_WORD = "jarvis"
@@ -360,7 +193,7 @@ class JarvisApplication:
         while self.running:
             try:
                 if not conversation_mode:
-                    # Listen for wake word (using the working approach)
+                    # Listen for wake word (using the exact working backup approach)
                     logger.debug("🎧 Listening for wake word...")
 
                     transcript = self.speech_manager.microphone_manager.listen_for_speech(
@@ -371,7 +204,7 @@ class JarvisApplication:
                     if transcript:
                         logger.info(f"🗣 Heard: '{transcript}'")
 
-                        # Simple wake word detection (like the working example)
+                        # Simple wake word detection (like the working backup)
                         if TRIGGER_WORD.lower() in transcript.lower():
                             logger.info(f"🎯 WAKE WORD DETECTED! Triggered by: '{transcript}'")
                             print(f"🎯 WAKE WORD DETECTED! Text: '{transcript}'")
@@ -400,26 +233,16 @@ class JarvisApplication:
                     )
 
                     if command:
-                        logger.info(f"📥 Command: '{command}'")
-
-                        # Process command with conversation manager
-                        try:
-                            logger.info("🧠 Processing with conversation manager...")
-                            self.conversation_manager.handle_user_input(command)
-                            consecutive_errors = 0  # Reset error count
-                        except Exception as e:
-                            logger.error(f"❌ Conversation error: {e}")
-                            self.speech_manager.speak_text("I'm sorry, I had trouble processing that request.")
-
+                        # Handle conversation (existing logic)
+                        consecutive_errors = 0  # Reset error count
+                        self._handle_conversation_with_command(command)
                         last_interaction_time = time.time()
                     else:
-                        logger.debug("No command heard")
-
-                    # Check for timeout
-                    if time.time() - last_interaction_time > CONVERSATION_TIMEOUT:
-                        logger.info("⌛ Timeout: Returning to wake word mode")
-                        conversation_mode = False
-                        consecutive_errors = 0  # Reset error count
+                        # Check for conversation timeout
+                        if last_interaction_time and (time.time() - last_interaction_time) > CONVERSATION_TIMEOUT:
+                            logger.info("Conversation timeout, returning to wake word mode")
+                            conversation_mode = False
+                            last_interaction_time = None
 
             except KeyboardInterrupt:
                 break
@@ -429,15 +252,10 @@ class JarvisApplication:
 
                 if consecutive_errors >= max_consecutive_errors:
                     logger.error("Too many consecutive audio errors, shutting down")
-                    terminal_ui.show_error(
-                        "Too many consecutive audio errors",
-                        suggestions=[
-                            "Check microphone permissions in System Preferences",
-                            "Ensure microphone is not being used by another app",
-                            "Verify internet connection for speech recognition",
-                            "Try restarting Jarvis"
-                        ]
-                    )
+                    print("❌ Too many audio errors. Please check:")
+                    print("   - Microphone permissions")
+                    print("   - Microphone is not being used by another app")
+                    print("   - Internet connection (for speech recognition)")
                     break
 
                 # Wait a bit before retrying
@@ -456,7 +274,7 @@ class JarvisApplication:
                    self.running):
 
                 try:
-                    # Handle one conversation cycle (sync wrapper for async agent)
+                    # Handle one conversation cycle
                     should_continue = self.conversation_manager.handle_conversation_cycle()
 
                     if not should_continue:
@@ -476,6 +294,27 @@ class JarvisApplication:
                 self.speech_manager.speak_text("I'm having trouble. Let's try again later.")
             except:
                 pass
+
+    def _handle_conversation_with_command(self, command: str) -> None:
+        """Handle conversation with a specific command (backup approach)."""
+        try:
+            logger.info(f"Processing command: '{command}'")
+
+            # Get AI response
+            response = self.agent.process_input(command)
+
+            if response:
+                logger.info(f"AI Response: {response}")
+
+                # Speak the response
+                self.speech_manager.speak_text(response)
+            else:
+                logger.warning("No response from AI agent")
+                self.speech_manager.speak_text("I'm not sure how to help with that.")
+
+        except Exception as e:
+            logger.error(f"Error processing command: {str(e)}")
+            self.speech_manager.speak_text("I encountered an error processing your request.")
 
     def test_components(self) -> bool:
         """
@@ -536,7 +375,6 @@ class JarvisApplication:
 
     def shutdown(self) -> None:
         """Shutdown the application gracefully."""
-        terminal_ui.show_shutdown()
         logger.info("🛑 Shutting down Jarvis...")
 
         self.running = False
@@ -545,103 +383,57 @@ class JarvisApplication:
         if self.wake_word_detector:
             try:
                 self.wake_word_detector.cleanup()
-                terminal_ui.show_component_status("Wake Word Detector", "cleaned up", True)
                 logger.info("✅ Wake word detector cleaned up")
             except Exception as e:
-                terminal_ui.show_component_status("Wake Word Detector", f"error: {str(e)}", False)
                 logger.error(f"Error cleaning up wake word detector: {str(e)}")
 
         if self.conversation_manager:
             try:
                 self.conversation_manager.reset_conversation()
-                terminal_ui.show_component_status("Conversation Manager", "cleaned up", True)
                 logger.info("✅ Conversation manager cleaned up")
             except Exception as e:
-                terminal_ui.show_component_status("Conversation Manager", f"error: {str(e)}", False)
                 logger.error(f"Error cleaning up conversation manager: {str(e)}")
 
         if self.agent:
             try:
                 self.agent.cleanup()
-                terminal_ui.show_component_status("AI Agent", "cleaned up", True)
                 logger.info("✅ AI agent cleaned up")
             except Exception as e:
-                terminal_ui.show_component_status("AI Agent", f"error: {str(e)}", False)
                 logger.error(f"Error cleaning up agent: {str(e)}")
 
         if self.speech_manager:
             try:
                 self.speech_manager.cleanup()
-                terminal_ui.show_component_status("Speech Manager", "cleaned up", True)
                 logger.info("✅ Speech manager cleaned up")
             except Exception as e:
-                terminal_ui.show_component_status("Speech Manager", f"error: {str(e)}", False)
                 logger.error(f"Error cleaning up speech manager: {str(e)}")
 
-        # Cleanup MCP system
-        try:
-            from .tools import stop_mcp_system
-            if stop_mcp_system():
-                terminal_ui.show_component_status("MCP System", "cleaned up", True)
-                logger.info("✅ MCP system cleaned up")
-            else:
-                terminal_ui.show_component_status("MCP System", "cleanup failed", False)
-        except Exception as e:
-            terminal_ui.show_component_status("MCP System", f"error: {str(e)}", False)
-            logger.error(f"Error cleaning up MCP system: {str(e)}")
-
-        terminal_ui.show_shutdown_complete()
         logger.info("👋 Jarvis shutdown complete")
 
 
 def main() -> int:
     """
-    Main synchronous entry point for the Jarvis Voice Assistant.
-    Manages the asyncio event loop in a background thread.
+    Main entry point for the Jarvis Voice Assistant.
+
+    Returns:
+        Exit code (0 for success, 1 for error)
     """
-    loop = None
-    app = None
     try:
         # Clear any cached configuration to ensure fresh load
         clear_config_cache()
 
-        # Load config to set up logging
+        # Load configuration first to set up logging
         config = get_config()
-        setup_logging(config.logging, clean_console=True)
+
+        # Set up logging
+        setup_logging(config.logging)
         setup_exception_logging()
 
         logger.info("Starting Jarvis Voice Assistant")
 
-        # Create and start the single, persistent event loop in a background thread
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        loop_thread = threading.Thread(target=loop.run_forever, daemon=True)
-        loop_thread.start()
-
-        logger.info("🚀 Persistent event loop started in background thread.")
-
-        # Create the application instance
+        # Create and run application
         app = JarvisApplication()
-
-        # Pass the running loop to the application for its components to use
-        app.set_event_loop(loop)
-
-        # Run initialization on the background loop and wait for it to complete
-        logger.info("🤖 Submitting initialization task to event loop...")
-        init_future = asyncio.run_coroutine_threadsafe(app.initialize(), loop)
-        init_future.result()  # Wait for initialization to finish
-        logger.info("✅ Initialization complete.")
-
-        # Set up emergency stop system in main thread (signal handlers must be in main thread)
-        logger.info("🛑 Setting up emergency stop system in main thread...")
-        setup_emergency_stop(
-            speech_manager=app.speech_manager,
-            agent=app.agent,
-            conversation_manager=app.conversation_manager,
-            tts_manager=getattr(app.speech_manager, 'tts_manager', None)
-        )
-        logger.info("✅ Emergency stop system activated")
+        app.initialize()
 
         # Check if we should run tests first
         if config.general.debug:
@@ -650,49 +442,17 @@ def main() -> int:
                 logger.error("Component tests failed")
                 return 1
 
-        # Initialize wake word detector in main thread (fixes threading issues)
-        logger.info("🎤 Initializing wake word detector in main thread...")
-        app.wake_word_detector = WakeWordDetector(
-            app.config.conversation,
-            app.speech_manager
-        )
-        logger.info("✅ Wake word detector initialized in main thread")
-
-        # Set up wake word callbacks
-        def on_wake_word_detected(detection):
-            logger.info(f"Wake word detected: {detection.text} (confidence: {detection.confidence:.2f})")
-            try:
-                app.conversation_manager.enter_conversation_mode()
-            except Exception as e:
-                logger.error(f"Failed to enter conversation mode: {str(e)}")
-
-        app.wake_word_detector.set_detection_callback(on_wake_word_detected)
-        logger.info("✅ Wake word callbacks set up")
-
-        # Now that initialization is done, run the main synchronous loop
+        # Run the application
         app.run()
 
         return 0
 
     except KeyboardInterrupt:
-        logger.info("Application interrupted by user.")
+        logger.info("Application interrupted by user")
         return 0
     except Exception as e:
-        logger.critical(f"A critical error occurred: {e}", exc_info=True)
+        logger.error(f"Application failed: {str(e)}", exc_info=True)
         return 1
-    finally:
-        logger.info("🛑 Shutting down application...")
-        if app and loop and loop.is_running():
-            # Submit the async shutdown task to the loop
-            shutdown_future = asyncio.run_coroutine_threadsafe(app.shutdown_async(), loop)
-            try:
-                shutdown_future.result(timeout=10) # Wait for shutdown to complete
-            except Exception as e:
-                logger.error(f"Error during async shutdown: {e}")
-
-            # Stop the event loop
-            loop.call_soon_threadsafe(loop.stop)
-        logger.info("👋 Jarvis shutdown complete.")
 
 
 if __name__ == "__main__":
