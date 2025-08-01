@@ -1,0 +1,19 @@
+{
+  "tool_name": "open_chrome",
+  "type": "generic",
+  "description": "Tool created from request: Make a tool that will open Chrome",
+  "capabilities": [
+    "General purpose functionality"
+  ],
+  "voice_commands": [
+    "use open chrome",
+    "run open chrome",
+    "execute open chrome",
+    "activate open chrome"
+  ],
+  "created_from_request": "Make a tool that will open Chrome",
+  "usage_examples": [
+    "Make a tool that will open Chrome"
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

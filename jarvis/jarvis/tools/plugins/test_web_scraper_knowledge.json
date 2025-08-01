@@ -1,0 +1,16 @@
+{
+  "tool_name": "test_web_scraper",
+  "type": "web_automation",
+  "description": "A test web scraping tool",
+  "capabilities": [
+    "Web scraping",
+    "Data extraction"
+  ],
+  "voice_commands": [
+    "scrape website",
+    "extract data"
+  ],
+  "created_from_request": "Create a web scraping tool for testing",
+  "usage_examples": [],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

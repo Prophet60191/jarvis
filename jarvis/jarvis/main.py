@@ -35,7 +35,7 @@ except ImportError:
 from jarvis.core.wake_word import WakeWordDetector
 from jarvis.core.emergency_stop import setup_emergency_stop
 from jarvis.utils.terminal_ui import terminal_ui, StatusType
-from jarvis.tools import get_langchain_tools, tool_registry, get_langchain_tools
+from jarvis.tools import get_langchain_tools
 
 
 logger = get_logger(__name__)
@@ -123,10 +123,17 @@ class JarvisApplication:
             terminal_ui.show_service_loading("Speech System", "success")
             logger.info("Speech system initialized")
 
-            # MCP system will be initialized in async agent initialization
+            # Initialize MCP tools
             terminal_ui.show_service_loading("MCP Tools")
-            terminal_ui.show_service_loading("MCP Tools", "pending")
-            logger.info("MCP system will be initialized with agent")
+            from .core.mcp_tool_integration import initialize_mcp_tools
+            try:
+                mcp_tools = await initialize_mcp_tools()
+                terminal_ui.show_service_loading("MCP Tools", "success")
+                logger.info(f"MCP system initialized with {len(mcp_tools)} tools")
+            except Exception as e:
+                mcp_tools = []
+                terminal_ui.show_service_loading("MCP Tools", "failed")
+                logger.warning(f"MCP system failed to initialize: {e}")
 
             # Initialize agent with all tools (built-in + MCP)
             terminal_ui.show_service_loading("AI Agent")
@@ -152,8 +159,8 @@ class JarvisApplication:
                 terminal_ui.show_service_loading("Open Interpreter", "failed")
                 logger.warning("Open Interpreter not available, continuing without code execution tools")
 
-            # Combine all tools (RAG is included in plugin_tools)
-            all_tools = plugin_tools + open_interpreter_tools
+            # Combine all tools (RAG is included in plugin_tools, MCP tools are external)
+            all_tools = plugin_tools + open_interpreter_tools + mcp_tools
 
             # No MCP client needed for direct integration
             self.mcp_client = None
@@ -344,18 +351,75 @@ class JarvisApplication:
         consecutive_errors = 0
         max_consecutive_errors = 5
 
+        # Simple state management (like the working GitHub example)
+        conversation_mode = False
+        last_interaction_time = None
+        TRIGGER_WORD = "jarvis"
+        CONVERSATION_TIMEOUT = 30  # seconds
+
         while self.running:
             try:
-                # Listen for wake word (synchronous - works better)
-                detection = self.wake_word_detector.listen_once(timeout=2.0)
+                if not conversation_mode:
+                    # Listen for wake word (using the working approach)
+                    logger.debug("🎧 Listening for wake word...")
 
-                if detection.detected:
-                    # Wake word detected, handle conversation
-                    consecutive_errors = 0  # Reset error count
-                    self._handle_conversation()
+                    transcript = self.speech_manager.microphone_manager.listen_for_speech(
+                        timeout=10.0,
+                        service="whisper"
+                    )
+
+                    if transcript:
+                        logger.info(f"🗣 Heard: '{transcript}'")
+
+                        # Simple wake word detection (like the working example)
+                        if TRIGGER_WORD.lower() in transcript.lower():
+                            logger.info(f"🎯 WAKE WORD DETECTED! Triggered by: '{transcript}'")
+                            print(f"🎯 WAKE WORD DETECTED! Text: '{transcript}'")
+
+                            # Respond with TTS
+                            self.speech_manager.speak_text("Yes sir?")
+
+                            # Enter conversation mode
+                            conversation_mode = True
+                            last_interaction_time = time.time()
+                            consecutive_errors = 0  # Reset error count
+                        else:
+                            logger.debug("Wake word not detected, continuing...")
+                            consecutive_errors = 0  # Reset error count
+                    else:
+                        logger.debug("No speech detected, continuing...")
+                        consecutive_errors = 0  # Reset error count
+
                 else:
-                    # No wake word detected, continue listening
-                    consecutive_errors = 0  # Reset error count
+                    # In conversation mode - listen for commands
+                    logger.debug("🎤 Listening for command...")
+
+                    command = self.speech_manager.microphone_manager.listen_for_speech(
+                        timeout=10.0,
+                        service="whisper"
+                    )
+
+                    if command:
+                        logger.info(f"📥 Command: '{command}'")
+
+                        # Process command with conversation manager
+                        try:
+                            logger.info("🧠 Processing with conversation manager...")
+                            self.conversation_manager.handle_user_input(command)
+                            consecutive_errors = 0  # Reset error count
+                        except Exception as e:
+                            logger.error(f"❌ Conversation error: {e}")
+                            self.speech_manager.speak_text("I'm sorry, I had trouble processing that request.")
+
+                        last_interaction_time = time.time()
+                    else:
+                        logger.debug("No command heard")
+
+                    # Check for timeout
+                    if time.time() - last_interaction_time > CONVERSATION_TIMEOUT:
+                        logger.info("⌛ Timeout: Returning to wake word mode")
+                        conversation_mode = False
+                        consecutive_errors = 0  # Reset error count
 
             except KeyboardInterrupt:
                 break

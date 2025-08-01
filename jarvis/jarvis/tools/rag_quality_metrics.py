@@ -6,6 +6,7 @@ Provides comprehensive quality measurement for RAG system including
 retrieval accuracy, answer faithfulness, and source citation accuracy.
 """
 
+import asyncio
 import re
 import time
 import logging

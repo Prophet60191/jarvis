@@ -1,0 +1,8 @@
+# UI Test Document
+
+This is a test document created at 1753763753.694067
+
+## Features
+- UI testing
+- Document management
+- RAG integration

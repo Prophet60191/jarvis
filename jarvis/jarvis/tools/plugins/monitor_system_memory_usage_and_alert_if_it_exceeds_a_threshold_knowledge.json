@@ -1,0 +1,19 @@
+{
+  "tool_name": "monitor_system_memory_usage_and_alert_if_it_exceeds_a_threshold",
+  "type": "system_tool",
+  "description": "Tool created from request: Create a tool to monitor system memory usage and alert if it exceeds a threshold",
+  "capabilities": [
+    "Monitoring"
+  ],
+  "voice_commands": [
+    "manage system with monitor system memory usage and alert if it exceeds a threshold",
+    "control using monitor system memory usage and alert if it exceeds a threshold",
+    "run monitor system memory usage and alert if it exceeds a threshold",
+    "activate monitor system memory usage and alert if it exceeds a threshold"
+  ],
+  "created_from_request": "Create a tool to monitor system memory usage and alert if it exceeds a threshold",
+  "usage_examples": [
+    "Create a tool to monitor system memory usage and alert if it exceeds a threshold"
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

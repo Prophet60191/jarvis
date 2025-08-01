@@ -161,16 +161,17 @@ class WhisperSpeechRecognizer:
         logger.debug(f"Transcribing audio file: {audio_file_path}")
         
         with self._lock:
-            # Transcribe with speed-optimized parameters
-            # Research shows these settings provide best speed/accuracy balance
+            # Transcribe with wake-word optimized parameters
+            # More lenient settings for better wake word detection
             segments, info = self.model.transcribe(
                 audio_file_path,
                 language=self.language if self.language != 'auto' else None,
                 beam_size=1,  # Reduced from 5 for speed (greedy decoding)
                 best_of=1,    # Reduced from 5 for speed
-                temperature=0.0,
+                temperature=[0.0, 0.2, 0.4],  # Multiple temperatures for better detection
                 condition_on_previous_text=False,
                 vad_filter=False,  # DISABLED: VAD was removing valid speech
+                no_speech_threshold=0.3,  # Lower threshold (default 0.6) for better detection
                 # Speed optimizations: lower beam_size and best_of for faster inference
             )
             
@@ -185,6 +186,7 @@ class WhisperSpeechRecognizer:
             logger.debug(f"Detected language: {info.language} (probability: {info.language_probability:.2f})")
             
             if not full_text:
+                logger.debug("Whisper returned empty text - audio may be too quiet or contain no speech")
                 raise SpeechRecognitionError("No speech detected in audio", recognition_service="whisper")
             
             return full_text

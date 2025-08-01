@@ -1,0 +1,10 @@
+# Integration Test Document
+            
+This document was created for integration testing at 1753764116.049079.
+
+## Key Information
+- Purpose: Testing document processing pipeline
+- Features: Upload, ingestion, and search integration
+- System: RAG Memory Management
+
+The document should be processed by the intelligent RAG system.

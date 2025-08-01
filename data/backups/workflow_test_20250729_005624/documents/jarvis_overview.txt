@@ -1,0 +1,29 @@
+Jarvis Voice Assistant - System Overview
+
+Jarvis is an advanced AI-powered voice assistant built with a plugin-based architecture and RAG memory system.
+
+Key Features:
+- Voice interaction with wake word detection
+- Dual memory system (short-term chat + long-term persistent facts)
+- Plugin-based tool system with zero built-in tools
+- ChromaDB vector database for semantic search
+- Web-based control panel for configuration
+- MCP integration for external services
+
+Architecture:
+The system follows a clean separation between core conversation management and extensible functionality through plugins. The RAG memory system uses ChromaDB to store both conversational facts and document content with semantic search capabilities.
+
+Memory System:
+- Short-term memory: Current conversation context
+- Long-term memory: Explicitly stored facts and document knowledge
+- Semantic search: Find information by meaning, not just keywords
+- PII protection: Automatic detection and warnings
+
+Voice Capabilities:
+- Speech-to-text using OpenAI Whisper
+- Text-to-speech with multiple engine support
+- Voice cloning for personalized responses
+- Wake word detection for hands-free operation
+
+Development:
+Built with Python, LangChain, ChromaDB, and modern web technologies. The plugin system allows developers to add functionality without modifying core code.

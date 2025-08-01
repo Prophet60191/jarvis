@@ -1,0 +1,6 @@
+**/chroma_db/**
+**/data/backups/**
+**/*.bin
+**/__pycache__/**
+**/.pytest_cache/**
+**/*.pyc

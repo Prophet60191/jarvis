@@ -145,23 +145,30 @@ class SpeechManager:
     def speak_text(self, text: str, wait: bool = True) -> None:
         """
         Convert text to speech and play it.
-        
+
         Args:
             text: Text to speak
             wait: Whether to wait for speech to complete
-            
+
         Raises:
             TextToSpeechError: If TTS fails
         """
         if not self.is_initialized():
             raise AudioError("SpeechManager not initialized. Call initialize() first.")
-        
+
         try:
             logger.debug(f"🔊 SPEECH_MANAGER: speak_text called with wait={wait}")
-            logger.debug(f"🔊 SPEECH_MANAGER: Text: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+            logger.debug(f"🔊 SPEECH_MANAGER: Original text: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+
+            # Format text for natural speech (remove markdown, fix special characters)
+            from ..audio.tts_formatter import format_text_for_speech
+            formatted_text = format_text_for_speech(text)
+
+            if formatted_text != text:
+                logger.debug(f"🔊 SPEECH_MANAGER: Formatted text: '{formatted_text[:50]}{'...' if len(formatted_text) > 50 else ''}'")
 
             speech_start_time = time.time()
-            self.tts_manager.speak(text, wait)
+            self.tts_manager.speak(formatted_text, wait)
             speech_end_time = time.time()
             speech_duration = speech_end_time - speech_start_time
 

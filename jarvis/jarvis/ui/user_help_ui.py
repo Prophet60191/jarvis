@@ -8,6 +8,7 @@ bookmarking, and voice command integration following the Jarvis UI template.
 import sys
 import os
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Set
@@ -25,6 +26,8 @@ from PyQt6.QtGui import QFont, QIcon, QPixmap, QTextCursor, QTextCharFormat, QCo
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
+
+logger = logging.getLogger(__name__)
 
 class DocumentationLoader(QThread):
     """Background thread for loading documentation files."""
@@ -92,14 +95,16 @@ class DocumentationLoader(QThread):
                             'last_modified': datetime.fromtimestamp(file_path.stat().st_mtime).strftime('%Y-%m-%d %H:%M')
                         }
                     except Exception as e:
-                        print(f"Error loading {filename}: {e}")
+                        logger.error(f"Error loading {filename}: {e}", exc_info=True)
+                        print(f"Error loading {filename}: {e}")  # Keep print for UI feedback
                 else:
                     print(f"Documentation file not found: {filename}")
             
             self.documentation_loaded.emit(docs)
             
         except Exception as e:
-            print(f"Error loading documentation: {e}")
+            logger.error(f"Error loading documentation: {e}", exc_info=True)
+            print(f"Error loading documentation: {e}")  # Keep print for UI feedback
             self.documentation_loaded.emit({})
 
 class UserHelpUI(QMainWindow):
@@ -609,7 +614,8 @@ class UserHelpUI(QMainWindow):
                 with open(bookmarks_file, 'r') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"Error loading bookmarks: {e}")
+            logger.error(f"Error loading bookmarks: {e}", exc_info=True)
+            print(f"Error loading bookmarks: {e}")  # Keep print for UI feedback
         return []
     
     def save_bookmarks(self):
@@ -620,7 +626,8 @@ class UserHelpUI(QMainWindow):
             with open(bookmarks_file, 'w') as f:
                 json.dump(self.bookmarks, f, indent=2)
         except Exception as e:
-            print(f"Error saving bookmarks: {e}")
+            logger.error(f"Error saving bookmarks: {e}", exc_info=True)
+            print(f"Error saving bookmarks: {e}")  # Keep print for UI feedback
     
     def get_welcome_content(self) -> str:
         """Get welcome content HTML."""

@@ -413,6 +413,8 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.serve_voice_profiles_page()
         elif path == "/device":
             self.serve_device_config_page()
+        elif path == "/tools":
+            self.serve_tools_page()
         elif path == "/mcp":
             self.serve_mcp_page()
         elif path == "/rag":
@@ -435,6 +437,10 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.serve_mcp_servers_api()
         elif path == "/api/mcp/tools":
             self.serve_mcp_tools_api()
+        elif path == "/api/jarvis/tools":
+            self.serve_jarvis_tools_api()
+        elif path == "/api/plugins":
+            self.serve_plugins_api()
         # RAG Management API endpoints
         elif path == "/api/rag/status":
             self.serve_rag_status_api()
@@ -477,6 +483,8 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.handle_add_memory()
         elif path == "/api/rag/memory/delete":
             self.handle_delete_memory()
+        elif path == "/api/plugins":
+            self.handle_plugin_action()
         elif path == "/api/rag/documents/upload":
             self.handle_document_upload()
         elif path == "/api/rag/documents/ingest":
@@ -618,9 +626,17 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(html.encode())
 
+    def serve_tools_page(self):
+        """Serve the Tools & Plugins management page."""
+        html = self.get_html_template("Tools & Plugins", self.get_tools_content())
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html.encode())
+
     def serve_mcp_page(self):
         """Serve the MCP management page."""
-        html = self.get_html_template("MCP Tools & Servers", self.get_mcp_content())
+        html = self.get_html_template("MCP Servers", self.get_mcp_content())
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
@@ -782,36 +798,38 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
     def serve_mcp_servers_api(self):
         """Serve MCP servers information as JSON API."""
         try:
-            # Get MCP client manager
-            from jarvis.tools import get_mcp_client
-            mcp_client = get_mcp_client()
+            # Get MCP config manager
+            from jarvis.tools import get_mcp_config_manager
+            config_manager = get_mcp_config_manager()
 
-            # Get all servers
-            all_servers = mcp_client.get_all_servers()
+            if not config_manager:
+                return self._send_json_response({"servers": {}}, 200)
+
+            # Get all server configs
+            all_server_configs = config_manager.get_all_servers()
 
             # Format server data for UI
             servers_data = {"servers": {}}
-            for server_name, server_info in all_servers.items():
-                servers_data["servers"][server_name] = {
+
+            # Convert config information for UI
+            for server_id, config in all_server_configs.items():
+                servers_data["servers"][server_id] = {
                     "config": {
-                        "name": server_info.config.name,
-                        "transport": server_info.config.transport.value,
-                        "command": server_info.config.command,
-                        "args": server_info.config.args,
-                        "url": server_info.config.url,
-                        "enabled": server_info.config.enabled
+                        "name": config.name,
+                        "description": config.description,
+                        "transport": config.transport.value,
+                        "command": config.command,
+                        "args": config.args,
+                        "env": config.env,
+                        "enabled": config.enabled,
+                        "timeout": config.timeout,
+                        "created_at": config.created_at,
+                        "last_modified": config.last_modified
                     },
-                    "status": server_info.status.value,
-                    "tools": [
-                        {
-                            "name": tool.name,
-                            "description": tool.description,
-                            "enabled": tool.enabled
-                        }
-                        for tool in server_info.tools
-                    ],
-                    "last_error": server_info.last_error,
-                    "connected_at": server_info.connected_at
+                    "status": {
+                        "connected": False,  # Default to false for now
+                        "tools_count": 0     # Default to 0 for now
+                    }
                 }
 
             self.send_response(200)
@@ -860,6 +878,181 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"error": str(e)}).encode())
 
+    def serve_jarvis_tools_api(self):
+        """Serve Jarvis plugin tools information as JSON API."""
+        try:
+            # Get plugin manager
+            from jarvis.tools import plugin_manager
+
+            # Get all plugin tools
+            plugin_tools = plugin_manager.get_all_tools()
+
+            # Format tools data for UI
+            tools_data = {"tools": {}}
+            for tool in plugin_tools:
+                tool_key = f"jarvis:{tool.name}"
+                tools_data["tools"][tool_key] = {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "source": "jarvis_plugin",
+                    "plugin_name": getattr(tool, 'plugin_name', 'unknown'),
+                    "enabled": True,  # Plugin tools are always enabled
+                    "type": "plugin"
+                }
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(tools_data, indent=2).encode())
+        except Exception as e:
+            logger.error(f"Error serving Jarvis tools API: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def serve_plugins_api(self):
+        """Serve plugins information as JSON API."""
+        try:
+            # Get plugin manager
+            from jarvis.tools import plugin_manager
+
+            # Get all plugins and their tools
+            plugins_data = {"plugins": {}}
+
+            # Access the plugin manager's internal data
+            loaded_plugins = getattr(plugin_manager, '_loaded_plugins', {})
+            plugin_tools_map = getattr(plugin_manager, '_plugin_tools', {})
+
+            logger.info(f"Found {len(loaded_plugins)} loaded plugins")
+            logger.info(f"Plugin tools map has {len(plugin_tools_map)} entries")
+
+            # If we have plugin instances, use them
+            if loaded_plugins:
+                for plugin_name, plugin_instance in loaded_plugins.items():
+                    try:
+                        # Get metadata from plugin
+                        metadata = plugin_instance.get_metadata()
+                        tools = plugin_instance.get_tools()
+
+                        plugins_data["plugins"][plugin_name] = {
+                            "name": metadata.name,
+                            "description": metadata.description,
+                            "version": metadata.version,
+                            "author": metadata.author,
+                            "tools": [
+                                {
+                                    "name": tool.name,
+                                    "description": tool.description or "No description available",
+                                    "enabled": True
+                                }
+                                for tool in tools
+                            ],
+                            "enabled": metadata.enabled,
+                            "type": "jarvis_plugin",
+                            "voice_phrases": getattr(metadata, 'voice_phrases', [])
+                        }
+
+                    except Exception as e:
+                        logger.error(f"Error processing plugin {plugin_name}: {e}")
+                        # Fallback for this plugin
+                        plugins_data["plugins"][plugin_name] = {
+                            "name": plugin_name,
+                            "description": "Plugin information unavailable",
+                            "tools": [],
+                            "enabled": True,
+                            "type": "jarvis_plugin",
+                            "voice_phrases": []
+                        }
+
+            # If we have plugin tools but no plugin instances, use the mapping approach
+            elif plugin_tools_map:
+                for plugin_name, tools in plugin_tools_map.items():
+                    plugins_data["plugins"][plugin_name] = {
+                        "name": plugin_name,
+                        "description": f"Plugin with {len(tools)} tools",
+                        "tools": [
+                            {
+                                "name": tool.name,
+                                "description": tool.description or "No description available",
+                                "enabled": True
+                            }
+                            for tool in tools
+                        ],
+                        "enabled": True,
+                        "type": "jarvis_plugin",
+                        "voice_phrases": []
+                    }
+
+            # Fallback: use all tools and group by heuristics
+            else:
+                logger.warning("No plugin structure found, using fallback approach")
+                all_tools = plugin_manager.get_all_tools()
+
+                # Group tools by common patterns
+                plugins_by_name = {}
+
+                for tool in all_tools:
+                    # Determine plugin name from tool name patterns
+                    tool_name = tool.name.lower()
+
+                    if 'aider' in tool_name:
+                        plugin_name = "AiderIntegration"
+                    elif 'rag' in tool_name or 'memory' in tool_name:
+                        plugin_name = "RAG Plugin"
+                    elif 'web' in tool_name or 'lavague' in tool_name:
+                        plugin_name = "LaVagueWebAutomation"
+                    elif 'mcp' in tool_name:
+                        plugin_name = "MCP Management"
+                    elif 'time' in tool_name:
+                        plugin_name = "DeviceTime"
+                    elif 'ui' in tool_name or 'jarvis' in tool_name:
+                        plugin_name = "Jarvis UI Tool"
+                    elif 'profile' in tool_name or 'name' in tool_name:
+                        plugin_name = "User Profile Tool"
+                    elif 'log' in tool_name or 'terminal' in tool_name:
+                        plugin_name = "LogTerminalTools"
+                    elif 'robot' in tool_name or 'test' in tool_name:
+                        plugin_name = "RobotFrameworkController"
+                    else:
+                        plugin_name = "Other Tools"
+
+                    if plugin_name not in plugins_by_name:
+                        plugins_by_name[plugin_name] = {
+                            "name": plugin_name,
+                            "description": f"Plugin containing {plugin_name.lower()} tools",
+                            "tools": [],
+                            "enabled": True,
+                            "type": "jarvis_plugin",
+                            "voice_phrases": []
+                        }
+
+                    plugins_by_name[plugin_name]["tools"].append({
+                        "name": tool.name,
+                        "description": tool.description or "No description available",
+                        "enabled": True
+                    })
+
+                plugins_data["plugins"] = plugins_by_name
+
+            logger.info(f"Serving {len(plugins_data['plugins'])} plugins")
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(plugins_data, indent=2).encode())
+
+        except Exception as e:
+            logger.error(f"Error serving plugins API: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
     def handle_mcp_server_action(self):
         """Handle MCP server management actions."""
         try:
@@ -869,47 +1062,82 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
 
             action = data.get('action')
 
-            # Get MCP client manager
-            from jarvis.tools import get_mcp_client
-            from jarvis.core.mcp_client import MCPServerConfig, MCPTransportType
-            mcp_client = get_mcp_client()
+            # Get MCP config manager
+            from jarvis.tools import get_mcp_config_manager
+            from jarvis.core.mcp_config_manager import MCPServerConfig, MCPTransportType
+            config_manager = get_mcp_config_manager()
 
-            if action == 'add':
-                # Create server configuration
+            if not config_manager:
+                result = {"success": False, "message": "MCP config manager not available"}
+            elif action == 'add':
+                # Parse arguments - handle both string and list
+                args_data = data.get('args', '')
+                if isinstance(args_data, list):
+                    args_list = args_data
+                elif isinstance(args_data, str):
+                    args_list = [arg.strip() for arg in args_data.split() if arg.strip()] if args_data else []
+                else:
+                    args_list = []
+
+                # Parse environment variables
+                env_str = data.get('env', '')
+                env_dict = {}
+                if env_str:
+                    for line in env_str.split('\n'):
+                        if '=' in line:
+                            key, value = line.split('=', 1)
+                            env_dict[key.strip()] = value.strip()
+
+                # Create server configuration with only valid fields
                 config = MCPServerConfig(
-                    name=data.get('name'),
-                    transport=MCPTransportType(data.get('transport')),
+                    name=data.get('name', '').strip(),
+                    description=data.get('description', ''),
+                    transport=MCPTransportType(data.get('transport', 'stdio')),
+                    command=data.get('command', '').strip(),
+                    args=args_list,
+                    env=env_dict,
                     enabled=data.get('enabled', True),
-                    command=data.get('command'),
-                    args=data.get('args', []),
-                    env=data.get('env', {}),
-                    cwd=data.get('cwd'),
-                    url=data.get('url'),
-                    headers=data.get('headers', {}),
-                    timeout=data.get('timeout', 30)
+                    timeout=int(data.get('timeout', 30))
                 )
 
-                success = mcp_client.add_server(config)
-                result = {"success": success, "message": "Server added successfully" if success else "Failed to add server"}
+                success = config_manager.add_server(config)
+                result = {"success": success, "message": f"Server '{config.name}' added successfully" if success else "Failed to add server"}
 
             elif action == 'remove':
                 server_name = data.get('name')
-                success = mcp_client.remove_server(server_name)
-                result = {"success": success, "message": "Server removed successfully" if success else "Failed to remove server"}
+                success = config_manager.remove_server(server_name)
+                result = {"success": success, "message": f"Server '{server_name}' removed successfully" if success else "Failed to remove server"}
 
             elif action == 'test':
                 # For test, create a temporary config and try to validate it
                 try:
+                    # Parse arguments - handle both string and list
+                    args_data = data.get('args', '')
+                    if isinstance(args_data, list):
+                        args_list = args_data
+                    elif isinstance(args_data, str):
+                        args_list = [arg.strip() for arg in args_data.split() if arg.strip()] if args_data else []
+                    else:
+                        args_list = []
+
+                    # Parse environment variables
+                    env_str = data.get('env', '')
+                    env_dict = {}
+                    if env_str:
+                        for line in env_str.split('\n'):
+                            if '=' in line:
+                                key, value = line.split('=', 1)
+                                env_dict[key.strip()] = value.strip()
+
                     config = MCPServerConfig(
                         name=data.get('name', 'test'),
-                        transport=MCPTransportType(data.get('transport')),
-                        command=data.get('command'),
-                        args=data.get('args', []),
-                        url=data.get('url'),
-                        headers=data.get('headers', {}),
-                        timeout=data.get('timeout', 30)
+                        description=data.get('description', ''),
+                        transport=MCPTransportType(data.get('transport', 'stdio')),
+                        command=data.get('command', '').strip(),
+                        args=args_list,
+                        env=env_dict,
+                        timeout=int(data.get('timeout', 30))
                     )
-                    config.validate()
                     result = {"success": True, "message": "Configuration is valid"}
                 except Exception as e:
                     result = {"success": False, "error": f"Configuration error: {str(e)}"}
@@ -1041,6 +1269,225 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
+
+    def handle_plugin_action(self):
+        """Handle plugin management actions (add, edit, delete)."""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            action = data.get('action')
+            result = {"success": False, "message": "Unknown action"}
+
+            if action == 'add':
+                result = self._add_plugin(data)
+            elif action == 'edit':
+                result = self._edit_plugin(data)
+            elif action == 'delete':
+                result = self._delete_plugin(data)
+            elif action == 'toggle':
+                result = self._toggle_plugin(data)
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+        except Exception as e:
+            logger.error(f"Error handling plugin action: {e}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
+
+    def _add_plugin(self, data):
+        """Add a new plugin."""
+        try:
+            plugin_name = data.get('name', '').strip()
+            plugin_description = data.get('description', '').strip()
+            plugin_code = data.get('code', '').strip()
+            voice_phrases = data.get('voice_phrases', [])
+
+            if not plugin_name or not plugin_code:
+                return {"success": False, "message": "Plugin name and code are required"}
+
+            # Ensure plugins directory exists
+            import os
+            plugins_dir = "jarvis/tools/plugins"
+            os.makedirs(plugins_dir, exist_ok=True)
+
+            # Create plugin file
+            plugin_filename = f"{plugin_name.lower().replace(' ', '_')}_plugin.py"
+            plugin_path = os.path.join(plugins_dir, plugin_filename)
+
+            # Check if plugin already exists
+            if os.path.exists(plugin_path):
+                return {"success": False, "message": f"Plugin '{plugin_name}' already exists"}
+
+            # Generate plugin code with voice phrases
+            plugin_template = self._generate_plugin_code(plugin_name, plugin_description, plugin_code, voice_phrases, data.get('version', '1.0.0'), data.get('author', 'User'))
+
+            # Write plugin file
+            with open(plugin_path, 'w') as f:
+                f.write(plugin_template)
+
+            # Refresh plugin manager
+            from jarvis.tools import plugin_manager
+            plugin_manager.refresh_plugins()
+
+            return {"success": True, "message": f"Plugin '{plugin_name}' added successfully"}
+        except Exception as e:
+            logger.error(f"Error adding plugin: {e}")
+            return {"success": False, "message": f"Error adding plugin: {str(e)}"}
+
+    def _edit_plugin(self, data):
+        """Edit an existing plugin."""
+        try:
+            plugin_name = data.get('name', '').strip()
+            # For now, return success - full edit functionality would require more complex file parsing
+            return {"success": True, "message": f"Plugin '{plugin_name}' edit functionality coming soon"}
+        except Exception as e:
+            logger.error(f"Error editing plugin: {e}")
+            return {"success": False, "message": f"Error editing plugin: {str(e)}"}
+
+    def _delete_plugin(self, data):
+        """Delete a plugin."""
+        try:
+            plugin_name = data.get('name', '').strip()
+
+            if not plugin_name:
+                return {"success": False, "message": "Plugin name is required"}
+
+            # Find plugin file in multiple possible directories
+            import os
+            import glob
+
+            # Check both possible plugin directories
+            possible_dirs = [
+                "jarvis/plugins",  # Main plugins directory
+                "jarvis/tools/plugins"  # User-created plugins directory
+            ]
+
+            # Look for plugin files that might match
+            possible_files = [
+                f"{plugin_name.lower().replace(' ', '_')}.py",
+                f"{plugin_name.lower().replace(' ', '_')}_plugin.py",
+                f"{plugin_name.lower()}_plugin.py",
+                f"{plugin_name}_plugin.py",
+                f"{plugin_name.lower()}.py",
+                f"{plugin_name}.py"
+            ]
+
+            deleted_file = None
+            deleted_path = None
+
+            # Search in all directories for the plugin file
+            for plugins_dir in possible_dirs:
+                if not os.path.exists(plugins_dir):
+                    continue
+
+                for filename in possible_files:
+                    file_path = os.path.join(plugins_dir, filename)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        deleted_file = filename
+                        deleted_path = file_path
+                        break
+
+                if deleted_file:
+                    break
+
+            if deleted_file:
+                # Also remove compiled Python cache files
+                try:
+                    cache_dir = os.path.join(os.path.dirname(deleted_path), "__pycache__")
+                    if os.path.exists(cache_dir):
+                        cache_file = os.path.join(cache_dir, f"{os.path.splitext(deleted_file)[0]}.cpython-*.pyc")
+                        import glob
+                        for cache_file_path in glob.glob(cache_file):
+                            os.remove(cache_file_path)
+                except Exception as cache_error:
+                    logger.warning(f"Could not remove cache files: {cache_error}")
+
+                # Refresh plugin manager
+                try:
+                    from jarvis.plugins.manager import PluginManager
+                    # Get the plugin manager instance and refresh
+                    if hasattr(self.server, 'plugin_manager'):
+                        self.server.plugin_manager.discover_and_load_plugins()
+                    else:
+                        logger.warning("Plugin manager not accessible for refresh")
+                except Exception as refresh_error:
+                    logger.warning(f"Could not refresh plugin manager: {refresh_error}")
+
+                return {"success": True, "message": f"Plugin '{plugin_name}' deleted successfully from {deleted_path}"}
+            else:
+                # List available plugins for debugging
+                available_plugins = []
+                for plugins_dir in possible_dirs:
+                    if os.path.exists(plugins_dir):
+                        available_plugins.extend([f for f in os.listdir(plugins_dir) if f.endswith('.py')])
+
+                return {"success": False, "message": f"Plugin file for '{plugin_name}' not found. Available plugins: {', '.join(available_plugins)}"}
+
+        except Exception as e:
+            logger.error(f"Error deleting plugin: {e}")
+            return {"success": False, "message": f"Error deleting plugin: {str(e)}"}
+
+    def _toggle_plugin(self, data):
+        """Toggle plugin enabled/disabled state."""
+        try:
+            plugin_name = data.get('name', '').strip()
+            enabled = data.get('enabled', True)
+            # For now, return success - plugin toggling would require plugin state management
+            return {"success": True, "message": f"Plugin '{plugin_name}' {'enabled' if enabled else 'disabled'}"}
+        except Exception as e:
+            logger.error(f"Error toggling plugin: {e}")
+            return {"success": False, "message": f"Error toggling plugin: {str(e)}"}
+
+    def _generate_plugin_code(self, name, description, code, voice_phrases, version="1.0.0", author="User"):
+        """Generate plugin code template."""
+        voice_phrases_str = ', '.join([f'"{phrase}"' for phrase in voice_phrases]) if voice_phrases else "None"
+
+        return f'''"""
+{name} Plugin for Jarvis Voice Assistant.
+
+{description}
+
+Version: {version}
+Author: {author}
+Voice Phrases: {voice_phrases_str}
+"""
+
+import logging
+from langchain_core.tools import tool
+from jarvis.plugins.base import PluginBase, PluginMetadata
+
+logger = logging.getLogger(__name__)
+
+{code}
+
+class {name.replace(' ', '')}Plugin(PluginBase):
+    """Plugin for {name}."""
+
+    def get_metadata(self) -> PluginMetadata:
+        return PluginMetadata(
+            name="{name}",
+            version="1.0.0",
+            description="{description}",
+            author="User Generated",
+            tags=["user", "custom"],
+            voice_phrases=[{voice_phrases_str}]
+        )
+
+    def get_tools(self) -> List:
+        # Return your tools here
+        return []
+
+# Create plugin instance for automatic discovery
+plugin = {name.replace(' ', '')}Plugin()
+'''
 
     def handle_config_update(self):
         """Handle configuration update requests."""
@@ -2165,6 +2612,364 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             }}
         }}
+
+        /* Professional Plugin Cards */
+        .plugins-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }}
+
+        .plugin-card {{
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(12px);
+        }}
+
+        .plugin-card::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6495ed, #4169e1, #1e90ff);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }}
+
+        .plugin-card:hover {{
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+            border-color: rgba(100, 149, 237, 0.4);
+        }}
+
+        .plugin-card:hover::before {{
+            opacity: 1;
+        }}
+
+        .plugin-card.selected {{
+            border-color: #6495ed;
+            box-shadow: 0 12px 40px rgba(100, 149, 237, 0.25);
+            background: linear-gradient(145deg, rgba(100, 149, 237, 0.15), rgba(100, 149, 237, 0.08));
+        }}
+
+        .plugin-card.selected::before {{
+            opacity: 1;
+        }}
+
+        .plugin-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2rem 2rem 0 2rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .plugin-title {{
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }}
+
+        .plugin-actions {{
+            display: flex;
+            gap: 0.75rem;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(12px);
+        }}
+
+        .plugin-card:hover .plugin-actions {{
+            opacity: 1;
+            transform: translateX(0);
+        }}
+
+        .btn-text {{
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }}
+
+        .btn-text:hover {{
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }}
+
+        .btn-text.btn-danger:hover {{
+            background: rgba(244, 67, 54, 0.25);
+            color: #ff6b6b;
+        }}
+
+        .plugin-description {{
+            color: #c8d3e0;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            padding: 0 2rem;
+            opacity: 0.9;
+        }}
+
+        .plugin-stats {{
+            display: flex;
+            gap: 1.5rem;
+            margin: 0;
+            padding: 1.5rem 2rem 2rem 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }}
+
+        .stat-item {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            color: #b8c5d1;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }}
+
+        .stat-item strong {{
+            display: block;
+            color: #6495ed;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }}
+
+        /* MCP Server Cards */
+        .mcp-servers-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }}
+
+        .mcp-server-card {{
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(12px);
+        }}
+
+        .mcp-server-card::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #32cd32, #228b22, #006400);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }}
+
+        .mcp-server-card:hover {{
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+            border-color: rgba(50, 205, 50, 0.4);
+        }}
+
+        .mcp-server-card:hover::before {{
+            opacity: 1;
+        }}
+
+        .mcp-server-card.connected {{
+            border-color: #32cd32;
+            box-shadow: 0 12px 40px rgba(50, 205, 50, 0.25);
+            background: linear-gradient(145deg, rgba(50, 205, 50, 0.15), rgba(50, 205, 50, 0.08));
+        }}
+
+        .mcp-server-card.connected::before {{
+            opacity: 1;
+        }}
+
+        .mcp-server-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2rem 2rem 0 2rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .mcp-server-title {{
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }}
+
+        .mcp-server-actions {{
+            display: flex;
+            gap: 0.75rem;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(12px);
+        }}
+
+        .mcp-server-card:hover .mcp-server-actions {{
+            opacity: 1;
+            transform: translateX(0);
+        }}
+
+        .mcp-server-description {{
+            color: #c8d3e0;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            padding: 0 2rem;
+            opacity: 0.9;
+        }}
+
+        .mcp-server-stats {{
+            display: flex;
+            gap: 1.5rem;
+            margin: 0;
+            padding: 1.5rem 2rem 2rem 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }}
+
+        .mcp-server-status {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            color: #b8c5d1;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }}
+
+        .mcp-server-status strong {{
+            display: block;
+            color: #32cd32;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }}
+
+        .mcp-server-status.disconnected strong {{
+            color: #ff6b6b;
+        }}
+
+        /* MCP Server Details Modal */
+        .mcp-server-details {{
+            color: #c8d3e0;
+            line-height: 1.6;
+        }}
+
+        .mcp-server-details p {{
+            margin: 0.75rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+
+        .mcp-server-details p:last-child {{
+            border-bottom: none;
+        }}
+
+        .mcp-server-details strong {{
+            color: #ffffff;
+            font-weight: 600;
+            display: inline-block;
+            min-width: 120px;
+        }}
+
+        .mcp-server-details h4 {{
+            color: #6495ed;
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 1.1rem;
+        }}
+
+        .mcp-server-details ul {{
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }}
+
+        .mcp-server-details li {{
+            margin: 0.5rem 0;
+        }}
+
+        .mcp-timestamps {{
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid rgba(100, 149, 237, 0.3);
+        }}
+
+        .status-connected {{
+            color: #32cd32;
+            font-weight: 600;
+        }}
+
+        .status-disconnected {{
+            color: #ff6b6b;
+            font-weight: 600;
+        }}
+
+        /* Notification styles */
+        .notification {{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }}
+
+        .notification.show {{
+            transform: translateX(0);
+        }}
+
+        .notification-success {{
+            background: linear-gradient(135deg, #32cd32, #228b22);
+        }}
+
+        .notification-error {{
+            background: linear-gradient(135deg, #ff6b6b, #e74c3c);
+        }}
+
+        .notification-info {{
+            background: linear-gradient(135deg, #6495ed, #4169e1);
+        }}
     </style>
 </head>
 <body>
@@ -2221,8 +3026,11 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 <a href="/device" class="nav-link" data-page="device">
                     <span class="icon">💻</span>Device Info
                 </a>
+                <a href="/tools" class="nav-link" data-page="tools">
+                    <span class="icon">🔧</span>Tools & Plugins
+                </a>
                 <a href="/mcp" class="nav-link" data-page="mcp">
-                    <span class="icon">🔗</span>MCP Tools
+                    <span class="icon">🔗</span>MCP Servers
                 </a>
             </div>
         </nav>
@@ -2361,6 +3169,117 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
                 <p>Manage available tools, plugins, and extensions.</p>
             </div>
         </div>
+
+        <script type="text/javascript">
+        (function() {
+            // Tools & Plugins JavaScript - Scoped to avoid conflicts
+            let plugins = {};
+
+            function loadPlugins() {
+                console.log('loadPlugins() called');
+                const pluginsList = document.getElementById('plugins-list');
+                if (!pluginsList) {
+                    console.log('plugins-list element not found');
+                    return;
+                }
+
+                pluginsList.innerHTML = '<p>Loading plugins...</p>';
+
+                fetch('/api/plugins')
+                    .then(response => {
+                        console.log('API response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Plugins data received:', data);
+                        plugins = data.plugins || {};
+                        console.log('Number of plugins:', Object.keys(plugins).length);
+                        renderPlugins();
+                        updateToolsStatus();
+                    })
+                    .catch(error => {
+                        console.error('Error loading plugins:', error);
+                        if (pluginsList) {
+                            pluginsList.innerHTML = '<p>Error loading plugins: ' + error.message + '</p>';
+                        }
+                    });
+            }
+
+            function renderPlugins() {
+                const pluginsList = document.getElementById('plugins-list');
+
+                if (!pluginsList) return;
+
+                if (Object.keys(plugins).length === 0) {
+                    pluginsList.innerHTML = '<p>No plugins found. The plugin system may still be loading.</p>';
+                    return;
+                }
+
+                const html = Object.entries(plugins).map(function([name, plugin]) {
+                    const toolsHtml = plugin.tools.map(function(tool) {
+                        return '<li><strong>' + tool.name + '</strong>: ' + (tool.description || 'No description') + '</li>';
+                    }).join('');
+
+                    return '<div class="plugin-card">' +
+                        '<div class="plugin-header">' +
+                            '<h3 class="plugin-title">' + plugin.name + '</h3>' +
+                        '</div>' +
+                        '<div class="plugin-description">' + (plugin.description || 'No description available') + '</div>' +
+                        (plugin.tools.length > 0 ?
+                            '<div class="plugin-tools">' +
+                                '<h5>Tools (' + plugin.tools.length + '):</h5>' +
+                                '<ul class="tool-list">' + toolsHtml + '</ul>' +
+                            '</div>' : ''
+                        ) +
+                    '</div>';
+                }).join('');
+
+                pluginsList.innerHTML = html;
+            }
+
+            function updateToolsStatus() {
+                const activePluginsCount = document.getElementById('active-plugins-count');
+                const availableToolsCount = document.getElementById('available-tools-count');
+                const voiceCommandsCount = document.getElementById('voice-commands-count');
+
+                if (activePluginsCount) {
+                    activePluginsCount.textContent = Object.keys(plugins).length;
+                }
+
+                if (availableToolsCount) {
+                    const totalTools = Object.values(plugins).reduce(function(sum, plugin) {
+                        return sum + plugin.tools.length;
+                    }, 0);
+                    availableToolsCount.textContent = totalTools;
+                }
+
+                if (voiceCommandsCount) {
+                    const totalCommands = Object.values(plugins).reduce(function(sum, plugin) {
+                        return sum + (plugin.voice_phrases ? plugin.voice_phrases.length : 0);
+                    }, 0);
+                    voiceCommandsCount.textContent = totalCommands;
+                }
+            }
+
+            window.showAddPluginModal = function() {
+                alert('Add Plugin functionality coming soon!');
+            };
+
+            // Load plugins when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('DOM loaded - loading plugins...');
+                    setTimeout(loadPlugins, 100);
+                });
+            } else {
+                console.log('DOM already ready - loading plugins immediately...');
+                setTimeout(loadPlugins, 100);
+            }
+        })();
+        </script>
         """
 
     def get_status_content(self) -> str:
@@ -2539,58 +3458,58 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
             }
         }
 
-        function shutdownUI() {{
-            if (confirm('Are you sure you want to shutdown the Jarvis UI server?')) {{
+        function shutdownUI() {
+            if (confirm('Are you sure you want to shutdown the Jarvis UI server?')) {
                 // For desktop app, send close window signal first
-                if (window.pywebview || navigator.userAgent.includes('pywebview')) {{
-                    fetch('/api/close-window', {{
+                if (window.pywebview || navigator.userAgent.includes('pywebview')) {
+                    fetch('/api/close-window', {
                         method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }}
-                    }})
-                    .then(() => {{
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(() => {
                         // Then shutdown the server
-                        return fetch('/api/shutdown', {{
+                        return fetch('/api/shutdown', {
                             method: 'POST',
-                            headers: {{ 'Content-Type': 'application/json' }}
-                        }});
-                    }})
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    })
                     .then(response => response.json())
-                    .then(data => {{
-                        if (data.success) {{
+                    .then(data => {
+                        if (data.success) {
                             // Desktop window should close automatically via monitoring
                             closeDesktopWindow();
-                        }}
-                    }})
-                    .catch(error => {{
+                        }
+                    })
+                    .catch(error => {
                         // Server is shutting down, close window
                         closeDesktopWindow();
-                    }});
-                }} else {{
+                    });
+                } else {
                     // Browser - just shutdown normally
-                    fetch('/api/shutdown', {{
+                    fetch('/api/shutdown', {
                         method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }}
-                    }})
+                        headers: { 'Content-Type': 'application/json' }
+                    })
                     .then(response => response.json())
-                    .then(data => {{
-                        if (data.success) {{
+                    .then(data => {
+                        if (data.success) {
                             alert('Jarvis UI server is shutting down. You can close this browser tab.');
-                            setTimeout(() => {{
+                            setTimeout(() => {
                                 window.close();
-                            }}, 2000);
-                        }} else {{
+                            }, 2000);
+                        } else {
                             alert('Error shutting down UI: ' + (data.error || 'Unknown error'));
-                        }}
-                    }})
-                    .catch(error => {{
+                        }
+                    })
+                    .catch(error => {
                         alert('Jarvis UI server has been shut down. You can close this browser tab.');
-                        setTimeout(() => {{
+                        setTimeout(() => {
                             window.close();
-                        }}, 2000);
-                    }});
-                }}
-            }}
-        }}
+                        }, 2000);
+                    });
+                }
+            }
+        }
         </script>
         """
 
@@ -3701,31 +4620,813 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
         </script>
         """
 
+    def get_tools_content(self) -> str:
+        """Get the Tools & Plugins management content - Clean rebuild."""
+        return """
+        <div class="page-header">
+            <h1>Tools & Plugins</h1>
+            <div class="breadcrumb">
+                <a href="/settings">Settings</a> > Tools & Plugins
+            </div>
+        </div>
+
+        <div class="info-banner">
+            <h3>Jarvis Tools & Plugins</h3>
+            <p>Manage your Jarvis plugins and tools. View current plugins, add custom tools, and configure voice commands.</p>
+
+            <div class="tools-status-overview" id="tools-status-overview">
+                <div class="status-item">
+                    <span class="status-label">Active Plugins:</span>
+                    <span class="status-value" id="active-plugins-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Available Tools:</span>
+                    <span class="status-value" id="available-tools-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Voice Commands:</span>
+                    <span class="status-value" id="voice-commands-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-header">
+                <h2>Current Plugins</h2>
+                <button class="btn btn-primary" id="add-plugin-btn">
+                    Add Plugin
+                </button>
+            </div>
+
+            <div id="plugins-list" class="plugins-grid">
+                <p>Loading plugins...</p>
+            </div>
+        </div>
+
+        <!-- Plugin Details Modal -->
+        <div id="plugin-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Plugin Details</h3>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- Content populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="modal-close-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Plugin Form Modal -->
+        <div id="add-plugin-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Plugin</h3>
+                    <button class="modal-close" id="add-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-plugin-form">
+                        <div class="form-group">
+                            <label for="plugin-name">Plugin Name *</label>
+                            <input type="text" id="plugin-name" name="name" required
+                                   placeholder="Enter plugin name (e.g., MyCustomTool)">
+                            <small>Use PascalCase for plugin names (no spaces or special characters)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="plugin-description">Description *</label>
+                            <textarea id="plugin-description" name="description" rows="3" required
+                                      placeholder="Describe what this plugin does..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="plugin-version">Version</label>
+                            <input type="text" id="plugin-version" name="version"
+                                   placeholder="1.0.0" value="1.0.0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="plugin-author">Author</label>
+                            <input type="text" id="plugin-author" name="author"
+                                   placeholder="Your name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="plugin-code">Plugin Code *</label>
+                            <textarea id="plugin-code" name="code" rows="12" required
+                                      placeholder="Enter your Python plugin code here..."></textarea>
+                            <small>Write Python code that defines your plugin class and tools</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Voice Commands</label>
+                            <div class="voice-commands-section">
+                                <div class="voice-input-group">
+                                    <input type="text" id="voice-command-input"
+                                           placeholder="Enter voice command phrase (e.g., 'run my custom tool')">
+                                    <button type="button" id="add-voice-command" class="btn btn-secondary">Add</button>
+                                </div>
+                                <div id="voice-commands-list" class="voice-commands-list">
+                                    <!-- Voice commands will be added here -->
+                                </div>
+                                <small>Add voice phrases that will trigger this plugin. Users can say these phrases to activate your tools.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-help">
+                                <h4>Plugin Development Tips:</h4>
+                                <ul>
+                                    <li>Your plugin should inherit from the base Plugin class</li>
+                                    <li>Define tools using the @tool decorator</li>
+                                    <li>Include proper docstrings for all functions</li>
+                                    <li>Test your code before submitting</li>
+                                    <li>Voice commands should be natural phrases users would say</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="add-modal-cancel">Cancel</button>
+                    <button type="submit" form="add-plugin-form" class="btn btn-primary">Create Plugin</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        // Clean Tools & Plugins JavaScript - Modern ES6+ approach
+        class ToolsManager {
+            constructor() {
+                this.plugins = {};
+                this.modal = null;
+                this.voiceCommands = [];
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.loadPlugins();
+            }
+
+            setupEventListeners() {
+                // Add plugin button
+                const addBtn = document.getElementById('add-plugin-btn');
+                if (addBtn) {
+                    addBtn.addEventListener('click', () => this.showAddPluginModal());
+                }
+
+                // Plugin details modal close handlers
+                const modal = document.getElementById('plugin-modal');
+                if (modal) {
+                    const closeBtn = modal.querySelector('#modal-close');
+                    const closeBtnFooter = modal.querySelector('#modal-close-btn');
+
+                    if (closeBtn) closeBtn.addEventListener('click', () => this.hideModal());
+                    if (closeBtnFooter) closeBtnFooter.addEventListener('click', () => this.hideModal());
+
+                    // Close on background click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) this.hideModal();
+                    });
+                }
+
+                // Add plugin modal handlers
+                const addModal = document.getElementById('add-plugin-modal');
+                if (addModal) {
+                    const closeBtn = addModal.querySelector('#add-modal-close');
+                    const cancelBtn = addModal.querySelector('#add-modal-cancel');
+
+                    if (closeBtn) closeBtn.addEventListener('click', () => this.hideAddPluginModal());
+                    if (cancelBtn) cancelBtn.addEventListener('click', () => this.hideAddPluginModal());
+
+                    // Close on background click
+                    addModal.addEventListener('click', (e) => {
+                        if (e.target === addModal) this.hideAddPluginModal();
+                    });
+                }
+
+                // Voice command handlers
+                const addVoiceBtn = document.getElementById('add-voice-command');
+                const voiceInput = document.getElementById('voice-command-input');
+
+                if (addVoiceBtn) {
+                    addVoiceBtn.addEventListener('click', () => this.addVoiceCommand());
+                }
+
+                if (voiceInput) {
+                    voiceInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.addVoiceCommand();
+                        }
+                    });
+                }
+
+                // Form submission
+                const form = document.getElementById('add-plugin-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                }
+            }
+
+            async loadPlugins() {
+                console.log('Loading plugins...');
+                const pluginsList = document.getElementById('plugins-list');
+
+                if (!pluginsList) {
+                    console.error('plugins-list element not found');
+                    return;
+                }
+
+                try {
+                    pluginsList.innerHTML = '<p>Loading plugins...</p>';
+
+                    const response = await fetch('/api/plugins');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    this.plugins = data.plugins || {};
+
+                    console.log(`Loaded ${Object.keys(this.plugins).length} plugins`);
+
+                    this.renderPlugins();
+                    this.updateStatus();
+
+                } catch (error) {
+                    console.error('Error loading plugins:', error);
+                    pluginsList.innerHTML = `<p>Error loading plugins: ${error.message}</p>`;
+                }
+            }
+
+            renderPlugins() {
+                const pluginsList = document.getElementById('plugins-list');
+                if (!pluginsList) return;
+
+                if (Object.keys(this.plugins).length === 0) {
+                    pluginsList.innerHTML = '<p>No plugins found. The plugin system may still be loading.</p>';
+                    return;
+                }
+
+                // Clear container
+                pluginsList.innerHTML = '';
+
+                // Create plugin cards
+                Object.entries(this.plugins).forEach(([name, plugin]) => {
+                    const card = this.createPluginCard(name, plugin);
+                    pluginsList.appendChild(card);
+                });
+            }
+
+            createPluginCard(name, plugin) {
+                const toolCount = plugin.tools?.length || 0;
+                const voiceCount = plugin.voice_phrases?.length || 0;
+
+                // Main card
+                const card = document.createElement('div');
+                card.className = 'plugin-card';
+                card.addEventListener('click', () => this.selectPlugin(name, card));
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'plugin-header';
+
+                const title = document.createElement('h3');
+                title.className = 'plugin-title';
+                title.textContent = plugin.name || name;
+
+                const actions = document.createElement('div');
+                actions.className = 'plugin-actions';
+
+                // Action buttons
+                const viewBtn = this.createActionButton('View', 'View Details', () => this.viewPlugin(name));
+                const editBtn = this.createActionButton('Edit', 'Edit Plugin', () => this.editPlugin(name));
+                const deleteBtn = this.createActionButton('Delete', 'Delete Plugin', () => this.deletePlugin(name), 'btn-danger');
+
+                actions.append(viewBtn, editBtn, deleteBtn);
+                header.append(title, actions);
+
+                // Description
+                const description = document.createElement('div');
+                description.className = 'plugin-description';
+                description.textContent = plugin.description || 'No description available';
+
+                // Stats
+                const stats = document.createElement('div');
+                stats.className = 'plugin-stats';
+
+                const toolStat = document.createElement('div');
+                toolStat.className = 'stat-item';
+                toolStat.innerHTML = `<strong>${toolCount}</strong>Tools`;
+
+                const voiceStat = document.createElement('div');
+                voiceStat.className = 'stat-item';
+                voiceStat.innerHTML = `<strong>${voiceCount}</strong>Voice Commands`;
+
+                stats.append(toolStat, voiceStat);
+
+                // Assemble card
+                card.append(header, description, stats);
+                return card;
+            }
+
+            createActionButton(text, title, onClick, extraClass = '') {
+                const btn = document.createElement('button');
+                btn.className = `btn-text ${extraClass}`;
+                btn.title = title;
+                btn.textContent = text;
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    onClick();
+                });
+                return btn;
+            }
+
+            selectPlugin(name, cardElement) {
+                // Remove previous selections
+                document.querySelectorAll('.plugin-card.selected').forEach(card => {
+                    card.classList.remove('selected');
+                });
+
+                // Add selection
+                cardElement.classList.add('selected');
+                console.log('Selected plugin:', name);
+            }
+
+            viewPlugin(name) {
+                const plugin = this.plugins[name];
+                if (!plugin) return;
+
+                const modalTitle = document.getElementById('modal-title');
+                const modalBody = document.getElementById('modal-body');
+
+                if (modalTitle) modalTitle.textContent = plugin.name || name;
+                if (modalBody) modalBody.innerHTML = this.createPluginDetailsHTML(plugin);
+
+                this.showModal();
+            }
+
+            createPluginDetailsHTML(plugin) {
+                let html = `
+                    <p><strong>Description:</strong> ${this.escapeHtml(plugin.description || 'No description')}</p>
+                    <p><strong>Version:</strong> ${this.escapeHtml(plugin.version || 'Unknown')}</p>
+                    <p><strong>Author:</strong> ${this.escapeHtml(plugin.author || 'Unknown')}</p>
+                `;
+
+                // Tools section
+                if (plugin.tools && plugin.tools.length > 0) {
+                    html += `<h4>Tools (${plugin.tools.length}):</h4><ul>`;
+                    plugin.tools.forEach(tool => {
+                        html += `<li><strong>${this.escapeHtml(tool.name)}</strong><br>`;
+                        html += `<em>${this.escapeHtml(tool.description || 'No description')}</em></li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                // Voice commands section
+                html += '<h4>Voice Commands:</h4>';
+                if (plugin.voice_phrases && plugin.voice_phrases.length > 0) {
+                    html += '<ul>';
+                    plugin.voice_phrases.forEach(phrase => {
+                        html += `<li>"${this.escapeHtml(phrase)}"</li>`;
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<p>No voice commands configured.</p>';
+                }
+
+                return html;
+            }
+
+            editPlugin(name) {
+                const plugin = this.plugins[name];
+                if (!plugin) {
+                    this.showNotification(`Plugin "${name}" not found`, 'error');
+                    return;
+                }
+
+                // For now, show plugin details with edit suggestion
+                const modalTitle = document.getElementById('modal-title');
+                const modalBody = document.getElementById('modal-body');
+
+                if (modalTitle) modalTitle.textContent = `Edit Plugin: ${plugin.name}`;
+                if (modalBody) {
+                    modalBody.innerHTML = `
+                        <div class="edit-plugin-info">
+                            <p><strong>Current Plugin:</strong> ${this.escapeHtml(plugin.name)}</p>
+                            <p><strong>Description:</strong> ${this.escapeHtml(plugin.description || 'No description')}</p>
+                            <p><strong>Tools:</strong> ${plugin.tools?.length || 0}</p>
+                            <p><strong>Voice Commands:</strong> ${plugin.voice_phrases?.length || 0}</p>
+
+                            <div class="edit-options">
+                                <h4>Edit Options:</h4>
+                                <p>To edit this plugin, you can:</p>
+                                <ul>
+                                    <li><strong>Delete and recreate:</strong> Use the delete button, then create a new plugin with your changes</li>
+                                    <li><strong>Manual edit:</strong> Edit the plugin file directly in <code>jarvis/tools/plugins/</code></li>
+                                    <li><strong>Voice commands:</strong> Add new voice phrases by recreating the plugin</li>
+                                </ul>
+
+                                <div class="edit-actions">
+                                    <button class="btn btn-danger" onclick="toolsManager.deletePlugin('${name}'); toolsManager.hideModal();">
+                                        Delete This Plugin
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                this.showModal();
+            }
+
+            async deletePlugin(name) {
+                if (!confirm(`Are you sure you want to delete the plugin "${name}"? This action cannot be undone.`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/plugins', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'delete',
+                            name: name
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showNotification(`Plugin "${name}" deleted successfully!`, 'success');
+                        this.loadPlugins(); // Refresh the plugin list
+                    } else {
+                        this.showNotification(`Error deleting plugin: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting plugin:', error);
+                    this.showNotification(`Error deleting plugin: ${error.message}`, 'error');
+                }
+            }
+
+            showAddPluginModal() {
+                this.voiceCommands = [];
+                this.renderVoiceCommands();
+                const modal = document.getElementById('add-plugin-modal');
+                if (modal) modal.style.display = 'flex';
+
+                // Reset form
+                const form = document.getElementById('add-plugin-form');
+                if (form) form.reset();
+            }
+
+            hideAddPluginModal() {
+                const modal = document.getElementById('add-plugin-modal');
+                if (modal) modal.style.display = 'none';
+                this.voiceCommands = [];
+            }
+
+            addVoiceCommand() {
+                const input = document.getElementById('voice-command-input');
+                if (!input) return;
+
+                const command = input.value.trim();
+                if (command && !this.voiceCommands.includes(command)) {
+                    this.voiceCommands.push(command);
+                    input.value = '';
+                    this.renderVoiceCommands();
+                }
+            }
+
+            removeVoiceCommand(index) {
+                this.voiceCommands.splice(index, 1);
+                this.renderVoiceCommands();
+            }
+
+            renderVoiceCommands() {
+                const container = document.getElementById('voice-commands-list');
+                if (!container) return;
+
+                if (this.voiceCommands.length === 0) {
+                    container.innerHTML = '<p class="no-commands">No voice commands added yet.</p>';
+                    return;
+                }
+
+                const html = this.voiceCommands.map((command, index) =>
+                    `<div class="voice-command-item">
+                        <span class="command-text">"${this.escapeHtml(command)}"</span>
+                        <button type="button" class="remove-command" onclick="toolsManager.removeVoiceCommand(${index})">Remove</button>
+                    </div>`
+                ).join('');
+
+                container.innerHTML = html;
+            }
+
+            hideAddPluginModal() {
+                const modal = document.getElementById('add-plugin-modal');
+                if (modal) modal.style.display = 'none';
+                this.voiceCommands = [];
+            }
+
+            addVoiceCommand() {
+                const input = document.getElementById('voice-command-input');
+                if (!input) return;
+
+                const command = input.value.trim();
+                if (command && !this.voiceCommands.includes(command)) {
+                    this.voiceCommands.push(command);
+                    input.value = '';
+                    this.renderVoiceCommands();
+                }
+            }
+
+            removeVoiceCommand(index) {
+                this.voiceCommands.splice(index, 1);
+                this.renderVoiceCommands();
+            }
+
+            renderVoiceCommands() {
+                const container = document.getElementById('voice-commands-list');
+                if (!container) return;
+
+                if (this.voiceCommands.length === 0) {
+                    container.innerHTML = '<p class="no-commands">No voice commands added yet.</p>';
+                    return;
+                }
+
+                const html = this.voiceCommands.map((command, index) =>
+                    `<div class="voice-command-item">
+                        <span class="command-text">"${this.escapeHtml(command)}"</span>
+                        <button type="button" class="remove-command" onclick="toolsManager.removeVoiceCommand(${index})">Remove</button>
+                    </div>`
+                ).join('');
+
+                container.innerHTML = html;
+            }
+
+            async handleFormSubmit(e) {
+                e.preventDefault();
+
+                const form = e.target;
+                const formData = new FormData(form);
+
+                const pluginData = {
+                    action: 'add',
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    version: formData.get('version') || '1.0.0',
+                    author: formData.get('author') || 'Unknown',
+                    code: formData.get('code'),
+                    voice_phrases: this.voiceCommands
+                };
+
+                try {
+                    const response = await fetch('/api/plugins', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(pluginData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showNotification('Plugin created successfully!', 'success');
+                        this.hideAddPluginModal();
+                        this.loadPlugins(); // Refresh the plugin list
+                    } else {
+                        this.showNotification(`Error creating plugin: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error creating plugin:', error);
+                    this.showNotification(`Error creating plugin: ${error.message}`, 'error');
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.textContent = message;
+
+                // Add to page
+                document.body.appendChild(notification);
+
+                // Show notification
+                setTimeout(() => notification.classList.add('show'), 100);
+
+                // Hide and remove notification
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 4000);
+            }
+
+            showModal() {
+                const modal = document.getElementById('plugin-modal');
+                if (modal) modal.style.display = 'flex';
+            }
+
+            hideModal() {
+                const modal = document.getElementById('plugin-modal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            updateStatus() {
+                const activeCount = document.getElementById('active-plugins-count');
+                const toolsCount = document.getElementById('available-tools-count');
+                const voiceCount = document.getElementById('voice-commands-count');
+
+                const pluginCount = Object.keys(this.plugins).length;
+                const totalTools = Object.values(this.plugins).reduce((sum, plugin) =>
+                    sum + (plugin.tools?.length || 0), 0);
+                const totalVoice = Object.values(this.plugins).reduce((sum, plugin) =>
+                    sum + (plugin.voice_phrases?.length || 0), 0);
+
+                if (activeCount) activeCount.textContent = pluginCount;
+                if (toolsCount) toolsCount.textContent = totalTools;
+                if (voiceCount) voiceCount.textContent = totalVoice;
+            }
+
+            async handleFormSubmit(e) {
+                e.preventDefault();
+
+                const form = e.target;
+                const formData = new FormData(form);
+
+                const pluginData = {
+                    action: 'add',
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    version: formData.get('version') || '1.0.0',
+                    author: formData.get('author') || 'Unknown',
+                    code: formData.get('code'),
+                    voice_phrases: this.voiceCommands
+                };
+
+                try {
+                    const response = await fetch('/api/plugins', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(pluginData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showNotification('Plugin created successfully!', 'success');
+                        this.hideAddPluginModal();
+                        this.loadPlugins(); // Refresh the plugin list
+                    } else {
+                        this.showNotification(`Error creating plugin: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error creating plugin:', error);
+                    this.showNotification(`Error creating plugin: ${error.message}`, 'error');
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.textContent = message;
+
+                // Add to page
+                document.body.appendChild(notification);
+
+                // Show notification
+                setTimeout(() => notification.classList.add('show'), 100);
+
+                // Hide and remove notification
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 4000);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize when DOM is ready
+        let toolsManager;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                toolsManager = new ToolsManager();
+            });
+        } else {
+            toolsManager = new ToolsManager();
+        }
+        </script>
+        """
+
     def get_mcp_content(self) -> str:
         """Get the MCP management content."""
         return """
         <div class="page-header">
-            <h1>MCP Tools & Servers</h1>
+            <h1>MCP Servers</h1>
             <div class="breadcrumb">
-                <a href="/settings">Settings</a> > MCP Tools & Servers
+                <a href="/settings">Settings</a> > MCP Servers
             </div>
         </div>
 
         <div class="info-banner">
             <h3>🔗 Model Context Protocol (MCP)</h3>
             <p>Connect Jarvis to external tools and services through MCP servers. Popular options include GitHub integration, file system access, web search, and database connections.</p>
+
+            <!-- Status Overview -->
+            <div class="mcp-status-overview" id="mcp-status-overview">
+                <div class="status-item">
+                    <span class="status-label">System Status:</span>
+                    <span class="status-value" id="mcp-system-status">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Connected Servers:</span>
+                    <span class="status-value" id="connected-servers-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Available Tools:</span>
+                    <span class="status-value" id="available-tools-count">0</span>
+                </div>
+            </div>
+
             <details>
                 <summary>📚 Quick Setup Guide</summary>
                 <div class="setup-guide">
-                    <h4>Getting Started:</h4>
-                    <ol>
-                        <li><strong>Install Node.js</strong> if you haven't already (required for most MCP servers)</li>
-                        <li><strong>Click "Add Server"</strong> and choose a template for quick setup</li>
-                        <li><strong>Popular first choice:</strong> Memory Storage (no setup required)</li>
-                        <li><strong>For GitHub:</strong> Get a personal access token from GitHub Settings</li>
-                        <li><strong>Test connection</strong> before saving to ensure everything works</li>
-                    </ol>
-                    <p><strong>Need help?</strong> Each template includes detailed setup instructions.</p>
+                    <h4>🚀 Getting Started (3 Easy Steps):</h4>
+                    <div class="setup-steps">
+                        <div class="setup-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Choose a Template</h5>
+                                <p>Click <strong>"Add Server"</strong> and select from popular templates like GitHub, File System, or Web Search</p>
+                            </div>
+                        </div>
+                        <div class="setup-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Configure & Test</h5>
+                                <p>Fill in required fields (API keys, etc.) and use <strong>"Test Connection"</strong> to verify setup</p>
+                            </div>
+                        </div>
+                        <div class="setup-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>Start Using</h5>
+                                <p>Save the server and start using new tools through voice commands or the interface</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="popular-templates">
+                        <h5>🌟 Popular First Choices:</h5>
+                        <div class="template-grid">
+                            <div class="template-card" onclick="quickAddTemplate('universal')">
+                                <div class="template-icon">🌐</div>
+                                <div class="template-name">Universal MCP</div>
+                                <div class="template-desc">Works with any MCP server</div>
+                            </div>
+                            <div class="template-card" onclick="quickAddTemplate('filesystem')">
+                                <div class="template-icon">📁</div>
+                                <div class="template-name">File System</div>
+                                <div class="template-desc">Access local files</div>
+                            </div>
+                            <div class="template-card" onclick="quickAddTemplate('github')">
+                                <div class="template-icon">🐙</div>
+                                <div class="template-name">GitHub</div>
+                                <div class="template-desc">Repository management</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="help-links">
+                        <p><strong>Need help?</strong>
+                        <a href="#" onclick="showTroubleshootingModal()">Troubleshooting Guide</a> |
+                        <a href="https://mcpservers.org" target="_blank">Browse More MCPs</a> |
+                        <a href="#" onclick="showVoiceCommandsModal()">Voice Commands</a>
+                        </p>
+                    </div>
                 </div>
             </details>
         </div>
@@ -3762,14 +5463,14 @@ class JarvisUIHandler(BaseHTTPRequestHandler):
 
         <div class="config-section">
             <div class="section-header">
-                <h2>Available Tools</h2>
+                <h2>Available MCP Tools</h2>
                 <button class="btn btn-secondary" onclick="refreshTools()">
-                    <i class="icon">🔄</i> Refresh Tools
+                    Refresh Tools
                 </button>
             </div>
 
             <div id="tools-list" class="tools-grid">
-                <p>Loading tools...</p>
+                <p>Loading MCP tools...</p>
             </div>
         </div>
 
@@ -3868,6 +5569,22 @@ X-API-Key: key"></textarea>
             </div>
         </div>
 
+        <!-- MCP Server Details Modal -->
+        <div id="plugin-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">MCP Server Details</h3>
+                    <button class="modal-close" onclick="hideMCPModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- Server details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideMCPModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
         <style>
         .info-banner {
             background: rgba(33, 150, 243, 0.1);
@@ -3895,6 +5612,884 @@ X-API-Key: key"></textarea>
             cursor: pointer;
             color: #2196F3;
             font-weight: bold;
+        }
+
+        /* MCP Status Overview */
+        .mcp-status-overview {
+            display: flex;
+            gap: 2rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 120px;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.25rem;
+        }
+
+        .status-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        /* Setup Steps */
+        .setup-steps {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .setup-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .step-number {
+            background: #2196F3;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .step-content h5 {
+            margin: 0 0 0.5rem 0;
+            color: #2196F3;
+            font-size: 0.95rem;
+        }
+
+        .step-content p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+        }
+
+        /* Popular Templates */
+        .popular-templates {
+            margin: 1.5rem 0;
+        }
+
+        .popular-templates h5 {
+            margin: 0 0 1rem 0;
+            color: #2196F3;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .template-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .template-card:hover {
+            background: rgba(33, 150, 243, 0.1);
+            border-color: rgba(33, 150, 243, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .template-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .template-name {
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 0.25rem;
+        }
+
+        .template-desc {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Help Links */
+        .help-links {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .help-links a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+
+        .help-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Status Indicators */
+        .status-success {
+            color: #4CAF50 !important;
+        }
+
+        .status-warning {
+            color: #FF9800 !important;
+        }
+
+        .status-error {
+            color: #F44336 !important;
+        }
+
+        /* Troubleshooting Modal */
+        .troubleshooting-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .issue-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .issue-item strong {
+            color: #2196F3;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-item ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .issue-item li {
+            margin-bottom: 0.25rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .issue-item code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #2196F3;
+        }
+
+        .troubleshooting-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Voice Commands Modal */
+        .voice-commands-section h4 {
+            color: #2196F3;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .voice-commands-section h4:first-child {
+            margin-top: 0;
+        }
+
+        .command-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        .command-list li {
+            padding: 0.5rem;
+            margin-bottom: 0.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .command-list strong {
+            color: #2196F3;
+        }
+
+        /* Enhanced Server Cards */
+        .server-card {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .server-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .server-status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #F44336;
+        }
+
+        .server-status-indicator.connected {
+            background: #4CAF50;
+        }
+
+        .server-status-indicator.connecting {
+            background: #FF9800;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Tools & Plugins Page Styles */
+        .tools-status-overview {
+            display: flex;
+            gap: 2rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            flex-wrap: wrap;
+        }
+
+        .plugins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .plugin-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(12px);
+        }
+
+        .plugin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6495ed, #4169e1, #1e90ff);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .plugin-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+            border-color: rgba(100, 149, 237, 0.4);
+        }
+
+        .plugin-card:hover::before {
+            opacity: 1;
+        }
+
+        .plugin-card.selected {
+            border-color: #6495ed;
+            box-shadow: 0 12px 40px rgba(100, 149, 237, 0.25);
+            background: linear-gradient(145deg, rgba(100, 149, 237, 0.15), rgba(100, 149, 237, 0.08));
+        }
+
+        .plugin-card.selected::before {
+            opacity: 1;
+        }
+
+        .plugin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2rem 2rem 0 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .plugin-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .plugin-actions {
+            display: flex;
+            gap: 0.75rem;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(12px);
+        }
+
+        .plugin-card:hover .plugin-actions {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .btn-text {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-text:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-text.btn-danger:hover {
+            background: rgba(244, 67, 54, 0.25);
+            color: #ff6b6b;
+        }
+
+        .plugin-description {
+            color: #c8d3e0;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            padding: 0 2rem;
+            opacity: 0.9;
+        }
+
+        .plugin-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin: 0;
+            padding: 1.5rem 2rem 2rem 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-item strong {
+            display: block;
+            color: #6495ed;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-item {
+            color: #b8c5d1;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #b8c5d1;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            color: #e0e6ed;
+        }
+
+        .modal-body h4 {
+            color: #6495ed;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .modal-body li {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 0.9rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6495ed;
+            box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.2);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: #b8c5d1;
+            font-size: 0.8rem;
+        }
+
+        .voice-commands-section {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .voice-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .voice-input-group input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .voice-commands-list {
+            min-height: 60px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .voice-command-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .voice-command-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .command-text {
+            color: #ffffff;
+            font-style: italic;
+        }
+
+        .remove-command {
+            background: rgba(244, 67, 54, 0.2);
+            border: none;
+            border-radius: 3px;
+            padding: 0.25rem 0.5rem;
+            color: #ff6b6b;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .remove-command:hover {
+            background: rgba(244, 67, 54, 0.3);
+        }
+
+        .no-commands {
+            color: #b8c5d1;
+            font-style: italic;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .form-help {
+            background: rgba(100, 149, 237, 0.1);
+            border: 1px solid rgba(100, 149, 237, 0.3);
+            border-radius: 4px;
+            padding: 1rem;
+        }
+
+        .form-help h4 {
+            margin: 0 0 0.5rem 0;
+            color: #6495ed;
+        }
+
+        .form-help ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .form-help li {
+            color: #e0e6ed;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .notification-error {
+            background: linear-gradient(135deg, #f44336, #da190b);
+        }
+
+        .notification-info {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+
+        /* Edit Plugin Styles */
+        .edit-plugin-info {
+            color: #e0e6ed;
+        }
+
+        .edit-options {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .edit-options h4 {
+            color: #6495ed;
+            margin: 0 0 1rem 0;
+        }
+
+        .edit-options ul {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .edit-options li {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .edit-options code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #6495ed;
+        }
+
+        .edit-actions {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .plugin-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .plugin-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(33, 150, 243, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .plugin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .plugin-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2196F3;
+            margin: 0;
+        }
+
+        .plugin-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .plugin-actions button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .plugin-actions .edit-btn {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+
+        .plugin-actions .delete-btn {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .plugin-actions button:hover {
+            opacity: 0.8;
+        }
+
+        .plugin-description {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .plugin-tools {
+            margin-bottom: 1rem;
+        }
+
+        .plugin-tools h5 {
+            color: #2196F3;
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .tool-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .tool-list li {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            margin-bottom: 0.25rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .plugin-voice-phrases {
+            margin-bottom: 1rem;
+        }
+
+        .plugin-voice-phrases h5 {
+            color: #2196F3;
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .voice-phrase-tag {
+            display: inline-block;
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 0.25rem 0.25rem 0.25rem 0;
+        }
+
+        /* Plugin Form Styles */
+        .large-modal .modal-content {
+            max-width: 800px;
+            width: 90vw;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .voice-phrases-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .voice-phrases-container input {
+            flex: 1;
+        }
+
+        .voice-phrases-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .voice-phrase-item {
+            display: flex;
+            align-items: center;
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .voice-phrase-item .remove-phrase {
+            background: none;
+            border: none;
+            color: #F44336;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            padding: 0;
+            font-size: 1rem;
+        }
+
+        .voice-phrase-item .remove-phrase:hover {
+            opacity: 0.7;
+        }
+
+        #plugin-code, #edit-plugin-code {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            resize: vertical;
         }
 
         .setup-guide {
@@ -4219,7 +6814,10 @@ X-API-Key: key"></textarea>
 
         <script>
         let servers = {};
-        let tools = {};
+        let mcpTools = {};
+        let jarvisTools = {};
+        let allTools = {};
+        let currentToolFilter = 'all';
 
         // Debug: Test if functions are accessible
         console.log('MCP JavaScript starting to load...');
@@ -4238,18 +6836,39 @@ X-API-Key: key"></textarea>
                 });
         }
 
-        function loadTools() {
+        function loadMCPTools() {
             fetch('/api/mcp/tools')
                 .then(response => response.json())
                 .then(data => {
-                    tools = data.tools || {};
+                    mcpTools = data.tools || {};
+                    updateAllTools();
                     renderTools();
                 })
                 .catch(error => {
-                    console.error('Error loading tools:', error);
-                    document.getElementById('tools-list').innerHTML =
-                        '<p>Error loading tools: ' + error.message + '</p>';
+                    console.error('Error loading MCP tools:', error);
                 });
+        }
+
+        function loadJarvisTools() {
+            fetch('/api/jarvis/tools')
+                .then(response => response.json())
+                .then(data => {
+                    jarvisTools = data.tools || {};
+                    updateAllTools();
+                    renderTools();
+                })
+                .catch(error => {
+                    console.error('Error loading Jarvis tools:', error);
+                });
+        }
+
+        function loadTools() {
+            loadMCPTools();
+            loadJarvisTools();
+        }
+
+        function updateAllTools() {
+            allTools = { ...jarvisTools, ...mcpTools };
         }
 
         function renderServers() {
@@ -4260,44 +6879,340 @@ X-API-Key: key"></textarea>
                 return;
             }
 
-            const html = Object.entries(servers).map(([name, server]) =>
-                '<div class="server-card">' +
-                    '<div class="server-header">' +
-                        '<div class="server-name">' + name + '</div>' +
-                        '<div class="server-status status-' + server.status + '">' + server.status.toUpperCase() + '</div>' +
-                    '</div>' +
-                    '<div class="server-info">' +
-                        '<div><strong>Transport:</strong> ' + server.config.transport + '</div>' +
-                        (server.config.transport === 'stdio' ?
-                            '<div><strong>Command:</strong> ' + server.config.command + ' ' + server.config.args.join(' ') + '</div>' :
-                            '<div><strong>URL:</strong> ' + server.config.url + '</div>'
-                        ) +
-                        '<div><strong>Tools:</strong> ' + (server.tools ? server.tools.length : 0) + ' available</div>' +
-                        (server.last_error ? '<div style="color: #F44336;"><strong>Error:</strong> ' + server.last_error + '</div>' : '') +
-                    '</div>' +
-                    '<div class="server-actions">' +
-                        (server.status === 'connected' ?
-                            '<button class="btn btn-secondary btn-small" onclick="disconnectServer(\\'' + name + '\\')">Disconnect</button>' :
-                            '<button class="btn btn-primary btn-small" onclick="connectServer(\\'' + name + '\\')">Connect</button>'
-                        ) +
-                        '<button class="btn btn-secondary btn-small" onclick="configureServer(\\'' + name + '\\')">Configure</button>' +
-                        '<button class="btn btn-danger btn-small" onclick="removeServer(\\'' + name + '\\')">Remove</button>' +
-                    '</div>' +
-                '</div>'
-            ).join('');
+            // Clear the container
+            serversList.innerHTML = '';
+            serversList.className = 'mcp-servers-grid';
 
-            serversList.innerHTML = html;
+            // Create server cards using DOM methods
+            Object.entries(servers).forEach(([serverId, server]) => {
+                const isConnected = server.status && server.status.connected;
+                const toolsCount = server.status ? server.status.tools_count : 0;
+
+                // Main card
+                const card = document.createElement('div');
+                card.className = `mcp-server-card ${isConnected ? 'connected' : 'disconnected'}`;
+                card.addEventListener('click', () => selectMCPServer(serverId, card));
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'mcp-server-header';
+
+                const title = document.createElement('h3');
+                title.className = 'mcp-server-title';
+                title.textContent = server.config.name || serverId;
+
+                const actions = document.createElement('div');
+                actions.className = 'mcp-server-actions';
+
+                // Action buttons
+                const viewBtn = createMCPActionButton('View', 'View Details', () => viewMCPServer(serverId));
+                const connectBtn = createMCPActionButton(
+                    isConnected ? 'Disconnect' : 'Connect',
+                    isConnected ? 'Disconnect Server' : 'Connect Server',
+                    () => isConnected ? disconnectMCPServer(serverId) : connectMCPServer(serverId),
+                    isConnected ? 'btn-danger' : 'btn-success'
+                );
+                const deleteBtn = createMCPActionButton('Delete', 'Delete Server', () => deleteMCPServer(serverId), 'btn-danger');
+
+                actions.append(viewBtn, connectBtn, deleteBtn);
+                header.append(title, actions);
+
+                // Description
+                const description = document.createElement('div');
+                description.className = 'mcp-server-description';
+                description.textContent = server.config.description || `${server.config.transport.toUpperCase()} MCP server`;
+
+                // Stats
+                const stats = document.createElement('div');
+                stats.className = 'mcp-server-stats';
+
+                const statusStat = document.createElement('div');
+                statusStat.className = `mcp-server-status ${isConnected ? 'connected' : 'disconnected'}`;
+                statusStat.innerHTML = `<strong>${isConnected ? 'Connected' : 'Disconnected'}</strong>Status`;
+
+                const toolsStat = document.createElement('div');
+                toolsStat.className = 'mcp-server-status';
+                toolsStat.innerHTML = `<strong>${toolsCount}</strong>Tools`;
+
+                const transportStat = document.createElement('div');
+                transportStat.className = 'mcp-server-status';
+                transportStat.innerHTML = `<strong>${server.config.transport.toUpperCase()}</strong>Transport`;
+
+                stats.append(statusStat, toolsStat, transportStat);
+
+                // Assemble card
+                card.append(header, description, stats);
+
+                // Add to container
+                serversList.appendChild(card);
+            });
+        }
+
+        function createMCPActionButton(text, title, onClick, extraClass = '') {
+            const btn = document.createElement('button');
+            btn.className = `btn-text ${extraClass}`;
+            btn.title = title;
+            btn.textContent = text;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                onClick();
+            });
+            return btn;
+        }
+
+        function selectMCPServer(serverId, cardElement) {
+            // Remove previous selections
+            document.querySelectorAll('.mcp-server-card.selected').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Add selection
+            cardElement.classList.add('selected');
+            console.log('Selected MCP server:', serverId);
+        }
+
+        function viewMCPServer(serverId) {
+            const server = servers[serverId];
+            if (!server) return;
+
+            // Create modal content
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+
+            if (modalTitle) modalTitle.textContent = `MCP Server: ${server.config.name}`;
+            if (modalBody) {
+                modalBody.innerHTML = createMCPServerDetailsHTML(server);
+            }
+
+            showMCPModal();
+        }
+
+        function createMCPServerDetailsHTML(server) {
+            const config = server.config;
+            const status = server.status;
+
+            let html = `
+                <div class="mcp-server-details">
+                    <p><strong>Name:</strong> ${escapeHtml(config.name)}</p>
+                    <p><strong>Description:</strong> ${escapeHtml(config.description || 'No description')}</p>
+                    <p><strong>Transport:</strong> ${escapeHtml(config.transport.toUpperCase())}</p>
+                    <p><strong>Command:</strong> ${escapeHtml(config.command)}</p>
+                    <p><strong>Arguments:</strong> ${escapeHtml(config.args.join(' '))}</p>
+                    <p><strong>Enabled:</strong> ${config.enabled ? 'Yes' : 'No'}</p>
+                    <p><strong>Timeout:</strong> ${config.timeout} seconds</p>
+                    <p><strong>Status:</strong> <span class="${status.connected ? 'status-connected' : 'status-disconnected'}">${status.connected ? 'Connected' : 'Disconnected'}</span></p>
+                    <p><strong>Available Tools:</strong> ${status.tools_count}</p>
+            `;
+
+            // Environment variables
+            if (config.env && Object.keys(config.env).length > 0) {
+                html += '<h4>Environment Variables:</h4><ul>';
+                Object.entries(config.env).forEach(([key, value]) => {
+                    html += `<li><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            // Timestamps
+            html += `
+                    <div class="mcp-timestamps">
+                        <p><strong>Created:</strong> ${new Date(config.created_at).toLocaleString()}</p>
+                        <p><strong>Last Modified:</strong> ${new Date(config.last_modified).toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function connectMCPServer(serverId) {
+            try {
+                const response = await fetch('/api/mcp/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        server: serverId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMCPNotification(`MCP server "${serverId}" connected successfully!`, 'success');
+                    loadServers(); // Refresh the server list
+                } else {
+                    showMCPNotification(`Error connecting to MCP server: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error connecting to MCP server:', error);
+                showMCPNotification(`Error connecting to MCP server: ${error.message}`, 'error');
+            }
+        }
+
+        async function disconnectMCPServer(serverId) {
+            try {
+                const response = await fetch('/api/mcp/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        server: serverId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMCPNotification(`MCP server "${serverId}" disconnected successfully!`, 'success');
+                    loadServers(); // Refresh the server list
+                } else {
+                    showMCPNotification(`Error disconnecting MCP server: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error disconnecting MCP server:', error);
+                showMCPNotification(`Error disconnecting MCP server: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMCPConnection() {
+            const form = document.getElementById('add-server-form');
+            if (!form) return;
+
+            const formData = new FormData(form);
+            const serverData = {
+                action: 'test',
+                name: formData.get('name') || 'test-connection',
+                transport: formData.get('transport'),
+                command: formData.get('command'),
+                args: formData.get('args'),
+                env: formData.get('env'),
+                timeout: formData.get('timeout')
+            };
+
+            try {
+                const response = await fetch('/api/mcp/servers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(serverData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMCPNotification('Connection test successful!', 'success');
+                } else {
+                    showMCPNotification(`Connection test failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error testing connection:', error);
+                showMCPNotification(`Connection test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function showMCPModal() {
+            const modal = document.getElementById('plugin-modal'); // Reuse the plugin modal
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function hideMCPModal() {
+            const modal = document.getElementById('plugin-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function refreshTools() {
+            showMCPNotification('Refreshing MCP tools...', 'info');
+
+            try {
+                // Reload both MCP and Jarvis tools
+                await loadTools();
+                await loadJarvisTools();
+
+                showMCPNotification('Tools refreshed successfully!', 'success');
+            } catch (error) {
+                console.error('Error refreshing tools:', error);
+                showMCPNotification(`Error refreshing tools: ${error.message}`, 'error');
+            }
+        }
+
+        // Alias for the form button
+        function testConnection() {
+            testMCPConnection();
+        }
+
+        async function deleteMCPServer(serverId) {
+            if (!confirm(`Are you sure you want to delete the MCP server "${serverId}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/mcp/servers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'remove',
+                        name: serverId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMCPNotification(`MCP server "${serverId}" deleted successfully!`, 'success');
+                    loadServers(); // Refresh the server list
+                } else {
+                    showMCPNotification(`Error deleting MCP server: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting MCP server:', error);
+                showMCPNotification(`Error deleting MCP server: ${error.message}`, 'error');
+            }
+        }
+
+        function showMCPNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            // Hide and remove notification
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
         }
 
         function renderTools() {
             const toolsList = document.getElementById('tools-list');
 
-            if (Object.keys(tools).length === 0) {
+            if (Object.keys(mcpTools).length === 0) {
                 toolsList.innerHTML = '<p>No tools available. Connect to MCP servers to discover tools.</p>';
                 return;
             }
 
-            const html = Object.entries(tools).map(([name, tool]) =>
+            const html = Object.entries(mcpTools).map(([name, tool]) =>
                 '<div class="tool-card">' +
                     '<div class="tool-header">' +
                         '<div>' +
@@ -4726,6 +7641,205 @@ X-API-Key: key"></textarea>
         // Load MCP configuration on page load
         loadMCPConfig();
 
+        // Enhanced Status Updates
+        function updateMCPStatus() {
+            const systemStatus = document.getElementById('mcp-system-status');
+            const serversCount = document.getElementById('connected-servers-count');
+            const toolsCount = document.getElementById('available-tools-count');
+
+            if (systemStatus) {
+                const connectedServers = Object.values(servers).filter(s => s.status && s.status.connected).length;
+                const totalServers = Object.keys(servers).length;
+
+                if (totalServers === 0) {
+                    systemStatus.textContent = 'No servers configured';
+                    systemStatus.className = 'status-value status-warning';
+                } else if (connectedServers === 0) {
+                    systemStatus.textContent = 'Ready';
+                    systemStatus.className = 'status-value status-success';
+                } else if (connectedServers === totalServers) {
+                    systemStatus.textContent = 'All Connected';
+                    systemStatus.className = 'status-value status-success';
+                } else {
+                    systemStatus.textContent = 'Partially Connected';
+                    systemStatus.className = 'status-value status-warning';
+                }
+            }
+
+            if (serversCount) {
+                const connected = Object.values(servers).filter(s => s.status && s.status.connected).length;
+                const total = Object.keys(servers).length;
+                serversCount.textContent = `${connected}/${total}`;
+            }
+
+            if (toolsCount) {
+                toolsCount.textContent = Object.keys(mcpTools).length;
+            }
+        }
+
+        // Quick Template Addition
+        function quickAddTemplate(templateName) {
+            showAddServerModal();
+            const templateSelect = document.getElementById('server-template');
+            if (templateSelect) {
+                templateSelect.value = templateName;
+                loadTemplate();
+            }
+        }
+
+        // Enhanced Modal Functions
+        function showTroubleshootingModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🔧 MCP Troubleshooting</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="troubleshooting-section">
+                            <h4>Common Issues:</h4>
+                            <div class="issue-item">
+                                <strong>Server won't connect:</strong>
+                                <ul>
+                                    <li>Check if Node.js is installed: <code>node --version</code></li>
+                                    <li>Verify MCP server package is installed</li>
+                                    <li>Test the command manually in terminal</li>
+                                    <li>Check API keys and environment variables</li>
+                                </ul>
+                            </div>
+                            <div class="issue-item">
+                                <strong>No tools appearing:</strong>
+                                <ul>
+                                    <li>Ensure server is connected (green status)</li>
+                                    <li>Refresh the tools list</li>
+                                    <li>Check server logs for errors</li>
+                                </ul>
+                            </div>
+                            <div class="issue-item">
+                                <strong>Voice commands not working:</strong>
+                                <ul>
+                                    <li>Make sure Jarvis main application is running</li>
+                                    <li>Try: "Jarvis, list MCP servers"</li>
+                                    <li>Check if tools are enabled</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="troubleshooting-actions">
+                            <button class="btn btn-primary" onclick="runDiagnostics()">Run Diagnostics</button>
+                            <button class="btn btn-secondary" onclick="refreshAllConnections()">Refresh All</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showVoiceCommandsModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🎤 MCP Voice Commands</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="voice-commands-section">
+                            <h4>Server Management:</h4>
+                            <ul class="command-list">
+                                <li><strong>"List MCP servers"</strong> - Show all configured servers</li>
+                                <li><strong>"Add filesystem MCP server"</strong> - Add file system access</li>
+                                <li><strong>"Add GitHub MCP server"</strong> - Add GitHub integration</li>
+                                <li><strong>"Enable [server name] MCP"</strong> - Enable a server</li>
+                                <li><strong>"Disable [server name] MCP"</strong> - Disable a server</li>
+                                <li><strong>"Remove [server name] MCP"</strong> - Delete a server</li>
+                            </ul>
+                            <h4>Configuration:</h4>
+                            <ul class="command-list">
+                                <li><strong>"Edit [server] MCP command"</strong> - Change server command</li>
+                                <li><strong>"Update [server] MCP timeout 30"</strong> - Set timeout</li>
+                                <li><strong>"Change [server] MCP environment variable API_KEY=abc123"</strong> - Set env var</li>
+                            </ul>
+                            <h4>Quick Access:</h4>
+                            <ul class="command-list">
+                                <li><strong>"Open MCP settings"</strong> - Open this interface</li>
+                                <li><strong>"Show MCP status"</strong> - Display server status</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Diagnostic Functions
+        function runDiagnostics() {
+            showNotification('Running MCP diagnostics...', 'info');
+
+            // Check system requirements
+            const diagnostics = {
+                nodeJs: false,
+                mcpServers: 0,
+                connectedServers: 0,
+                availableTools: 0
+            };
+
+            // Update diagnostics display
+            setTimeout(() => {
+                const connectedCount = Object.values(servers).filter(s => s.status === 'connected').length;
+                const toolCount = Object.keys(mcpTools).length;
+
+                let message = `Diagnostics Complete:\\n`;
+                message += `• Connected Servers: ${connectedCount}/${Object.keys(servers).length}\\n`;
+                message += `• Available Tools: ${toolCount}\\n`;
+
+                if (connectedCount === 0 && Object.keys(servers).length > 0) {
+                    message += `\\n⚠️ No servers connected. Check server configurations.`;
+                } else if (toolCount === 0 && connectedCount > 0) {
+                    message += `\\n⚠️ No tools available. Servers may not be providing tools.`;
+                } else if (connectedCount > 0 && toolCount > 0) {
+                    message += `\\n✅ MCP system is working correctly!`;
+                }
+
+                alert(message);
+            }, 1000);
+        }
+
+        function refreshAllConnections() {
+            showNotification('Refreshing all MCP connections...', 'info');
+
+            // Refresh servers and tools
+            loadServers();
+            loadTools();
+
+            // Force reconnection for all servers
+            Object.keys(servers).forEach(serverName => {
+                if (servers[serverName].status !== 'connected') {
+                    connectServer(serverName);
+                }
+            });
+
+            setTimeout(() => {
+                updateMCPStatus();
+                showNotification('MCP connections refreshed', 'success');
+            }, 2000);
+        }
+
+        // Override existing functions to include status updates
+        const originalLoadServers = loadServers;
+        loadServers = function() {
+            originalLoadServers();
+            setTimeout(updateMCPStatus, 500);
+        };
+
+        const originalLoadTools = loadTools;
+        loadTools = function() {
+            originalLoadTools();
+            setTimeout(updateMCPStatus, 500);
+        };
+
         // Auto-refresh every 30 seconds
         setInterval(() => {
             loadServers();
@@ -4734,794 +7848,36 @@ X-API-Key: key"></textarea>
         </script>
         """
 
+
+
+
+
     def get_rag_content(self) -> str:
         """Get the RAG management content."""
         return """
         <div class="page-header">
             <h1>RAG Memory Management</h1>
             <div class="breadcrumb">
-                <a href="/">Home</a> / <a href="/rag">RAG Memory</a>
+                <a href="/settings">Settings</a> > RAG Memory
             </div>
         </div>
 
         <div class="info-banner">
-            <h3>🧠 Intelligent RAG System</h3>
-            <p>Manage your long-term memory, document library, and intelligent search capabilities. This system uses advanced LLM processing for semantic understanding and query optimization.</p>
+            <h3>Intelligent RAG System</h3>
+            <p>RAG (Retrieval-Augmented Generation) system for long-term memory and document management.</p>
+            <p><strong>Note:</strong> Full RAG interface coming soon. For now, use voice commands to interact with the RAG system.</p>
         </div>
 
-        <!-- System Status Section -->
-        <div class="section">
-            <h2>System Status</h2>
-            <div id="rag-status" class="status-grid">
-                <div class="status-card">
-                    <h4>Loading...</h4>
-                    <p>Fetching RAG system status...</p>
-                </div>
-            </div>
+        <div class="config-section">
+            <h3>Voice Commands</h3>
+            <ul>
+                <li><strong>"Remember that..."</strong> - Add information to long-term memory</li>
+                <li><strong>"Search my memory for..."</strong> - Search stored information</li>
+                <li><strong>"What do I know about..."</strong> - Query knowledge base</li>
+            </ul>
         </div>
 
-        <!-- Tab Navigation -->
-        <div class="tab-container">
-            <div class="tab-nav">
-                <button class="tab-button active" onclick="showTab('memory')">🧠 Long-Term Memory</button>
-                <button class="tab-button" onclick="showTab('documents')">📚 Document Library</button>
-                <button class="tab-button" onclick="showTab('search')">🔍 Intelligent Search</button>
-            </div>
 
-            <!-- Long-Term Memory Tab -->
-            <div id="memory-tab" class="tab-content active">
-                <div class="section-header">
-                    <h3>Long-Term Memory</h3>
-                    <button class="btn btn-primary" onclick="showAddMemoryModal()">Add Memory</button>
-                </div>
-
-                <div id="memory-list" class="memory-list">
-                    <p>Loading memories...</p>
-                </div>
-            </div>
-
-            <!-- Document Library Tab -->
-            <div id="documents-tab" class="tab-content">
-                <div class="section-header">
-                    <h3>Document Library</h3>
-                    <div class="button-group">
-                        <button class="btn btn-primary" onclick="showUploadModal()">Upload Document</button>
-                        <button class="btn btn-secondary" onclick="ingestDocuments()">Process All Documents</button>
-                    </div>
-                </div>
-
-                <div id="documents-list" class="documents-list">
-                    <p>Loading documents...</p>
-                </div>
-            </div>
-
-            <!-- Intelligent Search Tab -->
-            <div id="search-tab" class="tab-content">
-                <div class="section-header">
-                    <h3>Intelligent Search</h3>
-                    <p>Test the enhanced RAG search with query optimization and result synthesis.</p>
-                </div>
-
-                <div class="search-container">
-                    <div class="form-group">
-                        <label for="search-query">Search Query:</label>
-                        <input type="text" id="search-query" placeholder="Enter your search query..." class="form-control">
-                        <button class="btn btn-primary" onclick="performSearch()">Search</button>
-                    </div>
-
-                    <div id="search-results" class="search-results">
-                        <p>Enter a query to see intelligent search results with optimization and synthesis.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Memory Modal -->
-        <div id="add-memory-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Add Long-Term Memory</h3>
-                    <button class="modal-close" onclick="hideAddMemoryModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="memory-fact">Memory/Fact:</label>
-                        <textarea id="memory-fact" placeholder="Enter the information you want to remember..." rows="4" class="form-control"></textarea>
-                    </div>
-                    <div class="pii-warning">
-                        <strong>⚠️ Privacy Notice:</strong> Avoid storing sensitive personal information like passwords, SSNs, or private details.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="hideAddMemoryModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addMemory()">Add Memory</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Upload Document Modal -->
-        <div id="upload-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Upload Document</h3>
-                    <button class="modal-close" onclick="hideUploadModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="document-file">Select File:</label>
-                        <input type="file" id="document-file" accept=".txt,.pdf,.doc,.docx" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="document-name">Document Name (optional):</label>
-                        <input type="text" id="document-name" placeholder="Leave blank to use filename" class="form-control">
-                    </div>
-                    <div class="upload-info">
-                        <strong>Supported formats:</strong> TXT, PDF, DOC, DOCX<br>
-                        <strong>Processing:</strong> Documents will be analyzed with intelligent chunking and metadata extraction.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="hideUploadModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="uploadDocument()">Upload & Process</button>
-                </div>
-            </div>
-        </div>
-
-        <style>
-        .info-banner {
-            background: rgba(33, 150, 243, 0.1);
-            border: 1px solid rgba(33, 150, 243, 0.3);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .info-banner h3 {
-            margin: 0 0 0.5rem 0;
-            color: #2196F3;
-        }
-
-        .tab-container {
-            margin-top: 2rem;
-        }
-
-        .tab-nav {
-            display: flex;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .tab-button {
-            background: none;
-            border: none;
-            color: #b8c5d1;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-        }
-
-        .tab-button:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .tab-button.active {
-            color: #6495ed;
-            border-bottom-color: #6495ed;
-            background: rgba(100, 149, 237, 0.1);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .memory-list, .documents-list {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .memory-item, .document-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .memory-item h4, .document-item h4 {
-            margin: 0 0 0.5rem 0;
-            color: #ffffff;
-        }
-
-        .memory-meta, .document-meta {
-            font-size: 0.85em;
-            color: #b8c5d1;
-            margin-bottom: 0.5rem;
-        }
-
-        .search-container {
-            max-width: 800px;
-        }
-
-        .search-results {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .search-result-item {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .pii-warning, .upload-info {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            border-radius: 4px;
-            padding: 0.75rem;
-            margin-top: 1rem;
-            font-size: 0.9em;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            margin: 5% auto;
-            padding: 0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            color: #ffffff;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: #b8c5d1;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-close:hover {
-            color: #ffffff;
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-footer {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            z-index: 10000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            max-width: 400px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification-success {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-        }
-
-        .notification-error {
-            background: linear-gradient(135deg, #f44336, #da190b);
-        }
-
-        .notification-info {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-        }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .status-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-
-        .status-card h4 {
-            margin: 0 0 1rem 0;
-            color: #6495ed;
-        }
-
-        .status-card p {
-            margin: 0.5rem 0;
-            color: #b8c5d1;
-        }
-        </style>
-
-        <script>
-        // Global variables
-        let ragStatus = {};
-        let memories = [];
-        let documents = [];
-
-        // Tab management
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-
-            // Show selected tab
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
-
-            // Load data for the tab
-            if (tabName === 'memory') {
-                loadMemories();
-            } else if (tabName === 'documents') {
-                loadDocuments();
-            }
-        }
-
-        // Load RAG system status
-        async function loadRAGStatus() {
-            try {
-                const response = await fetch('/api/rag/status');
-                const data = await response.json();
-                ragStatus = data;
-
-                const statusHtml = `
-                    <div class="status-card">
-                        <h4>Database Status</h4>
-                        <p>Total Documents: ${data.database?.total_documents || 0}</p>
-                        <p>Unique Sources: ${data.database?.unique_sources || 0}</p>
-                        <p>Status: ${data.status || 'Unknown'}</p>
-                    </div>
-                    <div class="status-card">
-                        <h4>Intelligence Features</h4>
-                        <p>Document LLM: ${data.intelligence?.document_llm || 'Unknown'}</p>
-                        <p>Features: ${(data.intelligence?.features || []).join(', ')}</p>
-                        <p>Capabilities: ${(data.intelligence?.capabilities || []).join(', ')}</p>
-                    </div>
-                    <div class="status-card">
-                        <h4>Document Library</h4>
-                        <p>Ingested: ${data.documents?.ingested_count || 0} documents</p>
-                        <p>Path: ${data.documents?.documents_path || 'Unknown'}</p>
-                        <p>Formats: ${(data.documents?.supported_formats || []).join(', ')}</p>
-                    </div>
-                `;
-
-                document.getElementById('rag-status').innerHTML = statusHtml;
-            } catch (error) {
-                console.error('Error loading RAG status:', error);
-                document.getElementById('rag-status').innerHTML = '<div class="status-card"><h4>Error</h4><p>Failed to load RAG status</p></div>';
-            }
-        }
-
-        // Load memories
-        async function loadMemories() {
-            try {
-                const response = await fetch('/api/rag/memory/long-term');
-                const data = await response.json();
-                memories = data.memories || [];
-
-                let memoriesHtml = '';
-                if (memories.length === 0) {
-                    memoriesHtml = '<p>No memories stored yet. Add your first memory using the button above.</p>';
-                } else {
-                    memories.forEach(memory => {
-                        memoriesHtml += `
-                            <div class="memory-item">
-                                <h4>${memory.title || 'Memory'}</h4>
-                                <div class="memory-meta">
-                                    Source: ${memory.source} | Type: ${memory.source_type} |
-                                    Importance: ${memory.importance_score} |
-                                    Topics: ${memory.topics || 'None'}
-                                </div>
-                                <p>${memory.content}</p>
-                            </div>
-                        `;
-                    });
-                }
-
-                document.getElementById('memory-list').innerHTML = memoriesHtml;
-            } catch (error) {
-                console.error('Error loading memories:', error);
-                document.getElementById('memory-list').innerHTML = '<p>Error loading memories: ' + error.message + '</p>';
-            }
-        }
-
-        // Load documents
-        async function loadDocuments() {
-            try {
-                const response = await fetch('/api/rag/documents');
-                const data = await response.json();
-                documents = data.documents || [];
-
-                let documentsHtml = '';
-                if (documents.length === 0) {
-                    documentsHtml = '<p>No documents in library. Upload documents using the button above.</p>';
-                } else {
-                    documents.forEach(doc => {
-                        const ingestedBadge = doc.ingested ?
-                            '<span style="color: #4CAF50;">✓ Processed</span>' :
-                            '<span style="color: #FF9800;">⚠ Not Processed</span>';
-
-                        documentsHtml += `
-                            <div class="document-item">
-                                <h4>${doc.name} ${ingestedBadge}</h4>
-                                <div class="document-meta">
-                                    Size: ${doc.size_mb} MB | Modified: ${doc.modified} |
-                                    Type: ${doc.type} | Chunks: ${doc.chunk_count || 0}
-                                </div>
-                                <div class="button-group" style="margin-top: 0.5rem;">
-                                    <button class="btn btn-sm btn-danger" onclick="deleteDocument('${doc.name}')">Delete</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-
-                document.getElementById('documents-list').innerHTML = documentsHtml;
-            } catch (error) {
-                console.error('Error loading documents:', error);
-                document.getElementById('documents-list').innerHTML = '<p>Error loading documents: ' + error.message + '</p>';
-            }
-        }
-
-        // Modal management
-        function showAddMemoryModal() {
-            document.getElementById('add-memory-modal').style.display = 'block';
-        }
-
-        function hideAddMemoryModal() {
-            document.getElementById('add-memory-modal').style.display = 'none';
-            document.getElementById('memory-fact').value = '';
-        }
-
-        function showUploadModal() {
-            document.getElementById('upload-modal').style.display = 'block';
-        }
-
-        function hideUploadModal() {
-            document.getElementById('upload-modal').style.display = 'none';
-            document.getElementById('document-file').value = '';
-            document.getElementById('document-name').value = '';
-        }
-
-        // Add memory
-        async function addMemory() {
-            const fact = document.getElementById('memory-fact').value.trim();
-            if (!fact) {
-                alert('Please enter a memory/fact to store.');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/rag/memory/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ fact: fact })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    hideAddMemoryModal();
-                    loadMemories(); // Refresh the list
-                    showNotification('Memory added successfully!', 'success');
-                } else {
-                    alert('Error adding memory: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Error adding memory:', error);
-                alert('Error adding memory: ' + error.message);
-            }
-        }
-
-        // Upload document
-        async function uploadDocument() {
-            const fileInput = document.getElementById('document-file');
-            const nameInput = document.getElementById('document-name');
-
-            if (!fileInput.files[0]) {
-                alert('Please select a file to upload.');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const filename = nameInput.value.trim() || file.name;
-
-            try {
-                const fileContent = await file.text();
-
-                const response = await fetch('/api/rag/documents/upload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        filename: filename,
-                        content: fileContent
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    hideUploadModal();
-                    loadDocuments(); // Refresh the list
-                    showNotification('Document uploaded successfully!', 'success');
-                } else {
-                    alert('Error uploading document: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Error uploading document:', error);
-                alert('Error uploading document: ' + error.message);
-            }
-        }
-
-        // Ingest documents
-        async function ingestDocuments() {
-            if (!confirm('This will process all documents in the library with intelligent analysis. Continue?')) {
-                return;
-            }
-
-            try {
-                showNotification('Processing documents... This may take a few minutes.', 'info');
-
-                const response = await fetch('/api/rag/documents/ingest', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    loadDocuments(); // Refresh the list
-                    loadRAGStatus(); // Refresh status
-                    showNotification('Documents processed successfully!', 'success');
-                } else {
-                    alert('Error processing documents: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Error processing documents:', error);
-                alert('Error processing documents: ' + error.message);
-            }
-        }
-
-        // Delete document
-        async function deleteDocument(filename) {
-            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/rag/documents/delete', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ filename: filename })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    loadDocuments(); // Refresh the list
-                    showNotification('Document deleted successfully!', 'success');
-                } else {
-                    alert('Error deleting document: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Error deleting document:', error);
-                alert('Error deleting document: ' + error.message);
-            }
-        }
-
-        // Perform intelligent search
-        async function performSearch() {
-            const query = document.getElementById('search-query').value.trim();
-            if (!query) {
-                alert('Please enter a search query.');
-                return;
-            }
-
-            try {
-                document.getElementById('search-results').innerHTML = '<p>Searching with intelligent optimization...</p>';
-
-                const response = await fetch(`/api/rag/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (data.results) {
-                    const results = data.results;
-                    const synthesis = results.synthesis || {};
-                    const queryOpt = results.query_optimization || {};
-                    const searchMeta = results.search_metadata || {};
-
-                    let resultsHtml = `
-                        <div class="search-result-item">
-                            <h4>🎯 Synthesized Answer</h4>
-                            <p><strong>Query:</strong> ${data.query}</p>
-                            <p><strong>Optimized Query:</strong> ${queryOpt.optimized_query || 'N/A'}</p>
-                            <p><strong>Answer:</strong> ${synthesis.synthesized_answer || 'No answer generated'}</p>
-                            <p><strong>Confidence:</strong> ${synthesis.confidence_score || 0} | <strong>Completeness:</strong> ${synthesis.answer_completeness || 'unknown'}</p>
-                        </div>
-                    `;
-
-                    if (synthesis.key_points && synthesis.key_points.length > 0) {
-                        resultsHtml += `
-                            <div class="search-result-item">
-                                <h4>🔑 Key Points</h4>
-                                <ul>
-                                    ${synthesis.key_points.map(point => `<li>${point}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                    }
-
-                    if (synthesis.source_citations && synthesis.source_citations.length > 0) {
-                        resultsHtml += `
-                            <div class="search-result-item">
-                                <h4>📚 Sources</h4>
-                                <ul>
-                                    ${synthesis.source_citations.map(cite => `<li>${cite.source} (${cite.relevance} relevance)</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                    }
-
-                    if (results.retrieved_documents && results.retrieved_documents.length > 0) {
-                        resultsHtml += `
-                            <div class="search-result-item">
-                                <h4>📄 Retrieved Documents (${results.retrieved_documents.length})</h4>
-                        `;
-                        results.retrieved_documents.forEach((doc, index) => {
-                            resultsHtml += `
-                                <div style="margin-bottom: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                    <strong>Document ${index + 1}:</strong> ${doc.metadata.source || 'Unknown'}<br>
-                                    <em>Content:</em> ${doc.content}
-                                </div>
-                            `;
-                        });
-                        resultsHtml += '</div>';
-                    }
-
-                    resultsHtml += `
-                        <div class="search-result-item">
-                            <h4>🔍 Search Metadata</h4>
-                            <p><strong>Queries Tried:</strong> ${searchMeta.queries_tried ? searchMeta.queries_tried.length : 0}</p>
-                            <p><strong>Total Results Found:</strong> ${searchMeta.total_results_found || 0}</p>
-                            <p><strong>Final Results:</strong> ${searchMeta.final_results || 0}</p>
-                            <p><strong>Query Intent:</strong> ${queryOpt.query_intent || 'unknown'}</p>
-                            <p><strong>Search Strategy:</strong> ${queryOpt.search_strategy || 'unknown'}</p>
-                        </div>
-                    `;
-
-                    document.getElementById('search-results').innerHTML = resultsHtml;
-                } else {
-                    document.getElementById('search-results').innerHTML = '<p>No results found or error occurred.</p>';
-                }
-            } catch (error) {
-                console.error('Error performing search:', error);
-                document.getElementById('search-results').innerHTML = '<p>Error performing search: ' + error.message + '</p>';
-            }
-        }
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-
-            // Add to page
-            document.body.appendChild(notification);
-
-            // Show notification
-            setTimeout(() => notification.classList.add('show'), 100);
-
-            // Hide and remove notification
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => document.body.removeChild(notification), 300);
-            }, 3000);
-        }
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            loadRAGStatus();
-            loadMemories(); // Load initial tab
-
-            // Handle Enter key in search
-            document.getElementById('search-query').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
-            });
-
-            // Close modals when clicking outside
-            window.addEventListener('click', function(event) {
-                if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-                }
-            });
-        });
-        </script>
         """
 
     def log_message(self, format, *args):

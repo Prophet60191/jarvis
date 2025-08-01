@@ -18,7 +18,7 @@ from jarvis.config import JarvisConfig, AudioConfig, ConversationConfig, LLMConf
 from jarvis.core.speech import SpeechManager
 from jarvis.core.agent import JarvisAgent
 from jarvis.core.conversation import ConversationManager
-from jarvis.tools import tool_registry
+from jarvis.tools import get_langchain_tools
 from jarvis.utils.logger import setup_logging, get_logger
 
 

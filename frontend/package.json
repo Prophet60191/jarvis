@@ -1,0 +1,20 @@
+{
+  "name": "test_button_app_frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@types/react": "^17.0.38",
+    "@types/react-dom": "^17.0.11",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typescript": "^4.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.38",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.1.3"
+  }
+}

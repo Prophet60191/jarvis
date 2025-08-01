@@ -170,19 +170,63 @@ class MyToolPlugin(PluginBase):
 plugin = MyToolPlugin()
 ```
 
+## 🏗️ **Service Layer Architecture**
+
+### **Clean Abstraction Layers:**
+```
+┌─────────────────────────────────────────┐
+│           Presentation Layer            │
+│  • OptimizedController                  │
+│  • ConversationManager                  │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│            Service Layer                │
+│  • MemoryService (unified memory ops)  │
+│  • ToolService (tool management)       │
+│  • PerformanceService (monitoring)     │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│           Business Logic Layer          │
+│  • RAG Tools (memory operations)       │
+│  • Tool Selection Managers             │
+│  • Performance Monitors                │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│            Data Layer                   │
+│  • ChromaDB (vector storage)           │
+│  • Configuration (settings)            │
+│  • Plugin System (extensibility)       │
+└─────────────────────────────────────────┘
+```
+
+### **Service Layer Benefits:**
+- ✅ **Dependency Injection**: Clean separation of concerns
+- ✅ **Interface Abstraction**: Consistent APIs across services
+- ✅ **Backward Compatibility**: Existing functionality preserved
+- ✅ **Testability**: Services can be mocked and tested independently
+- ✅ **Maintainability**: Changes isolated to service implementations
+
 ## 🎯 **Benefits of Current Architecture**
 
 ### **For Users:**
 - ✅ **Complete Control**: Enable/disable any functionality
 - ✅ **Persistent Memory**: Information survives across sessions
-- ✅ **Natural Interaction**: Simple "remember" and "search" commands
+- ✅ **Natural Interaction**: Simple "remember", "search", and "forget" commands
 - ✅ **Privacy Protection**: PII detection and warnings
+- ✅ **Performance Monitoring**: Real-time performance feedback
 
 ### **For Developers:**
 - ✅ **No Core Changes**: Add tools by dropping plugin files
 - ✅ **Hot Reloading**: Modify tools without app restarts
-- ✅ **Clean Architecture**: Each tool is self-contained
-- ✅ **Easy Testing**: Tools can be tested independently
+- ✅ **Clean Architecture**: Service layer abstraction
+- ✅ **Easy Testing**: Services and tools can be tested independently
+- ✅ **Professional Patterns**: Dependency injection, factory patterns, singletons
 
 ### **For System:**
 - ✅ **Scalable**: Add unlimited tools without performance impact

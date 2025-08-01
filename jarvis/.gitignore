@@ -169,3 +169,6 @@ tmp/
 archive/
 old/
 deprecated/
+# Allow aider config
+!.aider.conf.yml
+.aider*

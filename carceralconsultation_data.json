@@ -1,0 +1,35 @@
+{
+    "extraction_timestamp": "2025-07-29 20:40:44",
+    "url_requested": "https://carceralconsultation.com",
+    "url_actual": "https://carceralconsultation.com/",
+    "page_title": "Home - Carceral Consultation",
+    "meta_description": "Carceral Consultation is your ultimate destination for unparalleled presentations and workshops on incarceration-related issues, delivered exclusively by formerly incarcerated speakers. As the foremost authority in the field, Carceral Consultation takes pride in being the sole trusted source for this exceptional service.",
+    "main_headings": {
+        "h1": [
+            "Carceral Consultation"
+        ],
+        "h2": [
+            "Over 25 Years of Experience",
+            "Welcome to Carceral Consultation",
+            "Why Carceral Consultation?",
+            "Presentation Development"
+        ],
+        "h3": []
+    },
+    "contact_info": {},
+    "services_offered": [
+        "Consultants",
+        "Presentation Catalog",
+        "Book a Consultation",
+        "Mission Statement",
+        "Consultants",
+        "Presentation Catalog",
+        "Book a Consultation",
+        "Mission Statement"
+    ],
+    "page_stats": {
+        "total_links": 17,
+        "total_images": 1,
+        "total_headings": 5
+    }
+}

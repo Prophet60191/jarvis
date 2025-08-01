@@ -1,0 +1,19 @@
+{
+  "tool_name": "converts_json_files_to_csv_format",
+  "type": "data_analysis",
+  "description": "Tool created from request: Create a tool that converts JSON files to CSV format",
+  "capabilities": [
+    "General purpose functionality"
+  ],
+  "voice_commands": [
+    "analyze data with converts json files to csv format",
+    "process using converts json files to csv format",
+    "run converts json files to csv format",
+    "activate converts json files to csv format"
+  ],
+  "created_from_request": "Create a tool that converts JSON files to CSV format",
+  "usage_examples": [
+    "Create a tool that converts JSON files to CSV format"
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

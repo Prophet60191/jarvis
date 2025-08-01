@@ -489,3 +489,119 @@ class UnifiedPluginRegistry:
             
         except Exception:
             return 0.0
+
+    async def get_plugin(self, plugin_name: str):
+        """
+        Get a plugin instance by name for RAG-powered workflow compatibility.
+
+        Args:
+            plugin_name: Name of the plugin to retrieve
+
+        Returns:
+            Plugin instance if found, None otherwise
+        """
+        try:
+            # Check if plugin is registered
+            if plugin_name in self._plugins:
+                plugin_metadata = self._plugins[plugin_name]
+
+                # Try to import and return the plugin
+                # This is a simplified version - in practice, you'd want more sophisticated plugin loading
+                if plugin_name == "aider_integration":
+                    from ...tools.plugins.aider_integration import aider_code_edit
+                    return type('AiderPlugin', (), {'aider_code_edit': aider_code_edit})()
+                elif plugin_name == "open_interpreter":
+                    from ...tools.open_interpreter_direct import OpenInterpreterDirect
+                    return OpenInterpreterDirect()
+                elif plugin_name == "lavague_web_automation":
+                    # Return a mock plugin for now
+                    return type('LaVaguePlugin', (), {})()
+
+                logger.warning(f"Plugin {plugin_name} registered but not implemented for dynamic loading")
+                return None
+
+            # If plugin not in registry, try to load common plugins anyway
+            elif plugin_name == "aider_integration":
+                try:
+                    from ...tools.plugins.aider_integration import aider_code_edit
+                    logger.info(f"Loaded {plugin_name} plugin dynamically")
+                    return type('AiderPlugin', (), {'aider_code_edit': aider_code_edit})()
+                except ImportError as e:
+                    logger.error(f"Failed to load {plugin_name}: {e}")
+                    return None
+            elif plugin_name == "open_interpreter":
+                try:
+                    from ...tools.open_interpreter_direct import OpenInterpreterDirect
+                    logger.info(f"Loaded {plugin_name} plugin dynamically")
+                    return OpenInterpreterDirect()
+                except ImportError as e:
+                    logger.error(f"Failed to load {plugin_name}: {e}")
+                    return None
+            else:
+                logger.warning(f"Plugin {plugin_name} not found in registry")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to get plugin {plugin_name}: {e}")
+            return None
+
+    async def get_all_plugins(self) -> dict:
+        """
+        Get all registered plugins for RAG-powered workflow compatibility.
+
+        Returns:
+            Dictionary of plugin names and their metadata
+        """
+        try:
+            plugins_dict = {}
+            for name, metadata in self._plugins.items():
+                plugins_dict[name] = {
+                    'name': name,
+                    'description': metadata.description,
+                    'capabilities': getattr(metadata, 'capabilities', []),
+                    'tools': getattr(metadata, 'tools', []),
+                    'usage_patterns': getattr(metadata, 'usage_patterns', []),
+                    'limitations': getattr(metadata, 'limitations', [])
+                }
+
+            # Add common plugins even if not in registry
+            common_plugins = {
+                'aider_integration': {
+                    'name': 'aider_integration',
+                    'description': 'AI-powered code generation and editing using Aider',
+                    'capabilities': ['code_generation', 'file_creation', 'code_editing'],
+                    'tools': ['aider_code_edit'],
+                    'usage_patterns': ['web_applications', 'desktop_applications', 'tools'],
+                    'limitations': ['requires_ollama', 'no_execution']
+                },
+                'open_interpreter': {
+                    'name': 'open_interpreter',
+                    'description': 'Code execution and testing using Open Interpreter',
+                    'capabilities': ['code_execution', 'testing', 'validation'],
+                    'tools': ['execute_task', 'test_and_validate', 'test_and_run'],
+                    'usage_patterns': ['testing', 'validation', 'execution'],
+                    'limitations': ['requires_open_interpreter', 'local_execution_only']
+                }
+            }
+
+            # Add common plugins if not already present
+            for plugin_name, plugin_info in common_plugins.items():
+                if plugin_name not in plugins_dict:
+                    plugins_dict[plugin_name] = plugin_info
+
+            logger.info(f"Retrieved {len(plugins_dict)} plugins from registry (including common plugins)")
+            return plugins_dict
+
+        except Exception as e:
+            logger.error(f"Failed to get all plugins: {e}")
+            return {}
+
+    async def initialize(self):
+        """
+        Async initialization method for RAG-powered workflow compatibility.
+
+        This method doesn't do anything since UnifiedPluginRegistry initializes in __init__,
+        but it's provided for compatibility with the RAG-powered workflow system.
+        """
+        logger.info("UnifiedPluginRegistry async initialization called (no-op)")
+        return True

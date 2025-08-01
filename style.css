@@ -1,0 +1,14 @@
+/* style.css */
+body {
+    font-family: Arial, sans-serif;
+}
+
+#myForm {
+    width: 50%;
+    margin: 0 auto;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+}

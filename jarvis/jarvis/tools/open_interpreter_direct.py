@@ -5,6 +5,7 @@ This module provides a simple, direct integration with Open Interpreter,
 bypassing the complex MCP protocol for maximum reliability and performance.
 """
 
+import asyncio
 import logging
 import os
 from typing import List, Optional, Dict, Any
@@ -220,12 +221,108 @@ def is_open_interpreter_available() -> bool:
     return interpreter is not None
 
 
+class OpenInterpreterDirect:
+    """
+    Direct wrapper class for Open Interpreter functionality.
+    Provides a simple interface for RAG-powered workflow integration.
+    """
+
+    def __init__(self):
+        self.interpreter = get_interpreter()
+
+    async def execute_task(self, task_description: str) -> str:
+        """
+        Execute a task using Open Interpreter.
+
+        Args:
+            task_description: Description of the task to execute
+
+        Returns:
+            Result of the task execution
+        """
+        try:
+            if not self.interpreter:
+                return "Open Interpreter not available"
+
+            # Use the execute_code function
+            result = execute_code.invoke({"task_description": task_description})
+            return str(result)
+
+        except Exception as e:
+            logger.error(f"Task execution failed: {e}")
+            return f"Task execution failed: {str(e)}"
+
+    async def test_and_validate(self, **kwargs) -> dict:
+        """Test and validate generated code."""
+        try:
+            files_to_test = kwargs.get("files_to_test", "")
+            test_type = kwargs.get("test_type", "general")
+
+            task = f"Test and validate {files_to_test} for {test_type}"
+            result = await self.execute_task(task)
+
+            return {
+                "success": True,
+                "result": result,
+                "test_type": test_type
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "test_type": test_type
+            }
+
+    async def test_and_run(self, **kwargs) -> dict:
+        """Test and run generated code."""
+        try:
+            script_path = kwargs.get("script_path", "")
+            test_type = kwargs.get("test_type", "tool")
+
+            task = f"Test and run {script_path} as a {test_type}"
+            result = await self.execute_task(task)
+
+            return {
+                "success": True,
+                "result": result,
+                "script_path": script_path
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "script_path": script_path
+            }
+
+    async def validate_and_test(self, **kwargs) -> dict:
+        """Validate and test application files."""
+        try:
+            application_files = kwargs.get("application_files", "")
+            test_type = kwargs.get("test_type", "application")
+
+            task = f"Validate and test {application_files} as {test_type}"
+            result = await self.execute_task(task)
+
+            return {
+                "success": True,
+                "result": result,
+                "application_files": application_files
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "application_files": application_files
+            }
+
+
 # Export tools for easy import
 __all__ = [
     "execute_code",
-    "analyze_file", 
+    "analyze_file",
     "create_script",
     "system_task",
     "get_open_interpreter_tools",
-    "is_open_interpreter_available"
+    "is_open_interpreter_available",
+    "OpenInterpreterDirect"
 ]

@@ -1,0 +1,19 @@
+{
+  "tool_name": "check_cpu_usage",
+  "type": "generic",
+  "description": "Tool created from request: Create a tool to check CPU usage",
+  "capabilities": [
+    "General purpose functionality"
+  ],
+  "voice_commands": [
+    "use check cpu usage",
+    "run check cpu usage",
+    "execute check cpu usage",
+    "activate check cpu usage"
+  ],
+  "created_from_request": "Create a tool to check CPU usage",
+  "usage_examples": [
+    "Create a tool to check CPU usage"
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

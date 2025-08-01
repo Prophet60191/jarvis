@@ -5,12 +5,13 @@ This plugin provides seamless handoff between Jarvis and Aider for advanced code
 allowing voice commands to trigger Aider sessions and return control to Jarvis.
 """
 
-import asyncio
 import logging
 import os
 import subprocess
 import tempfile
 import time
+import logging
+import os
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -56,25 +57,62 @@ def aider_code_edit(task_description: str, files: str = "", auto_commit: bool = 
         # Get current working directory (should be the project root)
         cwd = Path.cwd()
         
-        # Build Aider command
-        cmd = ["aider"]
+        # Set up headless environment and disable all interactive features
+        env = os.environ.copy()
+        env["AIDER_NO_GIT"] = "1"
+        env["AIDER_NO_AUTO_COMMIT"] = "0" if auto_commit else "1"
+        env["AIDER_NO_BROWSER"] = "1"
+        env["AIDER_NONINTERACTIVE"] = "1"
+        env["AIDER_YES_ALWAYS"] = "1"
+        env["AIDER_DISABLE_PLAYWRIGHT"] = "1"
+        env["DISPLAY"] = ""
+        env["CI"] = "1"
+        env["TERM"] = "dumb"
+        env["HEADLESS"] = "1"
+        # Additional browser prevention
+        env["BROWSER"] = ""
+        env["NO_BROWSER"] = "1"
+        env["AIDER_BROWSER"] = "false"
+        # Ollama configuration
+        env["OLLAMA_API_BASE"] = "http://localhost:11434"
         
-        # Add model specification
-        cmd.extend(["--model", model])
+        # Build Aider command for non-interactive mode using local Ollama model
+        cmd = [
+            "aider",
+            "--model", "ollama/llama3.1:8b",  # Use local Ollama model that Aider recognizes
+            "--no-git",
+            "--no-browser",
+            "--no-gui",  # Explicitly disable GUI
+            "--yes",
+            "--disable-playwright",
+            "--no-fancy-input",  # Disable interactive input
+            "--no-stream",  # Disable streaming output
+            "--no-show-model-warnings",  # Suppress model warnings
+        ]
         
-        # Add auto-commit if requested
         if auto_commit:
-            cmd.append("--auto-commits")
-        
-        # Add files if specified
-        if files:
-            # Handle multiple files (comma or space separated)
-            file_list = [f.strip() for f in files.replace(',', ' ').split() if f.strip()]
-            for file_path in file_list:
-                if Path(file_path).exists():
-                    cmd.append(file_path)
-                else:
-                    logger.warning(f"File not found: {file_path}")
+            cmd.append("--auto-commit")
+            # Add files if specified
+            if files:
+                # Handle multiple files (comma or space separated)
+                file_list = [f.strip() for f in files.replace(',', ' ').split() if f.strip()]
+                for file_path in file_list:
+                    # Convert potential Windows path to Unix-style
+                    file_path = file_path.replace('\\', '/')
+                    # Remove any duplicate slashes
+                    while '//' in file_path:
+                        file_path = file_path.replace('//', '/')
+                    # Make absolute path
+                    abs_path = os.path.abspath(file_path)
+                    # Create directory if needed, but don't create placeholder files
+                    # Let Aider create the actual files with real content
+                    try:
+                        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                        logger.info(f"Will create file: {abs_path}")
+                    except Exception as e:
+                        logger.error(f"Failed to create directory for {abs_path}: {e}")
+                        continue
+                    cmd.append(abs_path)
         else:
             # Let Aider work with the current directory
             cmd.append(".")
@@ -82,25 +120,60 @@ def aider_code_edit(task_description: str, files: str = "", auto_commit: bool = 
         # Add the task as a message
         cmd.extend(["--message", task_description])
         
-        # Add yes flag to avoid interactive prompts
-        cmd.append("--yes")
-        
         logger.info(f"🚀 Launching Aider: {' '.join(cmd)}")
         
         # Create a temporary log file for Aider output
         with tempfile.NamedTemporaryFile(mode='w+', suffix='.log', delete=False) as log_file:
             log_path = log_file.name
         
-        # Run Aider with timeout
+        # Run Aider with retries
         start_time = time.time()
-        result = subprocess.run(
-            cmd,
-            cwd=str(cwd),
-            capture_output=True,
-            text=True,
-            timeout=300  # 5 minute timeout
-        )
+        max_retries = 3
+        retry_delay = 5  # seconds
+        success = False
+        last_error = None
+        
+        for attempt in range(max_retries):
+            # Create a temporary file for input
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+                f.write(task_description)
+                input_file = f.name
+
+            try:
+                # Add input/output redirection to command
+                cmd.extend(["--message-file", input_file])
+
+                # Run Aider command with input/output redirection
+                process = subprocess.Popen(
+                    cmd,
+                    env=env,
+                    cwd=str(cwd),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+
+                stdout, stderr = process.communicate()
+                
+                # Clean up temp file
+                os.unlink(input_file)
+                
+                if process.returncode != 0:
+                    logger.error(f"Aider command failed: {stderr}")
+                    return {"error": f"Aider command failed: {stderr}"}
+
+                return {"success": True, "message": stdout}
+            except subprocess.TimeoutExpired as e:
+                last_error = str(e)
+                logger.warning(f"Aider attempt {attempt + 1} timed out")
+                if attempt < max_retries - 1:
+                    logger.info(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+        
         end_time = time.time()
+        
+        if not success:
+            raise RuntimeError(f"Aider failed after {max_retries} attempts: {last_error}")
         
         # Parse results
         success = result.returncode == 0

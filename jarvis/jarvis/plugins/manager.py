@@ -14,6 +14,7 @@ from langchain_core.tools import BaseTool
 
 from .base import PluginBase, PluginMetadata
 from .discovery import PluginDiscovery
+from .hot_reload_manager import get_hot_reload_manager
 
 logger = logging.getLogger(__name__)
 
@@ -26,19 +27,32 @@ class PluginManager:
     providing a centralized interface for plugin management.
     """
     
-    def __init__(self, auto_discover: bool = True, plugin_directories: Optional[List[str]] = None):
+    def __init__(self, auto_discover: bool = True, plugin_directories: Optional[List[str]] = None, enable_hot_reload: bool = True):
         """
         Initialize the plugin manager.
-        
+
         Args:
             auto_discover: Whether to automatically discover plugins on startup
             plugin_directories: Custom plugin directories to search
+            enable_hot_reload: Whether to enable hot-reload of new plugins
         """
         self.discovery = PluginDiscovery(plugin_directories)
         self._loaded_plugins: Dict[str, PluginBase] = {}
         self._plugin_tools: Dict[str, List[BaseTool]] = {}
         self._disabled_plugins: Set[str] = set()
-        
+
+        # Initialize hot reload manager for dynamic plugin loading
+        self.hot_reload_manager = None
+        if enable_hot_reload:
+            # Get the plugins directory from discovery
+            plugins_dir = self.discovery.plugin_directories[0] if self.discovery.plugin_directories else None
+            if plugins_dir:
+                # Monitor the plugins directory directly (not plugins/plugins)
+                self.hot_reload_manager = get_hot_reload_manager(str(plugins_dir))
+                self.hot_reload_manager.plugin_manager = self  # Set reference
+                self.hot_reload_manager.start_monitoring()
+                logger.info("🔥 Hot reload enabled for dynamic plugin loading")
+
         if auto_discover:
             self.discover_and_load_all()
     
@@ -232,14 +246,21 @@ class PluginManager:
     
     def get_all_tools(self) -> List[BaseTool]:
         """
-        Get all tools from all loaded plugins.
-        
+        Get all tools from all loaded plugins, including dynamically loaded ones.
+
         Returns:
             List[BaseTool]: List of all available tools
         """
         all_tools = []
+
+        # Get tools from regular plugins
         for tools in self._plugin_tools.values():
             all_tools.extend(tools)
+
+        # Get tools from hot-reloaded plugins
+        if self.hot_reload_manager:
+            all_tools.extend(self.hot_reload_manager.active_tools)
+
         return all_tools
     
     def get_loaded_plugin_names(self) -> List[str]:

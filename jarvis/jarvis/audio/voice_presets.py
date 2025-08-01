@@ -78,7 +78,56 @@ class VoicePresetManager:
                     "speed": "medium"
                 }
             ],
-            "multi_speaker_models": []
+            "multi_speaker_models": [
+                {
+                    "id": "vctk_p374",
+                    "name": "American Male 374, Age 28",
+                    "model": "tts_models/en/vctk/vits",
+                    "speaker_id": "p374",
+                    "gender": "male",
+                    "accent": "American",
+                    "age": "28",
+                    "description": "Appealing and feminine-sounding American male voice",
+                    "quality": "high",
+                    "speed": "medium"
+                },
+                {
+                    "id": "vctk_p360",
+                    "name": "American Male 360, Age 19",
+                    "model": "tts_models/en/vctk/vits",
+                    "speaker_id": "p360",
+                    "gender": "male",
+                    "accent": "American",
+                    "age": "19",
+                    "description": "Young American male voice",
+                    "quality": "high",
+                    "speed": "medium"
+                },
+                {
+                    "id": "vctk_p301",
+                    "name": "American Female 301, Age 18",
+                    "model": "tts_models/en/vctk/vits",
+                    "speaker_id": "p301",
+                    "gender": "female",
+                    "accent": "American",
+                    "age": "18",
+                    "description": "Young American female voice",
+                    "quality": "high",
+                    "speed": "medium"
+                },
+                {
+                    "id": "vctk_p300",
+                    "name": "American Female 300, Age 26",
+                    "model": "tts_models/en/vctk/vits",
+                    "speaker_id": "p300",
+                    "gender": "female",
+                    "accent": "American",
+                    "age": "26",
+                    "description": "Adult American female voice",
+                    "quality": "high",
+                    "speed": "medium"
+                }
+            ]
         }
     
     def get_voice_config(self, preset_id: str) -> Dict[str, Any]:

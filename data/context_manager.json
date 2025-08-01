@@ -1,0 +1,1765 @@
+{
+  "contexts": {
+    "test_session_001": {
+      "session_id": "test_session_001",
+      "user_id": null,
+      "conversation_id": "test_session_001_conv_1753801124",
+      "conversation_context": {
+        "current_topic": "context_management",
+        "intent_history": [],
+        "conversation_flow": [],
+        "user_intent": "testing"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.527306,
+      "updated_at": 1753803114.335689,
+      "access_count": 16
+    },
+    "integration_test_001": {
+      "session_id": "integration_test_001",
+      "user_id": null,
+      "conversation_id": "integration_test_001_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "user_intent": "integration_testing",
+        "available_tools": [
+          "tool_a",
+          "tool_b"
+        ],
+        "complexity_level": "medium"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.537796,
+      "updated_at": 1753803114.349924,
+      "access_count": 16
+    },
+    "perf_test_0": {
+      "session_id": "perf_test_0",
+      "user_id": null,
+      "conversation_id": "perf_test_0_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_0"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.554024,
+      "updated_at": 1753803115.202666,
+      "access_count": 16
+    },
+    "perf_test_1": {
+      "session_id": "perf_test_1",
+      "user_id": null,
+      "conversation_id": "perf_test_1_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_1"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.554423,
+      "updated_at": 1753803115.203711,
+      "access_count": 16
+    },
+    "perf_test_2": {
+      "session_id": "perf_test_2",
+      "user_id": null,
+      "conversation_id": "perf_test_2_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_2"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5547688,
+      "updated_at": 1753803115.204652,
+      "access_count": 16
+    },
+    "perf_test_3": {
+      "session_id": "perf_test_3",
+      "user_id": null,
+      "conversation_id": "perf_test_3_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_3"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.555197,
+      "updated_at": 1753803115.20563,
+      "access_count": 16
+    },
+    "perf_test_4": {
+      "session_id": "perf_test_4",
+      "user_id": null,
+      "conversation_id": "perf_test_4_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_4"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5556438,
+      "updated_at": 1753803115.206639,
+      "access_count": 16
+    },
+    "perf_test_5": {
+      "session_id": "perf_test_5",
+      "user_id": null,
+      "conversation_id": "perf_test_5_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_5"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.556162,
+      "updated_at": 1753803115.207604,
+      "access_count": 16
+    },
+    "perf_test_6": {
+      "session_id": "perf_test_6",
+      "user_id": null,
+      "conversation_id": "perf_test_6_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_6"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.556789,
+      "updated_at": 1753803115.208894,
+      "access_count": 16
+    },
+    "perf_test_7": {
+      "session_id": "perf_test_7",
+      "user_id": null,
+      "conversation_id": "perf_test_7_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_7"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.557396,
+      "updated_at": 1753803115.21003,
+      "access_count": 16
+    },
+    "perf_test_8": {
+      "session_id": "perf_test_8",
+      "user_id": null,
+      "conversation_id": "perf_test_8_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_8"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5580459,
+      "updated_at": 1753803115.211262,
+      "access_count": 16
+    },
+    "perf_test_9": {
+      "session_id": "perf_test_9",
+      "user_id": null,
+      "conversation_id": "perf_test_9_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_9"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5587451,
+      "updated_at": 1753803115.212548,
+      "access_count": 16
+    },
+    "perf_test_10": {
+      "session_id": "perf_test_10",
+      "user_id": null,
+      "conversation_id": "perf_test_10_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_10"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5594912,
+      "updated_at": 1753803115.213739,
+      "access_count": 16
+    },
+    "perf_test_11": {
+      "session_id": "perf_test_11",
+      "user_id": null,
+      "conversation_id": "perf_test_11_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_11"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.560277,
+      "updated_at": 1753803115.214874,
+      "access_count": 16
+    },
+    "perf_test_12": {
+      "session_id": "perf_test_12",
+      "user_id": null,
+      "conversation_id": "perf_test_12_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_12"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.561072,
+      "updated_at": 1753803115.215967,
+      "access_count": 16
+    },
+    "perf_test_13": {
+      "session_id": "perf_test_13",
+      "user_id": null,
+      "conversation_id": "perf_test_13_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_13"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.561839,
+      "updated_at": 1753803115.217206,
+      "access_count": 16
+    },
+    "perf_test_14": {
+      "session_id": "perf_test_14",
+      "user_id": null,
+      "conversation_id": "perf_test_14_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_14"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.562742,
+      "updated_at": 1753803115.218334,
+      "access_count": 16
+    },
+    "perf_test_15": {
+      "session_id": "perf_test_15",
+      "user_id": null,
+      "conversation_id": "perf_test_15_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_15"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.563769,
+      "updated_at": 1753803115.219737,
+      "access_count": 16
+    },
+    "perf_test_16": {
+      "session_id": "perf_test_16",
+      "user_id": null,
+      "conversation_id": "perf_test_16_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_16"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5647302,
+      "updated_at": 1753803115.220858,
+      "access_count": 16
+    },
+    "perf_test_17": {
+      "session_id": "perf_test_17",
+      "user_id": null,
+      "conversation_id": "perf_test_17_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_17"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.565685,
+      "updated_at": 1753803115.221914,
+      "access_count": 16
+    },
+    "perf_test_18": {
+      "session_id": "perf_test_18",
+      "user_id": null,
+      "conversation_id": "perf_test_18_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_18"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.566765,
+      "updated_at": 1753803115.22287,
+      "access_count": 16
+    },
+    "perf_test_19": {
+      "session_id": "perf_test_19",
+      "user_id": null,
+      "conversation_id": "perf_test_19_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_19"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.567816,
+      "updated_at": 1753803115.2241259,
+      "access_count": 16
+    },
+    "perf_test_20": {
+      "session_id": "perf_test_20",
+      "user_id": null,
+      "conversation_id": "perf_test_20_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_20"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.568972,
+      "updated_at": 1753803115.2250838,
+      "access_count": 16
+    },
+    "perf_test_21": {
+      "session_id": "perf_test_21",
+      "user_id": null,
+      "conversation_id": "perf_test_21_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_21"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.570137,
+      "updated_at": 1753803115.226092,
+      "access_count": 16
+    },
+    "perf_test_22": {
+      "session_id": "perf_test_22",
+      "user_id": null,
+      "conversation_id": "perf_test_22_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_22"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5714219,
+      "updated_at": 1753803115.2271192,
+      "access_count": 16
+    },
+    "perf_test_23": {
+      "session_id": "perf_test_23",
+      "user_id": null,
+      "conversation_id": "perf_test_23_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_23"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5727239,
+      "updated_at": 1753803115.228139,
+      "access_count": 16
+    },
+    "perf_test_24": {
+      "session_id": "perf_test_24",
+      "user_id": null,
+      "conversation_id": "perf_test_24_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_24"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5740612,
+      "updated_at": 1753803115.2292821,
+      "access_count": 16
+    },
+    "perf_test_25": {
+      "session_id": "perf_test_25",
+      "user_id": null,
+      "conversation_id": "perf_test_25_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_25"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5754309,
+      "updated_at": 1753803115.2302668,
+      "access_count": 16
+    },
+    "perf_test_26": {
+      "session_id": "perf_test_26",
+      "user_id": null,
+      "conversation_id": "perf_test_26_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_26"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.576873,
+      "updated_at": 1753803115.231266,
+      "access_count": 16
+    },
+    "perf_test_27": {
+      "session_id": "perf_test_27",
+      "user_id": null,
+      "conversation_id": "perf_test_27_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_27"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.578346,
+      "updated_at": 1753803115.232259,
+      "access_count": 16
+    },
+    "perf_test_28": {
+      "session_id": "perf_test_28",
+      "user_id": null,
+      "conversation_id": "perf_test_28_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_28"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.579888,
+      "updated_at": 1753803115.2332559,
+      "access_count": 16
+    },
+    "perf_test_29": {
+      "session_id": "perf_test_29",
+      "user_id": null,
+      "conversation_id": "perf_test_29_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_29"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.581509,
+      "updated_at": 1753803115.2342882,
+      "access_count": 16
+    },
+    "perf_test_30": {
+      "session_id": "perf_test_30",
+      "user_id": null,
+      "conversation_id": "perf_test_30_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_30"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5831292,
+      "updated_at": 1753803115.2353039,
+      "access_count": 16
+    },
+    "perf_test_31": {
+      "session_id": "perf_test_31",
+      "user_id": null,
+      "conversation_id": "perf_test_31_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_31"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.58482,
+      "updated_at": 1753803115.236347,
+      "access_count": 16
+    },
+    "perf_test_32": {
+      "session_id": "perf_test_32",
+      "user_id": null,
+      "conversation_id": "perf_test_32_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_32"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.586557,
+      "updated_at": 1753803115.2373161,
+      "access_count": 16
+    },
+    "perf_test_33": {
+      "session_id": "perf_test_33",
+      "user_id": null,
+      "conversation_id": "perf_test_33_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_33"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.588335,
+      "updated_at": 1753803115.238306,
+      "access_count": 16
+    },
+    "perf_test_34": {
+      "session_id": "perf_test_34",
+      "user_id": null,
+      "conversation_id": "perf_test_34_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_34"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.590185,
+      "updated_at": 1753803115.239281,
+      "access_count": 16
+    },
+    "perf_test_35": {
+      "session_id": "perf_test_35",
+      "user_id": null,
+      "conversation_id": "perf_test_35_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_35"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.592073,
+      "updated_at": 1753803115.240289,
+      "access_count": 16
+    },
+    "perf_test_36": {
+      "session_id": "perf_test_36",
+      "user_id": null,
+      "conversation_id": "perf_test_36_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_36"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.593987,
+      "updated_at": 1753803115.241278,
+      "access_count": 16
+    },
+    "perf_test_37": {
+      "session_id": "perf_test_37",
+      "user_id": null,
+      "conversation_id": "perf_test_37_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_37"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.595943,
+      "updated_at": 1753803115.242274,
+      "access_count": 16
+    },
+    "perf_test_38": {
+      "session_id": "perf_test_38",
+      "user_id": null,
+      "conversation_id": "perf_test_38_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_38"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.5986261,
+      "updated_at": 1753803115.2432818,
+      "access_count": 16
+    },
+    "perf_test_39": {
+      "session_id": "perf_test_39",
+      "user_id": null,
+      "conversation_id": "perf_test_39_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_39"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.6008909,
+      "updated_at": 1753803115.2443762,
+      "access_count": 16
+    },
+    "perf_test_40": {
+      "session_id": "perf_test_40",
+      "user_id": null,
+      "conversation_id": "perf_test_40_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_40"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.6031628,
+      "updated_at": 1753803115.245373,
+      "access_count": 16
+    },
+    "perf_test_41": {
+      "session_id": "perf_test_41",
+      "user_id": null,
+      "conversation_id": "perf_test_41_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_41"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.605397,
+      "updated_at": 1753803115.2466822,
+      "access_count": 16
+    },
+    "perf_test_42": {
+      "session_id": "perf_test_42",
+      "user_id": null,
+      "conversation_id": "perf_test_42_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_42"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.607778,
+      "updated_at": 1753803115.24777,
+      "access_count": 16
+    },
+    "perf_test_43": {
+      "session_id": "perf_test_43",
+      "user_id": null,
+      "conversation_id": "perf_test_43_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_43"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.610181,
+      "updated_at": 1753803115.248746,
+      "access_count": 16
+    },
+    "perf_test_44": {
+      "session_id": "perf_test_44",
+      "user_id": null,
+      "conversation_id": "perf_test_44_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_44"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.612468,
+      "updated_at": 1753803115.2497652,
+      "access_count": 16
+    },
+    "perf_test_45": {
+      "session_id": "perf_test_45",
+      "user_id": null,
+      "conversation_id": "perf_test_45_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_45"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.614791,
+      "updated_at": 1753803115.2509792,
+      "access_count": 16
+    },
+    "perf_test_46": {
+      "session_id": "perf_test_46",
+      "user_id": null,
+      "conversation_id": "perf_test_46_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_46"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.617347,
+      "updated_at": 1753803115.251976,
+      "access_count": 16
+    },
+    "perf_test_47": {
+      "session_id": "perf_test_47",
+      "user_id": null,
+      "conversation_id": "perf_test_47_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_47"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.61979,
+      "updated_at": 1753803115.2529879,
+      "access_count": 16
+    },
+    "perf_test_48": {
+      "session_id": "perf_test_48",
+      "user_id": null,
+      "conversation_id": "perf_test_48_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_48"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.622425,
+      "updated_at": 1753803115.253993,
+      "access_count": 16
+    },
+    "perf_test_49": {
+      "session_id": "perf_test_49",
+      "user_id": null,
+      "conversation_id": "perf_test_49_conv_1753801124",
+      "conversation_context": {
+        "current_topic": null,
+        "intent_history": [],
+        "conversation_flow": [],
+        "test_data": "data_49"
+      },
+      "user_context": {},
+      "system_context": {},
+      "tool_context": {
+        "active_tools": [],
+        "tool_states": {}
+      },
+      "created_at": 1753801124.624916,
+      "updated_at": 1753803115.2549918,
+      "access_count": 16
+    }
+  },
+  "conversation_state": {
+    "session_states": {
+      "perf_test_0": {
+        "session_id": "perf_test_0",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.554026,
+        "last_activity": 1753801124.554026
+      },
+      "perf_test_1": {
+        "session_id": "perf_test_1",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.554425,
+        "last_activity": 1753801124.554425
+      },
+      "perf_test_2": {
+        "session_id": "perf_test_2",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.55477,
+        "last_activity": 1753801124.55477
+      },
+      "perf_test_3": {
+        "session_id": "perf_test_3",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.555198,
+        "last_activity": 1753801124.555198
+      },
+      "perf_test_4": {
+        "session_id": "perf_test_4",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5556438,
+        "last_activity": 1753801124.5556438
+      },
+      "perf_test_5": {
+        "session_id": "perf_test_5",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.556163,
+        "last_activity": 1753801124.556163
+      },
+      "perf_test_6": {
+        "session_id": "perf_test_6",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.55679,
+        "last_activity": 1753801124.55679
+      },
+      "perf_test_7": {
+        "session_id": "perf_test_7",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.557397,
+        "last_activity": 1753801124.557397
+      },
+      "perf_test_8": {
+        "session_id": "perf_test_8",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.558047,
+        "last_activity": 1753801124.558047
+      },
+      "perf_test_9": {
+        "session_id": "perf_test_9",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.558746,
+        "last_activity": 1753801124.558746
+      },
+      "perf_test_10": {
+        "session_id": "perf_test_10",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5594912,
+        "last_activity": 1753801124.5594912
+      },
+      "perf_test_11": {
+        "session_id": "perf_test_11",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.560278,
+        "last_activity": 1753801124.560278
+      },
+      "perf_test_12": {
+        "session_id": "perf_test_12",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5610728,
+        "last_activity": 1753801124.5610728
+      },
+      "perf_test_13": {
+        "session_id": "perf_test_13",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.56184,
+        "last_activity": 1753801124.56184
+      },
+      "perf_test_14": {
+        "session_id": "perf_test_14",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.562743,
+        "last_activity": 1753801124.562743
+      },
+      "perf_test_15": {
+        "session_id": "perf_test_15",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5637708,
+        "last_activity": 1753801124.5637708
+      },
+      "perf_test_16": {
+        "session_id": "perf_test_16",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5647302,
+        "last_activity": 1753801124.564731
+      },
+      "perf_test_17": {
+        "session_id": "perf_test_17",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.565686,
+        "last_activity": 1753801124.565686
+      },
+      "perf_test_18": {
+        "session_id": "perf_test_18",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.566766,
+        "last_activity": 1753801124.566766
+      },
+      "perf_test_19": {
+        "session_id": "perf_test_19",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.567817,
+        "last_activity": 1753801124.567817
+      },
+      "perf_test_20": {
+        "session_id": "perf_test_20",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.568973,
+        "last_activity": 1753801124.568973
+      },
+      "perf_test_21": {
+        "session_id": "perf_test_21",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5701382,
+        "last_activity": 1753801124.5701382
+      },
+      "perf_test_22": {
+        "session_id": "perf_test_22",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.571423,
+        "last_activity": 1753801124.571423
+      },
+      "perf_test_23": {
+        "session_id": "perf_test_23",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.572725,
+        "last_activity": 1753801124.572725
+      },
+      "perf_test_24": {
+        "session_id": "perf_test_24",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.574062,
+        "last_activity": 1753801124.574062
+      },
+      "perf_test_25": {
+        "session_id": "perf_test_25",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5754309,
+        "last_activity": 1753801124.5754309
+      },
+      "perf_test_26": {
+        "session_id": "perf_test_26",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.576874,
+        "last_activity": 1753801124.576874
+      },
+      "perf_test_27": {
+        "session_id": "perf_test_27",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.578346,
+        "last_activity": 1753801124.578346
+      },
+      "perf_test_28": {
+        "session_id": "perf_test_28",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5798888,
+        "last_activity": 1753801124.5798888
+      },
+      "perf_test_29": {
+        "session_id": "perf_test_29",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.581509,
+        "last_activity": 1753801124.581509
+      },
+      "perf_test_30": {
+        "session_id": "perf_test_30",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5831292,
+        "last_activity": 1753801124.5831301
+      },
+      "perf_test_31": {
+        "session_id": "perf_test_31",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.58482,
+        "last_activity": 1753801124.58482
+      },
+      "perf_test_32": {
+        "session_id": "perf_test_32",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.586557,
+        "last_activity": 1753801124.586557
+      },
+      "perf_test_33": {
+        "session_id": "perf_test_33",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5883362,
+        "last_activity": 1753801124.5883362
+      },
+      "perf_test_34": {
+        "session_id": "perf_test_34",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.590185,
+        "last_activity": 1753801124.590185
+      },
+      "perf_test_35": {
+        "session_id": "perf_test_35",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.592074,
+        "last_activity": 1753801124.592074
+      },
+      "perf_test_36": {
+        "session_id": "perf_test_36",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.5939882,
+        "last_activity": 1753801124.5939882
+      },
+      "perf_test_37": {
+        "session_id": "perf_test_37",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.595944,
+        "last_activity": 1753801124.595944
+      },
+      "perf_test_38": {
+        "session_id": "perf_test_38",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.598628,
+        "last_activity": 1753801124.598628
+      },
+      "perf_test_39": {
+        "session_id": "perf_test_39",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.6008909,
+        "last_activity": 1753801124.6008909
+      },
+      "perf_test_40": {
+        "session_id": "perf_test_40",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.6031628,
+        "last_activity": 1753801124.6031628
+      },
+      "perf_test_41": {
+        "session_id": "perf_test_41",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.605398,
+        "last_activity": 1753801124.605398
+      },
+      "perf_test_42": {
+        "session_id": "perf_test_42",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.607779,
+        "last_activity": 1753801124.607779
+      },
+      "perf_test_43": {
+        "session_id": "perf_test_43",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.6101818,
+        "last_activity": 1753801124.6101818
+      },
+      "perf_test_44": {
+        "session_id": "perf_test_44",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.612468,
+        "last_activity": 1753801124.612468
+      },
+      "perf_test_45": {
+        "session_id": "perf_test_45",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.6147919,
+        "last_activity": 1753801124.6147919
+      },
+      "perf_test_46": {
+        "session_id": "perf_test_46",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.6173482,
+        "last_activity": 1753801124.6173482
+      },
+      "perf_test_47": {
+        "session_id": "perf_test_47",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.619791,
+        "last_activity": 1753801124.619791
+      },
+      "perf_test_48": {
+        "session_id": "perf_test_48",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.622426,
+        "last_activity": 1753801124.622426
+      },
+      "perf_test_49": {
+        "session_id": "perf_test_49",
+        "current_topic": null,
+        "current_phase": "greeting",
+        "intent_history": [],
+        "conversation_flow": [],
+        "topic_history": {},
+        "context_stack": [],
+        "total_interactions": 0,
+        "successful_interactions": 0,
+        "average_response_time": 0.0,
+        "created_at": 1753801124.624917,
+        "last_activity": 1753801124.624917
+      }
+    }
+  },
+  "tool_state_tracker": {
+    "session_tools": {},
+    "session_history": {}
+  },
+  "user_preferences": {
+    "user_profiles": {}
+  },
+  "session_memory": {
+    "sessions": {},
+    "persistent_memory": {}
+  },
+  "saved_at": 1753803115.255029
+}

@@ -7,17 +7,17 @@ plugin support, allowing tools to be added without modifying core code.
 
 import logging
 from .base import BaseTool, ToolResult
-from .registry import ToolRegistry
-from ..plugins.manager import PluginManager
-# Legacy MCP system removed - using official MCP system only
 
 logger = logging.getLogger(__name__)
 
-# Create global tool registry
-tool_registry = ToolRegistry()
-
-# Create global plugin manager
-plugin_manager = PluginManager(auto_discover=True)
+try:
+    from ..plugins.manager import PluginManager
+    # Create global plugin manager
+    plugin_manager = PluginManager(auto_discover=True)
+except ImportError as e:
+    logger.warning(f"Plugin manager not available: {e}")
+    plugin_manager = None
+# Legacy MCP system removed - using official MCP system only
 
 # Legacy MCP system removed - using official MCP system only
 
@@ -36,11 +36,19 @@ def get_langchain_tools():
     tools = []
 
     # Add plugin tools (includes RAG, UI, time, etc.)
-    plugin_tools = plugin_manager.get_all_tools()
-    tools.extend(plugin_tools)
+    if plugin_manager:
+        plugin_tools = plugin_manager.get_all_tools()
+        tools.extend(plugin_tools)
+        logger.info(f"Loaded {len(plugin_tools)} plugin tools (MCP tools handled separately)")
+    else:
+        # Fallback: Load RAG tools directly if plugin manager is not available
+        try:
+            from .plugins.rag_plugin import __plugin_tools__
+            tools.extend(__plugin_tools__)
+            logger.info(f"Loaded {len(__plugin_tools__)} RAG tools directly (plugin manager not available)")
+        except ImportError:
+            logger.warning("Could not load RAG tools directly")
 
-    # MCP tools are handled by the official MCP system in main.py
-    logger.info(f"Loaded {len(plugin_tools)} plugin tools (MCP tools handled separately)")
     return tools
 
 def refresh_plugins():
@@ -51,13 +59,59 @@ def get_plugin_manager():
     """Get the global plugin manager instance."""
     return plugin_manager
 
-# Legacy MCP functions removed - using official MCP system only
+# MCP System Functions
+def start_mcp_system():
+    """Start the MCP system (placeholder for UI compatibility)."""
+    try:
+        # MCP system is now initialized in main.py
+        # This is a placeholder for UI compatibility
+        logger.info("MCP system start requested (handled by main application)")
+        return True
+    except Exception as e:
+        logger.error(f"Error in MCP system start: {e}")
+        return False
+
+def stop_mcp_system():
+    """Stop the MCP system (placeholder for UI compatibility)."""
+    try:
+        # MCP system cleanup is handled in main.py
+        # This is a placeholder for UI compatibility
+        logger.info("MCP system stop requested (handled by main application)")
+        return True
+    except Exception as e:
+        logger.error(f"Error in MCP system stop: {e}")
+        return False
+
+def get_mcp_client():
+    """Get MCP client (placeholder for UI compatibility)."""
+    try:
+        from ..core.mcp_client import get_mcp_client as _get_mcp_client
+        return _get_mcp_client()
+    except Exception as e:
+        logger.error(f"Error getting MCP client: {e}")
+        return None
+
+def get_mcp_tool_manager():
+    """Get MCP tool manager (placeholder for UI compatibility)."""
+    try:
+        from ..core.mcp_tool_integration import get_mcp_tool_manager as _get_mcp_tool_manager
+        return _get_mcp_tool_manager()
+    except Exception as e:
+        logger.error(f"Error getting MCP tool manager: {e}")
+        return None
+
+def get_mcp_config_manager():
+    """Get MCP config manager (placeholder for UI compatibility)."""
+    try:
+        from ..core.mcp_config_manager import get_mcp_config_manager as _get_mcp_config_manager
+        return _get_mcp_config_manager()
+    except Exception as e:
+        logger.error(f"Error getting MCP config manager: {e}")
+        return None
 
 __all__ = [
     'BaseTool',
     'ToolResult',
-    'ToolRegistry',
-    'tool_registry',
     'plugin_manager',
     'get_langchain_tools',
     'refresh_plugins',

@@ -1,0 +1,19 @@
+{
+  "tool_name": "check_if_website",
+  "type": "web_automation",
+  "description": "Tool created from request: Create a tool to check if a website is up and measure its response time",
+  "capabilities": [
+    "General purpose functionality"
+  ],
+  "voice_commands": [
+    "use check if website",
+    "run check if website",
+    "execute check if website",
+    "activate check if website"
+  ],
+  "created_from_request": "Create a tool to check if a website is up and measure its response time",
+  "usage_examples": [
+    "Create a tool to check if a website is up and measure its response time"
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

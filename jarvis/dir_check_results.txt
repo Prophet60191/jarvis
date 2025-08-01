@@ -1,3 +1,0 @@
-Directory exists: True
-Contents: [PosixPath('/Users/josed/.jarvis/voice_profiles'), PosixPath('/Users/josed/.jarvis/metrics'), PosixPath('/Users/josed/.jarvis/context'), PosixPath('/Users/josed/.jarvis/cache'), PosixPath('/Users/josed/.jarvis/enterprise'), PosixPath('/Users/josed/.jarvis/config'), PosixPath('/Users/josed/.jarvis/voice_training'), PosixPath('/Users/josed/.jarvis/logs'), PosixPath('/Users/josed/.jarvis/mcp_servers.json')]
-Check complete

@@ -7,6 +7,7 @@ and user behavior patterns. Built using the Jarvis UI template.
 
 import sys
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -27,6 +28,8 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from jarvis.jarvis.core.analytics.usage_analytics import usage_analytics
+
+logger = logging.getLogger(__name__)
 from jarvis.jarvis.core.monitoring.performance_tracker import performance_tracker
 
 class MetricCard(QFrame):
@@ -108,7 +111,8 @@ class AnalyticsDataThread(QThread):
                 self.msleep(5000)
                 
             except Exception as e:
-                print(f"Error fetching analytics data: {e}")
+                logger.error(f"Error fetching analytics data: {e}", exc_info=True)
+                print(f"Error fetching analytics data: {e}")  # Keep print for UI feedback
                 self.msleep(5000)
     
     def stop(self):
@@ -436,7 +440,8 @@ class UsageAnalyticsDashboard(QMainWindow):
             self.last_update_label.setText(f"Last Update: {datetime.now().strftime('%H:%M:%S')}")
             
         except Exception as e:
-            print(f"Error updating dashboard: {e}")
+            logger.error(f"Error updating dashboard: {e}", exc_info=True)
+            print(f"Error updating dashboard: {e}")  # Keep print for UI feedback
     
     def update_overview_tab(self, stats):
         """Update overview tab with new data."""

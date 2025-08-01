@@ -1,0 +1,19 @@
+{
+  "tool_name": "text_processing",
+  "type": "system_tool",
+  "description": "Tool created from request: Create a text processing tool that can count words, find patterns, and format text.",
+  "capabilities": [
+    "General purpose functionality"
+  ],
+  "voice_commands": [
+    "manage system with text processing",
+    "control using text processing",
+    "run text processing",
+    "activate text processing"
+  ],
+  "created_from_request": "Create a text processing tool that can count words, find patterns, and format text.",
+  "usage_examples": [
+    "Create a text processing tool that can count words, find patterns, and format text."
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}

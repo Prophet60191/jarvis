@@ -5,6 +5,7 @@ Implements RAG (Retrieval-Augmented Generation) for codebase understanding,
 enabling semantic search and intelligent code analysis.
 """
 
+import asyncio
 import time
 import logging
 import hashlib

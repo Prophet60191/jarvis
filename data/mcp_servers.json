@@ -1,0 +1,111 @@
+{
+  "servers": {
+    "jarvis_time_server": {
+      "name": "Jarvis Time Server",
+      "description": "Provides current time and date information",
+      "transport": "stdio",
+      "command": "python3",
+      "args": [
+        "/Users/josed/Desktop/Voice App/mcp_servers/time_server.py"
+      ],
+      "env": {},
+      "enabled": true,
+      "timeout": 10,
+      "auto_start": true,
+      "created_at": "2025-07-30T18:34:19.876225",
+      "last_modified": "2025-07-30T18:48:43.383269"
+    },
+    "filesystem_access": {
+      "name": "Filesystem Access",
+      "description": "Read, write, and manage files and directories",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/josed"
+      ],
+      "env": {},
+      "enabled": true,
+      "timeout": 30,
+      "auto_start": true,
+      "created_at": "2025-07-30T18:48:43.383301",
+      "last_modified": "2025-07-30T18:48:43.383302"
+    },
+    "web_search": {
+      "name": "Web Search",
+      "description": "Search the internet using Brave Search API",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": ""
+      },
+      "enabled": false,
+      "timeout": 30,
+      "auto_start": true,
+      "created_at": "2025-07-30T18:48:43.383304",
+      "last_modified": "2025-07-30T18:48:43.383305"
+    },
+    "http_fetch": {
+      "name": "HTTP Fetch",
+      "description": "Make HTTP requests to web APIs and websites",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ],
+      "env": {},
+      "enabled": true,
+      "timeout": 30,
+      "auto_start": true,
+      "created_at": "2025-07-30T18:48:43.383306",
+      "last_modified": "2025-07-30T18:48:43.383306"
+    },
+    "sqlite_database": {
+      "name": "SQLite Database",
+      "description": "Query and manage SQLite databases",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite"
+      ],
+      "env": {},
+      "enabled": true,
+      "timeout": 30,
+      "auto_start": true,
+      "created_at": "2025-07-30T18:48:43.383307",
+      "last_modified": "2025-07-30T18:48:43.383308"
+    },
+    "github_integration": {
+      "name": "GitHub Integration",
+      "description": "Manage GitHub repositories, issues, and pull requests",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      },
+      "enabled": false,
+      "timeout": 30,
+      "auto_start": true,
+      "created_at": "2025-07-30T18:48:43.383309",
+      "last_modified": "2025-07-30T18:48:43.383309"
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-07-30T18:48:43.384391",
+    "description": "MCP server configurations for Jarvis Voice Assistant",
+    "total_servers": 6,
+    "enabled_servers": 4
+  }
+}

@@ -123,6 +123,121 @@ def _remember_fact(fact: str, manager) -> str:
         logger.error(f"Failed to remember fact: {e}")
         return f"I'm sorry, I couldn't store that information in my long-term memory. Error: {str(e)}"
 
+def _forget_information(query: str, rag_manager) -> str:
+    """
+    Internal function to remove specific information from long-term memory.
+
+    Args:
+        query: Description of what information to forget/remove
+        rag_manager: RAGMemoryManager instance
+
+    Returns:
+        str: Status message about the removal operation
+    """
+    try:
+        # Validate input
+        if not query or not query.strip():
+            return "❌ Please provide a description of what information to forget."
+
+        query = query.strip()
+        logger.info(f"Forget request: {query}")
+
+        # Search for matching content first
+        docs = rag_manager.vector_store.similarity_search(query, k=10)
+
+        if not docs:
+            return f"🔍 No information found matching '{query}' to forget."
+
+        # Show what would be removed and ask for confirmation
+        preview_items = []
+        for i, doc in enumerate(docs[:5], 1):
+            content_preview = doc.page_content[:100] + "..." if len(doc.page_content) > 100 else doc.page_content
+            source = doc.metadata.get('source', 'unknown')
+            preview_items.append(f"{i}. Source: {source}\n   Content: {content_preview}")
+
+        preview_text = "\n".join(preview_items)
+
+        # For safety, require explicit confirmation in the query
+        confirmation_keywords = ['confirm', 'delete', 'remove', 'forget permanently', 'confirm delete', 'remove permanently']
+        has_confirmation = any(keyword in query.lower() for keyword in confirmation_keywords)
+
+        if not has_confirmation:
+            return f"""🚨 FORGET OPERATION PREVIEW
+
+Found {len(docs)} items matching '{query}':
+
+{preview_text}
+
+⚠️ This operation will permanently delete this information from memory.
+
+To proceed, include one of these confirmation words in your request:
+- "confirm delete"
+- "remove permanently"
+- "forget permanently"
+
+Example: "forget information about my old job - confirm delete"
+"""
+
+        # Proceed with deletion
+        deleted_count = 0
+        errors = []
+
+        # Get collection for direct deletion
+        collection = rag_manager.vector_store._collection
+
+        # Use a simpler approach: delete by content similarity
+        try:
+            # Get all documents with IDs
+            all_results = collection.get()
+
+            if all_results and 'documents' in all_results and 'ids' in all_results:
+                documents = all_results['documents']
+                ids = all_results['ids']
+
+                # Find documents to delete based on similarity to search results
+                ids_to_delete = set()  # Use set to avoid duplicates
+                for doc in docs:
+                    doc_content = doc.page_content.strip().lower()
+
+                    # Find matching documents in the collection
+                    for i, stored_content in enumerate(documents):
+                        if stored_content and doc_content in stored_content.lower():
+                            ids_to_delete.add(ids[i])
+                            break
+
+                # Delete the found documents
+                if ids_to_delete:
+                    ids_list = list(ids_to_delete)
+                    collection.delete(ids=ids_list)
+                    deleted_count = len(ids_list)
+                    logger.info(f"Deleted {deleted_count} documents with IDs: {ids_list}")
+
+        except Exception as e:
+            error_msg = f"Failed to delete documents: {str(e)}"
+            errors.append(error_msg)
+            logger.error(error_msg)
+
+        # Prepare result message
+        result_parts = [f"🗑️ Forget operation completed"]
+        result_parts.append(f"   Deleted: {deleted_count} items")
+
+        if errors:
+            result_parts.append(f"   Errors: {len(errors)}")
+            result_parts.append("   Some items could not be deleted")
+
+        if deleted_count > 0:
+            result_parts.append(f"\n✅ Successfully removed information about '{query}' from memory")
+            result_parts.append("   This action cannot be undone")
+        else:
+            result_parts.append(f"\n⚠️ No items were deleted")
+
+        return "\n".join(result_parts)
+
+    except Exception as e:
+        logger.error(f"Error in forget operation: {e}")
+        return f"❌ Error during forget operation: {str(e)}"
+
+
 def _search_long_term_memory(query: str, manager) -> str:
     """
     Internal function to search long-term memory with enhanced empty handling.
@@ -208,9 +323,29 @@ def get_stage_one_tools(rag_manager) -> List[BaseTool]:
         Returns 'No relevant information found' if nothing was previously stored.
         """
         return _search_long_term_memory(query, rag_manager)
-    
-    logger.info("Created Stage 1 RAG tools: remember_fact, search_long_term_memory")
-    return [remember_fact, search_long_term_memory]
+
+    # Create the 'forget_information' tool
+    @tool
+    def forget_information(query: str) -> str:
+        """
+        REMOVES specific information from PERMANENT long-term memory.
+
+        Use when user explicitly says:
+        - "Forget that..."
+        - "Delete information about..."
+        - "Remove from memory..."
+        - "Don't remember..."
+        - "Erase what I told you about..."
+
+        SAFETY: Requires confirmation keywords for permanent deletion.
+        Add 'confirm delete' or 'remove permanently' to proceed with deletion.
+
+        Example: "Forget my old job information - confirm delete"
+        """
+        return _forget_information(query, rag_manager)
+
+    logger.info("Created Stage 1 RAG tools: remember_fact, search_long_term_memory, forget_information")
+    return [remember_fact, search_long_term_memory, forget_information]
 
 def get_debug_tools(rag_manager, debug_mode: bool = False) -> List[BaseTool]:
     """

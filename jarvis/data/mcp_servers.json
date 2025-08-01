@@ -1,0 +1,27 @@
+{
+  "servers": {
+    "test_filesystem": {
+      "name": "test-filesystem",
+      "description": "",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "/tmp"
+      ],
+      "env": {},
+      "enabled": true,
+      "timeout": 30,
+      "auto_start": true,
+      "created_at": "2025-07-31T00:34:44.789824",
+      "last_modified": "2025-07-31T00:34:44.789829"
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-07-31T00:34:44.789860",
+    "description": "MCP server configurations for Jarvis Voice Assistant",
+    "total_servers": 1,
+    "enabled_servers": 1
+  }
+}

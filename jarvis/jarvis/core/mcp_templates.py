@@ -280,6 +280,39 @@ MCP_SERVER_TEMPLATES: Dict[str, MCPServerTemplate] = {
         """.strip(),
         required_env_vars=[],
         documentation_url="https://github.com/modelcontextprotocol/servers/tree/main/src/everything"
+    ),
+
+
+
+    "custom_mcp": MCPServerTemplate(
+        name="Add Any MCP Server",
+        description="Universal template to add any MCP server from mcpservers.org",
+        config=MCPServerConfig(
+            name="my-custom-mcp",
+            transport=MCPTransportType.STDIO,
+            command="npx",
+            args=["-y", "PACKAGE_NAME_HERE"],
+            enabled=True
+        ),
+        setup_instructions="""
+🎯 HOW TO USE THIS TEMPLATE:
+
+1. Visit https://mcpservers.org to browse available MCP servers
+2. Find the MCP you want (e.g., Apple Notes, Browser MCP, Calculator, etc.)
+3. Replace 'PACKAGE_NAME_HERE' with the actual package name from the website
+4. Update the server name to something descriptive
+5. Add any required API keys in the Environment Variables section
+
+📋 EXAMPLES:
+• Apple Notes: Replace with 'mcp-apple-notes'
+• Browser Automation: Replace with 'browsermcp'
+• Calculator: Replace with 'mcp-server-calculator'
+• Any other MCP from mcpservers.org
+
+✅ Most MCPs are completely FREE and work immediately!
+        """.strip(),
+        required_env_vars=[],
+        documentation_url="https://mcpservers.org"
     )
 }
 
@@ -302,7 +335,8 @@ def get_templates_by_category() -> Dict[str, List[str]]:
         "Cloud Storage": ["google_drive"],
         "Communication": ["slack"],
         "Databases": ["postgres", "sqlite"],
-        "Utilities": ["memory"]
+        "Utilities": ["memory"],
+        "Custom": ["custom_mcp"]
     }
     return categories
 

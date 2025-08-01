@@ -98,9 +98,9 @@ def get_config_notifier() -> ConfigChangeNotifier:
 @dataclass
 class AudioConfig:
     """Audio-related configuration settings."""
-    mic_index: int = 2  # MacBook Pro Microphone (working microphone)
+    mic_index: int = 0  # MacBook Pro Microphone (working microphone)
     mic_name: str = "MacBook Pro Microphone"
-    energy_threshold: int = 100  # Optimized for wake word detection sensitivity
+    energy_threshold: int = 50  # Lowered for better microphone sensitivity
     timeout: float = 3.0  # Balanced for responsiveness and reliability
     phrase_time_limit: float = 5.0  # Optimized for natural speech patterns
 
@@ -115,8 +115,8 @@ class AudioConfig:
     whisper_language: str = "en"  # Fixed language for speed
     whisper_compute_type: str = "int8"  # Quantized for faster inference
 
-    # Coqui TTS settings - Using LJSpeech Tacotron2 (works without voice cloning)
-    coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"
+    # Coqui TTS settings - Using VCTK VITS for multi-speaker support (user's preferred voice)
+    coqui_model: str = "tts_models/en/vctk/vits"
     coqui_language: str = "en"
     coqui_device: str = "cpu"  # Force CPU to avoid MPS tensor issues
     coqui_use_gpu: bool = False
@@ -129,9 +129,9 @@ class AudioConfig:
     coqui_streaming: bool = False  # Enable streaming mode (future feature)
 
     # Advanced Coqui TTS settings
-    coqui_voice_preset: str = "ljspeech_tacotron2"  # Voice preset selection
+    coqui_voice_preset: str = "vctk_p374"  # Voice preset selection (User's preferred voice)
     coqui_voice_speed: float = 1.0  # Speech speed multiplier
-    coqui_speaker_id: Optional[str] = None  # Speaker ID for multi-speaker models
+    coqui_speaker_id: Optional[str] = "p374"  # Speaker ID for multi-speaker models (user's preferred voice)
     coqui_voice_conditioning_latents: Optional[str] = None  # Pre-computed latents
     coqui_emotion: str = "neutral"  # Emotion/style for synthesis
     coqui_sample_rate: int = 22050  # Audio sample rate
@@ -167,14 +167,19 @@ class LLMConfig:
     verbose: bool = False
     reasoning: bool = False
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
+    max_tokens: Optional[int] = 4096  # Generous limit to prevent truncation while avoiding excessive responses
+
+    def __post_init__(self):
+        """Initialize RAG config after dataclass initialization."""
+        self.rag = RAGConfig()
+        self.llm = self  # For compatibility with RAGService
 
 
 @dataclass
 class AgentConfig:
     """Agent execution configuration settings."""
-    max_iterations: int = 15  # Increased from 5 for tool creation and complex tasks
-    max_execution_time: int = 120  # Increased from 30 for complex operations (2 minutes)
+    max_iterations: int = 10  # Balanced: enough for complex queries, not excessive (was 5)
+    max_execution_time: int = 45  # Balanced: enough time but not too long (was 30)
     enable_memory: bool = True
     handle_parsing_errors: bool = True
 
@@ -189,30 +194,13 @@ class LoggingConfig:
 
 
 @dataclass
-class MCPServerConfig:
-    """Configuration for a single MCP server."""
-    name: str
-    command: str
-    args: List[str] = field(default_factory=list)
-    env: Optional[Dict[str, str]] = None
-    enabled: bool = True
-    timeout: int = 30
-
-
-@dataclass
 class MCPConfig:
     """MCP (Model Context Protocol) configuration settings."""
-    servers: Dict[str, MCPServerConfig] = field(default_factory=lambda: {
-        "memory_storage": MCPServerConfig(
-            name="memory_storage",
-            command="npx",
-            args=["-y", "@modelcontextprotocol/server-memory"],
-            env=None,
-            enabled=False,  # Disabled - using RAG memory system instead
-            timeout=30
-        )
-    })
     enabled: bool = True
+    config_file: str = "data/mcp_servers.json"
+    auto_start_servers: bool = True
+    connection_timeout: int = 30
+    max_retries: int = 3
 
 
 @dataclass
@@ -274,11 +262,11 @@ class RAGConfig:
     sanitize_inputs: bool = True
     max_memory_length: int = 10000
 
-    # Intelligence settings (for RAGService)
-    intelligent_processing: bool = True
+    # Intelligence settings (for RAGService) - Optimized for performance
+    intelligent_processing: bool = False  # Disable to prevent over-processing
     document_llm_model: str = "qwen2.5:3b-instruct"
-    query_optimization: bool = True
-    result_synthesis: bool = True
+    query_optimization: bool = False  # Disable to prevent excessive API calls
+    result_synthesis: bool = False  # Disable to prevent over-complex responses
 
 
 @dataclass

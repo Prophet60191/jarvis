@@ -1,0 +1,718 @@
+{
+  "test_summary": {
+    "total_tests": 35,
+    "successful_tests": 35,
+    "orchestration_detected": 20,
+    "complexity_matches": 27,
+    "test_timestamp": 1753834769.406649
+  },
+  "category_results": [
+    {
+      "category": "simple_direct_knowledge",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 1,
+      "complexity_matches": 5,
+      "results": [
+        {
+          "prompt": "What is the capital of France?",
+          "response": "The capital of France is Paris.",
+          "category": "simple_direct_knowledge",
+          "success": true,
+          "execution_time": 0.31353211402893066,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 31,
+          "timestamp": 1753834625.138693
+        },
+        {
+          "prompt": "Explain how photosynthesis works",
+          "response": "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with water and carbon dioxide. The main products of photosynthesis include oxygen and glucose (a type of sugar). This process is crucial for life on Earth as it provides the primary energy source for nearly all living things.\n\n### Key Components Involved in Photosynthesis:\n\n1. **Light-Dependent Reactions**: These occur primarily in the thylakoid membranes of chloroplasts, which contain photosynthetic pigments like chlorophyll.\n   - **Energy Capture**: Chlorophyll absorbs light energy from the sun.\n   - **Water Splitting (Photolysis)**: Light energy is used to split water molecules into hydrogen and oxygen. Oxygen is released as a byproduct.\n   - **Electron Transport Chain and ATP Production**: Electrons are passed through a series of proteins, leading to the production of adenosine triphosphate (ATP), which stores chemical energy.\n\n2. **Light-Independent Reactions (Calvin Cycle)**: These occur in the stroma of chloroplasts.\n   - **Carbon Fixation**: Using ATP and NADPH produced from light-dependent reactions, carbon dioxide is incorporated into organic molecules like glucose.\n   - **Regeneration of Ribulose Bisphosphate (RuBP)**: This cycle also includes a regeneration step where RuBP is reused to continue the process.\n\n### Overall Process:\n\n1. **Absorption of Light**: Chlorophyll and other pigments in the plant's chloroplasts absorb light energy, primarily in the blue and red regions of the visible spectrum.\n2. **Water Splitting (Photolysis)**: The absorbed light energy is used to split water molecules into oxygen, electrons, and protons.\n3. **Electron Transport Chain**: Electrons are passed through a series of proteins embedded in the thylakoid membrane, leading to the production of ATP and NADPH.\n4. **Carbon Fixation (Calvin Cycle)**: Using the ATP and NADPH produced, CO2 is fixed into organic molecules like glucose.\n\n### Byproducts:\n- **Oxygen**: Released as a byproduct of water splitting during light-dependent reactions.\n- **Glucose**: Produced in the Calvin cycle to provide energy for the plant's activities.\n\nPhotosynthesis not only provides food for plants but also oxygen for other organisms, making it an essential process for life on Earth.",
+          "category": "simple_direct_knowledge",
+          "success": true,
+          "execution_time": 6.804267883300781,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 2296,
+          "timestamp": 1753834632.946193
+        },
+        {
+          "prompt": "Tell me about electric cars",
+          "response": "Certainly! Electric vehicles (EVs), including electric cars, have become increasingly popular as the world shifts towards cleaner and more sustainable forms of transportation. Here's an overview of electric cars:\n\n### What Are Electric Cars?\nElectric cars are vehicles that use one or more electric motors for propulsion instead of traditional internal combustion engines (ICE). They run on electricity stored in rechargeable batteries. The term \"electric car\" typically refers to plug-in electric vehicles, which can be recharged from external sources.\n\n### Types of Electric Cars\n1. **Battery-Electric Vehicles (BEVs):**\n   - These are fully electric cars that use only battery power.\n   - They do not have an onboard combustion engine and require charging through a plug connected to the grid or a fast-charging station.\n\n2. **Plug-in Hybrid Electric Vehicles (PHEVs):**\n   - PHEVs combine a conventional internal combustion engine with one or more electric motors.\n   - These vehicles can be charged from an external power source but also have a fuel tank for gasoline or diesel, allowing them to run on both electricity and fossil fuels.\n\n3. **Hybrid Electric Vehicles (HEVs):**\n   - HEVs are similar to PHEVs but typically do not require charging; they generate their own electricity through regenerative braking and other mechanisms.\n   - They primarily use the electric motor for acceleration and low-speed driving, with the internal combustion engine taking over at higher speeds.\n\n### Advantages of Electric Cars\n1. **Environmental Benefits:**\n   - EVs produce zero tailpipe emissions, reducing air pollution and greenhouse gas emissions.\n   - This is particularly beneficial in urban areas where smog and other pollutants can be a health hazard.\n\n2. **Cost Savings:**\n   - Electricity is generally cheaper than gasoline or diesel, leading to lower fuel costs over the life of the vehicle.\n   - Maintenance costs are often lower for EVs because they have fewer moving parts compared to ICE vehicles.\n\n3. **Performance:**\n   - Electric motors provide instant torque, offering smooth and powerful acceleration from a standstill.\n   - Many electric cars can accelerate quickly, providing an enjoyable driving experience.\n\n4. **Government Incentives:**\n   - Various countries offer incentives such as tax credits, rebates, and exemptions from certain fees to encourage the purchase of EVs.\n   - Charging infrastructure is expanding in many regions, making it easier for drivers to recharge their vehicles.\n\n### Challenges\n1. **Range Anxiety:**\n   - One common concern with BEVs is the limited driving range before needing a recharge compared to traditional cars that can travel much longer distances without refueling.\n   \n2. **Charging Infrastructure:**\n   - While charging infrastructure has improved, it may still be less extensive in some areas than gasoline stations.\n\n3. **Cost of Ownership:**\n   - Although EVs are becoming more affordable, the initial cost of purchasing an electric car is often higher due to advanced technology and battery costs.\n   \n4. **Battery Lifespan and Recycling:**\n   - Battery degradation over time can affect performance and longevity, and there are concerns about the environmental impact of disposing of used batteries.\n\n### Future Outlook\nElectric vehicles are expected to become more prevalent as governments worldwide increase their efforts to reduce carbon emissions. Technological advancements in battery technology, charging infrastructure, and overall vehicle efficiency continue to drive down costs and improve driving experiences.\n\nIf you have any specific questions or need more detailed information on a particular aspect of electric cars, feel free to ask!",
+          "category": "simple_direct_knowledge",
+          "success": true,
+          "execution_time": 9.818966150283813,
+          "orchestration_detected": true,
+          "intelligence_level": "basic_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "rag"
+          ],
+          "response_length": 3713,
+          "timestamp": 1753834643.76777
+        },
+        {
+          "prompt": "What's the difference between Python and JavaScript?",
+          "response": "Python and JavaScript are both popular programming languages used for various applications, but they have distinct characteristics and are typically used in different contexts:\n\n1. **Syntax and Readability**:\n   - **Python**: Known for its clean, readable syntax that emphasizes code readability with its indentation-based line structure. It's often described as more \"English-like\" which can make it easier to learn and understand.\n   - **JavaScript**: Syntax is also relatively straightforward but can be more verbose compared to Python. JavaScript has a mix of curly braces `{}` for block delimiters, semicolons `;` at the end of statements, and uses commas `,` in arrays or lists.\n\n2. **Use Cases**:\n   - **Python**: Versatile language that is popular across multiple domains such as web development (with frameworks like Django and Flask), scientific computing, data analysis, artificial intelligence, machine learning, automation scripts, and more.\n   - **JavaScript**: Primarily used for client-side scripting in web browsers to create interactive web pages. It's also used on the server side with Node.js for building scalable network applications.\n\n3. **Execution Environment**:\n   - **Python**: Can run on both the client (with Jupyter Notebooks, Brython) and the server side. Python 3.x is the most widely used version today.\n   - **JavaScript**: Runs primarily in web browsers but can also be executed on Node.js for backend development or using frameworks like React Native for mobile app development.\n\n4. **Type System**:\n   - **Python**: Dynamically typed, meaning you don't have to declare a variable's type when defining it (e.g., `x = 5`).\n   - **JavaScript**: Also dynamically typed but has some unique features such as optional strict typing introduced in ECMAScript 6.\n\n5. **Community and Ecosystem**:\n   - Both languages benefit from large communities, extensive documentation, and rich libraries and frameworks.\n   - Python has a strong community around data science and machine learning, with popular libraries like NumPy, Pandas, TensorFlow, and PyTorch.\n   - JavaScript has a vast ecosystem centered around web development but also offers robust tools for frontend and backend development.\n\n6. **GIL (Global Interpreter Lock)**:\n   - **Python**: Implements a GIL which can limit the performance of multi-threaded Python applications on multiprocessor machines.\n   - **JavaScript**: Not subject to such limitations since it's single-threaded in web browsers, although Node.js uses multiple threads for I/O operations.\n\n7. **Object-Oriented Programming (OOP)**:\n   - Both languages support OOP principles like classes and inheritance but with different implementations.\n   - Python\u2019s class definition is more straightforward and closer to traditional object-oriented programming paradigms.\n   - JavaScript has a prototype-based system, where objects can inherit properties from other objects.\n\nThese differences make each language suitable for specific types of tasks. Understanding the strengths and limitations of both can help developers choose the right tool for their project needs.",
+          "category": "simple_direct_knowledge",
+          "success": true,
+          "execution_time": 9.01093339920044,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 3111,
+          "timestamp": 1753834653.779287
+        },
+        {
+          "prompt": "How does machine learning work?",
+          "response": "Machine learning is a subset of artificial intelligence that involves building systems capable of performing tasks without explicit instructions, relying instead on patterns and inference from data. Here's a simplified overview of how it works:\n\n1. **Data Collection**: The first step in any machine learning project is collecting relevant data. This can come from various sources such as databases, public datasets, sensors, or user inputs.\n\n2. **Data Preparation**: Once the data is collected, it needs to be cleaned and prepared for analysis. This includes handling missing values, removing duplicates, and transforming the data into a suitable format.\n\n3. **Feature Selection/Engineering**: Features are the variables used by the machine learning model to make predictions or decisions. Feature selection involves choosing which features to include in your dataset, while feature engineering is about creating new features from existing ones to improve model performance.\n\n4. **Model Selection**: Choosing an appropriate algorithm for your task. Common algorithms include decision trees, random forests, support vector machines (SVM), neural networks, and more. The choice depends on the type of problem (classification, regression, clustering, etc.) and data characteristics.\n\n5. **Training**: This is where the machine learning model learns from the prepared data. During training, the algorithm adjusts its internal parameters to minimize error between predicted outputs and actual labels. Techniques like cross-validation are used to ensure that the model generalizes well to new data.\n\n6. **Evaluation**: After training, the model\u2019s performance is evaluated using a separate validation dataset or through metrics such as accuracy, precision, recall, F1 score, etc., depending on the problem type.\n\n7. **Hyperparameter Tuning**: Adjusting the parameters of the machine learning algorithm for optimal performance. This can be done manually or with automated tools like grid search or random search.\n\n8. **Deployment**: Once a satisfactory model is achieved, it's deployed into production to make real-world predictions or decisions. This involves integrating the model into an application or system that uses its output as part of its functionality.\n\n9. **Monitoring and Updating**: After deployment, the model should be monitored for performance degradation or changes in the underlying data distribution. Periodic updates may be necessary to maintain accuracy.\n\nMachine learning is a complex field with many nuances, but these steps provide a basic framework for understanding how machine learning systems are developed and used.",
+          "category": "simple_direct_knowledge",
+          "success": true,
+          "execution_time": 6.89628791809082,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 2638,
+          "timestamp": 1753834661.678004
+        }
+      ]
+    },
+    {
+      "category": "simple_single_tool",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 0,
+      "complexity_matches": 5,
+      "results": [
+        {
+          "prompt": "What time is it?",
+          "response": "As an AI, I don't have real-time information about the current time. However, you can easily check the current time on your device or through a search on any web browser. Just type \"current time\" and press enter! If you need help with anything else, feel free to ask.",
+          "category": "simple_single_tool",
+          "success": true,
+          "execution_time": 0.9497442245483398,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 267,
+          "timestamp": 1753834663.62882
+        },
+        {
+          "prompt": "Remember that I prefer Python for data analysis",
+          "response": "Sure thing! If you have any questions or need assistance with Python for data analysis, feel free to ask. Whether it's working with pandas, NumPy, Matplotlib, or other libraries, I'm here to help. What specific task are you working on or what do you want to learn about?",
+          "category": "simple_single_tool",
+          "success": true,
+          "execution_time": 0.9566669464111328,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 270,
+          "timestamp": 1753834665.588012
+        },
+        {
+          "prompt": "Search my memory for information about my last project",
+          "response": "I'm sorry, but as an AI, I don't have direct access to your personal memories or devices. However, if you provide me with some details or context about your last project, I can help you brainstorm ideas, offer advice, or find relevant information to assist you further. Please share what you remember or need assistance with regarding your last project!",
+          "category": "simple_single_tool",
+          "success": true,
+          "execution_time": 1.1825401782989502,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 353,
+          "timestamp": 1753834667.77308
+        },
+        {
+          "prompt": "What did I tell you about my coding preferences?",
+          "response": "I'm sorry, but as an AI assistant, I don't have any prior context or information about your specific coding preferences unless you've shared it with me during this conversation. Could you please provide more details so I can assist you better?",
+          "category": "simple_single_tool",
+          "success": true,
+          "execution_time": 0.7819738388061523,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 243,
+          "timestamp": 1753834669.555671
+        },
+        {
+          "prompt": "Find information about machine learning in my documents",
+          "response": "To find information about machine learning in your documents, you can follow these steps:\n\n1. **Search for Keywords**: Use the search function of your document editor or software to look for specific keywords related to machine learning such as \"machine learning,\" \"neural networks,\" \"artificial intelligence,\" \"data mining,\" \"pattern recognition,\" etc.\n\n2. **Check Document Titles and Abstracts**: If your documents are organized in a way that includes titles, abstracts, or summaries, these sections can often provide quick insights into whether the document contains relevant information about machine learning.\n\n3. **Review Sections or Chapters**: Look for specific chapters or sections dedicated to topics such as \"Machine Learning Techniques,\" \"Applications of Machine Learning,\" \"Case Studies on Machine Learning,\" etc.\n\n4. **Contextual Analysis**: Read through the content to understand how machine learning is discussed in context. This might be within a broader discussion about data science, artificial intelligence, or specific industries like healthcare, finance, or tech.\n\n5. **Check for Code Snippets or Algorithms**: If your documents include code snippets or detailed descriptions of algorithms and models, these are strong indicators that the document contains information related to machine learning.\n\n6. **Use Advanced Search Features**: Depending on the software you're using (e.g., Microsoft Word, Google Docs), there might be advanced search features such as \"find similar\" or \"search within results\" that can help narrow down your search more effectively.\n\n7. **Categorize and Tag Documents**: If you haven't done so already, consider categorizing or tagging documents related to machine learning for easier future reference.\n\nIf you provide a sample of the document text or a specific file, I could give more tailored advice on how to find relevant information!",
+          "category": "simple_single_tool",
+          "success": true,
+          "execution_time": 4.872833013534546,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "simple",
+          "complexity_match": true,
+          "orchestration_indicators_found": [],
+          "response_length": 1886,
+          "timestamp": 1753834675.4307299
+        }
+      ]
+    },
+    {
+      "category": "medium_website_extraction",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 1,
+      "complexity_matches": 1,
+      "results": [
+        {
+          "prompt": "Extract the product information from https://example-store.com",
+          "response": "To extract product information from the website `https://example-store.com`, I would typically need to know the specific structure of the webpage and which elements contain the desired data such as product names, prices, descriptions, images, etc. Since this is a hypothetical example, I'll provide you with an example of how one might do it using Python and BeautifulSoup for web scraping.\n\nFirstly, ensure that you have the necessary libraries installed:\n```bash\npip install requests beautifulsoup4\n```\n\nHere's a sample script to extract product information:\n\n```python\nimport requests\nfrom bs4 import BeautifulSoup\n\n# URL of the website\nurl = 'https://example-store.com'\n\n# Send a GET request to fetch the HTML content\nresponse = requests.get(url)\nhtml_content = response.text\n\n# Parse the HTML content using BeautifulSoup\nsoup = BeautifulSoup(html_content, 'html.parser')\n\n# Find all product elements (this will depend on the actual structure of the webpage)\nproducts = soup.find_all('div', class_='product-item')  # Adjust this selector based on your website's structure\n\nfor product in products:\n    name = product.find('h2', class_='product-title').text.strip() if product.find('h2', class_='product-title') else 'N/A'\n    price = product.find('span', class_='price').text.strip() if product.find('span', class_='price') else 'N/A'\n    description = product.find('p', class_='product-description').text.strip() if product.find('p', class_='product-description') else 'N/A'\n    \n    # Print the extracted information\n    print(f\"Product Name: {name}\")\n    print(f\"Price: {price}\")\n    print(f\"Description: {description}\\n\")\n\n# Note: Replace the selectors (like 'h2.product-title', 'span.price', etc.) with the actual HTML elements used in your target website.\n```\n\n### Explanation:\n1. **Import Libraries**: Import `requests` for making HTTP requests and `BeautifulSoup` from `bs4` for parsing the HTML content.\n2. **Send Request**: Use `requests.get()` to fetch the webpage's HTML content.\n3. **Parse Content**: Create a BeautifulSoup object to parse the HTML content.\n4. **Find Elements**: Use `find_all()` or similar methods to find all product elements on the page, and then extract specific details like name, price, and description.\n\n### Note:\n- The selectors used in this script (like `'h2.product-title'`, `'span.price'`) are placeholders. You need to inspect the actual HTML structure of `https://example-store.com` to determine the correct CSS or XPath selectors for your data.\n- Ensure that web scraping is allowed by the website's terms of service, and respect any robots.txt rules.\n\nIf you provide more specific details about the structure of the webpage, I can tailor the script even further.",
+          "category": "medium_website_extraction",
+          "success": true,
+          "execution_time": 8.584645986557007,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [],
+          "response_length": 2711,
+          "timestamp": 1753834685.0180979
+        },
+        {
+          "prompt": "Scrape the latest news headlines from a tech news website",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use LaVague to explore the website structure and identify data patterns\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by analyzing the website structure...",
+          "category": "medium_website_extraction",
+          "success": true,
+          "execution_time": 0.023780107498168945,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 327,
+          "timestamp": 1753834686.042757
+        },
+        {
+          "prompt": "Get the pricing information from https://competitor-site.com",
+          "response": "I'm unable to directly access external websites or extract information from them. However, I can guide you on how to get the pricing information from https://competitor-site.com.\n\nHere\u2019s a step-by-step process:\n\n1. **Visit the Website**: Open your web browser and navigate to `https://competitor-site.com`.\n\n2. **Locate Pricing Information**:\n   - Check if there's a \"Pricing\" or \"Prices\" section on the homepage.\n   - Look for tabs or menus that might contain pricing details, such as \"Services,\" \"Products,\" \"Features,\" etc.\n   - Sometimes, companies list their prices in dropdowns, tables, or even in a blog post format.\n\n3. **Take Notes**:\n   - If you find specific pricing information, jot down the relevant details (e.g., product names, price ranges, any additional costs, subscription periods).\n   \n4. **Contact Support**:\n   - If the website is not clear about its pricing or if you need more detailed information, consider contacting their support team through a \"Contact Us\" page.\n\n5. **Legal Considerations**:\n   - Ensure that your use of this information complies with any legal and ethical guidelines regarding competitive analysis.\n\nIf you can provide specific details about what kind of information you're looking for (e.g., services, plans), I might be able to give more tailored advice!",
+          "category": "medium_website_extraction",
+          "success": true,
+          "execution_time": 4.142137765884399,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [],
+          "response_length": 1303,
+          "timestamp": 1753834691.186302
+        },
+        {
+          "prompt": "Extract all the job listings from a careers page",
+          "response": "To extract job listings from a careers page, you can use web scraping techniques with programming languages like Python. Below is a simple example using Python and the BeautifulSoup library to scrape job listings from a hypothetical careers page. Note that this is just an example, and you'll need to adjust it according to the structure of the actual website.\n\nFirst, ensure you have the necessary libraries installed:\n\n```sh\npip install requests beautifulsoup4\n```\n\nHere's a basic Python script for scraping job listings:\n\n```python\nimport requests\nfrom bs4 import BeautifulSoup\n\ndef get_job_listings(url):\n    # Send a GET request to the URL\n    response = requests.get(url)\n    \n    # Check if the request was successful\n    if response.status_code != 200:\n        print(f\"Failed to retrieve the page. Status code: {response.status_code}\")\n        return []\n    \n    # Parse the HTML content using BeautifulSoup\n    soup = BeautifulSoup(response.content, 'html.parser')\n    \n    # Find all job listings based on a common pattern (you might need to inspect the page)\n    job_listings = soup.find_all('div', class_='job-listing')  # Example class name\n    \n    # Extract relevant information from each job listing\n    jobs = []\n    for job in job_listings:\n        title = job.find('h2', class_='job-title').text.strip() if job.find('h2', class_='job-title') else 'N/A'\n        company = job.find('span', class_='company-name').text.strip() if job.find('span', class_='company-name') else 'N/A'\n        location = job.find('span', class_='location').text.strip() if job.find('span', class_='location') else 'N/A'\n        \n        # Create a dictionary for each job listing\n        jobs.append({\n            'title': title,\n            'company': company,\n            'location': location\n        })\n    \n    return jobs\n\n# Example URL of the careers page\nurl = \"https://example.com/careers\"\n\n# Get job listings from the URL\njob_listings = get_job_listings(url)\n\n# Print extracted job listings\nfor job in job_listings:\n    print(job)\n```\n\n### Explanation:\n\n1. **Import Libraries**: Import `requests` for making HTTP requests and `BeautifulSoup` for parsing HTML.\n2. **Define Function**: Define a function `get_job_listings` that takes a URL as input.\n3. **Send Request**: Use `requests.get` to send an HTTP GET request to the provided URL.\n4. **Check Response**: Ensure the request was successful by checking the status code.\n5. **Parse HTML**: Use BeautifulSoup to parse the HTML content of the page.\n6. **Find Job Listings**: Locate job listings in the HTML using a common pattern (class name or tag). Adjust this based on the actual structure of the careers page.\n7. **Extract Information**: For each job listing, extract relevant information such as title, company name, and location.\n8. **Store and Return Data**: Store the extracted data in dictionaries and return them.\n\n### Note:\n- Replace the example URL with the actual URL of the careers page you want to scrape.\n- Adjust the HTML tag and class names according to the structure of the website.\n- Be respectful of the website's terms of service and consider using a delay between requests if scraping many pages.\n\nThis is a basic example, and more advanced techniques might be needed for complex websites or those that use JavaScript rendering.",
+          "category": "medium_website_extraction",
+          "success": true,
+          "execution_time": 10.708280801773071,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [],
+          "response_length": 3305,
+          "timestamp": 1753834702.895982
+        },
+        {
+          "prompt": "Pull the contact information from a company's about page",
+          "response": "To pull contact information from a company\u2019s about page, I would typically follow these steps:\n\n1. **Identify the Company**: First, you need to know which company's about page you're looking at.\n\n2. **Access the About Page**: Navigate to the \"About Us\" or \"Contact Us\" section of the company's website. This is usually found in the navigation menu.\n\n3. **Locate Contact Information**:\n   - **Phone Number**: Often displayed prominently, sometimes with a phone icon.\n   - **Email Address**: Usually listed as part of an email address or with an envelope icon.\n   - **Physical Address**: Found under \"Location\" or \"Headquarters.\"\n   - **Social Media Links**: These can be useful for additional contact options.\n\n4. **Extract the Information**:\n   - For phone numbers and emails, copy them directly from the page if possible.\n   - For addresses, ensure you capture the full address, including street, city, state, and postal code (if applicable).\n\n5. **Verify Accuracy**: Double-check that the information is correct by visiting the site again or using a search function to confirm.\n\n6. **Format for Use**:\n   - Organize the extracted data in a format suitable for your needs, such as a spreadsheet or a contact management system.\n\nIf you provide me with the specific company and any relevant links, I can help you extract and verify this information more precisely!",
+          "category": "medium_website_extraction",
+          "success": true,
+          "execution_time": 4.293946027755737,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [],
+          "response_length": 1363,
+          "timestamp": 1753834708.19199
+        }
+      ]
+    },
+    {
+      "category": "medium_code_development",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 4,
+      "complexity_matches": 4,
+      "results": [
+        {
+          "prompt": "Create a Python script that monitors my system's CPU usage",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "medium_code_development",
+          "success": true,
+          "execution_time": 0.0225069522857666,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834709.215072
+        },
+        {
+          "prompt": "Build a web scraper for collecting stock prices",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use LaVague to explore the website structure and identify data patterns\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by analyzing the website structure...",
+          "category": "medium_code_development",
+          "success": true,
+          "execution_time": 0.02341008186340332,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 327,
+          "timestamp": 1753834710.240931
+        },
+        {
+          "prompt": "Write a script that organizes my Downloads folder by file type",
+          "response": "Certainly! Below is a Python script that will organize your downloads folder based on the file types of the files within it. This script uses the `os` and `shutil` libraries to move files into subfolders named after their respective file extensions.\n\nBefore running this script, ensure you have Python installed on your system and that you are familiar with the command line or terminal interface in which you will run the script.\n\n```python\nimport os\nimport shutil\n\ndef organize_downloads(downloads_path):\n    # Ensure the Downloads directory exists\n    if not os.path.exists(downloads_path):\n        print(f\"Directory {downloads_path} does not exist.\")\n        return\n    \n    # List of common file extensions and their corresponding folders\n    file_types = {\n        'pdf': 'PDFs',\n        'docx': 'Documents',\n        'xlsx': 'Spreadsheets',\n        'jpg': 'Images',\n        'png': 'Images',\n        'jpeg': 'Images',\n        'mp3': 'Audio',\n        'mp4': 'Video',\n    }\n    \n    # Create subfolders if they don't already exist\n    for ext, folder_name in file_types.items():\n        folder_path = os.path.join(downloads_path, folder_name)\n        if not os.path.exists(folder_path):\n            os.makedirs(folder_path)\n            print(f\"Created {folder_name} folder.\")\n    \n    # Move files to their respective folders based on extension\n    for filename in os.listdir(downloads_path):\n        file_ext = filename.split('.')[-1].lower()\n        \n        if file_ext in file_types:\n            source = os.path.join(downloads_path, filename)\n            destination_folder = os.path.join(downloads_path, file_types[file_ext])\n            \n            shutil.move(source, destination_folder)\n            print(f\"Moved {filename} to {destination_folder}\")\n    \n    print(\"Downloads organized successfully!\")\n\n# Replace 'path_to_downloads' with the path of your Downloads folder\norganize_downloads('path_to_downloads')\n```\n\n### Instructions to Use:\n\n1. **Replace `'path_to_downloads'`**: Update `organize_downloads('path_to_downloads')` with the actual path where your downloads are stored.\n\n2. **Run the Script**:\n   - Open a terminal or command prompt.\n   - Navigate to the directory containing this script.\n   - Run the script by typing: \n     ```sh\n     python organize_downloads.py\n     ```\n   - (If you're using Python 3, replace `python` with `python3` if necessary.)\n\n### Notes:\n\n- This script is designed for common file types. You can extend the `file_types` dictionary to include more specific or uncommon file extensions as needed.\n- The script creates subfolders like \"Images\", \"Audio\", and so on based on typical file categories.\n- Make sure you have proper permissions to read, write, and move files in your Downloads folder.\n\nThis script should help you keep your Downloads folder organized by file type.",
+          "category": "medium_code_development",
+          "success": true,
+          "execution_time": 8.909610986709595,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [],
+          "response_length": 2826,
+          "timestamp": 1753834720.152205
+        },
+        {
+          "prompt": "Create a tool that backs up my important files automatically",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "medium_code_development",
+          "success": true,
+          "execution_time": 0.02396392822265625,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834721.178294
+        },
+        {
+          "prompt": "Build a simple REST API for managing a todo list",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "medium_code_development",
+          "success": true,
+          "execution_time": 0.018779754638671875,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834722.199258
+        }
+      ]
+    },
+    {
+      "category": "medium_research_analysis",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 4,
+      "complexity_matches": 2,
+      "results": [
+        {
+          "prompt": "Analyze the current trends in renewable energy adoption",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use LaVague to explore the website structure and identify data patterns\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by searching for relevant information...",
+          "category": "medium_research_analysis",
+          "success": true,
+          "execution_time": 0.015332937240600586,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 337,
+          "timestamp": 1753834723.215631
+        },
+        {
+          "prompt": "Research the latest developments in artificial intelligence",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use LaVague to explore the website structure and identify data patterns\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by searching for relevant information...",
+          "category": "medium_research_analysis",
+          "success": true,
+          "execution_time": 0.020637035369873047,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 337,
+          "timestamp": 1753834724.238009
+        },
+        {
+          "prompt": "Compare the market performance of electric vehicle companies",
+          "response": "To compare the market performance of electric vehicle (EV) companies, we need to consider several factors such as stock price trends, revenue growth, profit margins, and other financial metrics. Here\u2019s an overview based on some of the leading EV manufacturers:\n\n### 1. Tesla Inc.\n- **Market Cap**: Tesla is one of the most highly valued EV companies globally with a market capitalization that often exceeds $500 billion.\n- **Stock Performance**: Its stock price has seen significant volatility, but it has also experienced dramatic growth over recent years due to strong sales and innovation.\n- **Revenue Growth**: Tesla's revenue has grown exponentially, driven by both car sales and expanding into new markets like energy storage and solar panels.\n\n### 2. Volkswagen AG\n- **Market Cap**: VW is a large company with a diverse portfolio including luxury brands, but its EV division (Volkswagen Group) has been growing rapidly.\n- **Stock Performance**: The stock performance of the group as a whole can be volatile due to its wide range of business segments, but it shows promise in the EV market.\n- **Revenue Growth**: VW has made significant investments and is on track to become one of the largest EV manufacturers globally.\n\n### 3. General Motors (GM)\n- **Market Cap**: GM's stock price has seen fluctuations but is generally stable.\n- **Stock Performance**: GM\u2019s share price has been influenced by its transition towards electric vehicles, with plans for a major shift in their product lineup.\n- **Revenue Growth**: GM is investing heavily in EVs and autonomous driving technologies, aiming to capture market share.\n\n### 4. Nio Inc.\n- **Market Cap**: Nio operates primarily in the Chinese market but has ambitions to expand globally.\n- **Stock Performance**: Nio\u2019s stock price has been highly volatile due to factors such as regulatory changes in China and international competition.\n- **Revenue Growth**: Revenue growth is robust, driven by strong demand for its higher-end EVs.\n\n### 5. BYD Company Limited\n- **Market Cap**: BYD is a major player in the Chinese market with significant investments in EV technology.\n- **Stock Performance**: BYD\u2019s stock has seen growth due to its position as one of China's leading EV manufacturers.\n- **Revenue Growth**: The company benefits from strong domestic demand and increasing export potential.\n\n### 6. Ford Motor Company\n- **Market Cap**: Ford is transitioning towards electric vehicles but still relies heavily on traditional automotive sales.\n- **Stock Performance**: Stock performance has been mixed, with volatility due to both the transition challenges and success of their EV ventures like the F-150 Lightning.\n- **Revenue Growth**: Ford has made significant investments in EV technology and aims to ramp up production significantly.\n\n### 7. Rivian Inc.\n- **Market Cap**: Rivian is a newer player but has seen substantial investment from Amazon among others, driving its market valuation.\n- **Stock Performance**: Rivian\u2019s stock has had high volatility due to its relatively short track record in the EV market.\n- **Revenue Growth**: The company is still small compared to industry leaders but shows potential with plans for multiple vehicle models.\n\n### 8. Lucid Group\n- **Market Cap**: Lucid focuses on luxury EVs and has seen strong interest from investors despite being a smaller player.\n- **Stock Performance**: Lucid\u2019s stock price has been volatile, reflecting the risk associated with its business model and market positioning.\n- **Revenue Growth**: Revenue is growing but currently limited due to production capacity constraints.\n\n### Conclusion\nWhen comparing these companies, Tesla stands out as one of the leaders in both market capitalization and revenue growth. However, other companies like Volkswagen, BYD, and Rivian are also making significant strides and showing promise. Each company's stock performance can vary widely based on market conditions, regulatory changes, and business strategy.\n\nFor a comprehensive analysis, it would be beneficial to review specific financial reports, analyst forecasts, and industry trends for each company over the past few years.",
+          "category": "medium_research_analysis",
+          "success": true,
+          "execution_time": 12.280003786087036,
+          "orchestration_detected": true,
+          "intelligence_level": "basic_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [
+            "rag"
+          ],
+          "response_length": 4136,
+          "timestamp": 1753834737.520454
+        },
+        {
+          "prompt": "Study the impact of remote work on productivity",
+          "response": "The impact of remote work on productivity has been a subject of much discussion and research in recent years, particularly as technology has made it easier for more people to work from home or other locations outside the traditional office setting. Here are some key points to consider:\n\n### 1. **Increased Flexibility**\n- **Time Management:** Remote workers can often manage their time more effectively by avoiding daily commutes and adjusting their schedules around personal commitments.\n- **Work-Life Balance:** The ability to work from home or other locations can lead to better integration of work with personal life, potentially reducing stress and improving overall well-being.\n\n### 2. **Reduced Distractions**\n- **Focused Environment:** Eliminating office distractions like colleagues, noise, and the need for frequent commutes can improve concentration.\n- **Personalized Workspaces:** Many remote workers create personalized spaces that are conducive to work, enhancing productivity.\n\n### 3. **Potential Drawbacks**\n- **Isolation:** Working from home can lead to feelings of isolation, which may impact motivation and mental health. Regular social interaction is crucial for maintaining engagement.\n- **Boundary Blurring:** The lack of a clear separation between work and personal life can sometimes make it difficult to switch off after working hours.\n\n### 4. **Technology Tools**\n- **Collaboration Software:** Technologies like Slack, Microsoft Teams, Zoom, and Google Workspace facilitate communication and collaboration among remote teams, mimicking the office environment.\n- **Productivity Trackers:** Tools like Asana, Trello, or Monday.com help in managing tasks and deadlines effectively.\n\n### 5. **Research Findings**\n- **Positive Outcomes:** Studies by Stanford University found that remote workers can be up to 13% more productive than their office-based counterparts.\n- **Negative Outcomes:** Other studies indicate that without proper structure, some remote workers may experience decreased productivity due to lack of discipline or appropriate work environments.\n\n### 6. **Best Practices for Remote Work**\n- **Clear Communication:** Establishing regular check-ins and setting clear expectations can help maintain accountability and transparency.\n- **Structured Routine:** Maintaining a consistent schedule and setting dedicated times for breaks and personal activities can help manage productivity.\n- **Proper Equipment and Environment:** Ensuring that remote workers have access to necessary equipment and a suitable workspace is crucial.\n\n### 7. **Impact on Different Industries**\nThe impact of remote work on productivity can vary significantly across industries. For instance, creative professionals might thrive in the flexibility of working from home, while sales teams may require more face-to-face interactions for effective collaboration.\n\n### Conclusion\nRemote work has both advantages and challenges when it comes to boosting productivity. While it offers increased flexibility and reduced distractions, it also requires good time management skills and a structured approach to maintain high levels of output. Employers should consider implementing strategies that support their remote workforce to maximize its potential benefits while mitigating any negative impacts.\n\nFor more detailed research or specific case studies, you can refer to academic journals, industry reports, and professional articles on the topic of remote work and productivity.",
+          "category": "medium_research_analysis",
+          "success": true,
+          "execution_time": 9.317005157470703,
+          "orchestration_detected": false,
+          "intelligence_level": "no_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [],
+          "response_length": 3483,
+          "timestamp": 1753834747.839957
+        },
+        {
+          "prompt": "Investigate the growth of cryptocurrency adoption",
+          "response": "The adoption and growth of cryptocurrencies have seen significant developments over recent years. Here\u2019s an overview of key trends and factors influencing their increasing acceptance:\n\n### 1. **Market Growth**\n- **Value**: The total market capitalization of cryptocurrencies has grown exponentially, with Bitcoin (BTC) leading the pack but numerous other altcoins also experiencing substantial gains.\n- **Trading Volume**: Trading volumes on cryptocurrency exchanges have surged, reflecting increased participation from both retail and institutional investors.\n\n### 2. **Regulatory Environment**\n- **Legislation**: Different countries are adopting varying regulatory stances. Some countries like Japan and Singapore have established frameworks to regulate cryptocurrencies, while others remain uncertain or outright ban them.\n- **Taxation Policies**: Governments worldwide are grappling with how to tax cryptocurrency gains, which can significantly affect adoption levels.\n\n### 3. **Institutional Involvement**\n- **Investments by Major Companies**: Large corporations like Tesla, MicroStrategy, and PayPal have invested in Bitcoin, signaling a shift towards recognizing cryptocurrencies as legitimate assets.\n- **Mutual Funds and ETFs**: The launch of cryptocurrency-focused mutual funds and exchange-traded funds (ETFs) has made it easier for retail investors to participate.\n\n### 4. **Technology Advancements**\n- **Blockchain Improvements**: Ongoing development in blockchain technology, including improvements in scalability and privacy, are addressing some of the initial hurdles faced by cryptocurrencies.\n- **Decentralized Finance (DeFi)**: DeFi applications have grown rapidly, offering financial services without traditional intermediaries like banks.\n\n### 5. **Consumer Use Cases**\n- **Payment Systems**: Cryptocurrency adoption for everyday transactions is growing, with companies like PayPal and Visa allowing users to buy goods and services using cryptocurrencies.\n- **Cross-Border Transactions**: The reduced fees and faster transaction times of cryptocurrencies make them attractive for international remittances.\n\n### 6. **Education and Awareness**\n- **Public Understanding**: Increased education and awareness programs have helped demystify cryptocurrency concepts, making it more accessible to the general public.\n- **Media Coverage**: News articles, documentaries, and social media campaigns have played a role in increasing interest and knowledge about cryptocurrencies.\n\n### 7. **Environmental Impact**\n- **Sustainability Concerns**: The energy consumption associated with certain cryptocurrencies like Bitcoin has raised environmental concerns, prompting some projects to explore more sustainable alternatives such as proof-of-stake (PoS) consensus mechanisms.\n\n### Conclusion\nThe growth of cryptocurrency adoption is multifaceted and influenced by a combination of technological advancements, regulatory actions, institutional involvement, and increased consumer awareness. While challenges remain, the overall trajectory suggests continued expansion in the use and acceptance of cryptocurrencies across various sectors and geographies.\n\nFor more detailed analysis or specific data points, you might want to refer to reports from financial institutions, blockchain analytics firms, or market research companies dedicated to cryptocurrency trends.",
+          "category": "medium_research_analysis",
+          "success": true,
+          "execution_time": 9.3570716381073,
+          "orchestration_detected": true,
+          "intelligence_level": "basic_orchestration",
+          "expected_complexity": "medium",
+          "complexity_match": false,
+          "orchestration_indicators_found": [
+            "rag"
+          ],
+          "response_length": 3368,
+          "timestamp": 1753834758.198573
+        }
+      ]
+    },
+    {
+      "category": "complex_multi_agent",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 5,
+      "complexity_matches": 5,
+      "results": [
+        {
+          "prompt": "Extract data from https://tech-company.com, analyze their product offerings, and create a competitive analysis report",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use LaVague to explore the website structure and identify data patterns\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by searching for relevant information...",
+          "category": "complex_multi_agent",
+          "success": true,
+          "execution_time": 0.023490190505981445,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 337,
+          "timestamp": 1753834759.2238631
+        },
+        {
+          "prompt": "Build a monitoring system for my server, test it thoroughly, and create documentation",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "complex_multi_agent",
+          "success": true,
+          "execution_time": 0.025000810623168945,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834760.250293
+        },
+        {
+          "prompt": "Research the latest AI trends, create a summary report, and build a tool to track ongoing developments",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use LaVague to explore the website structure and identify data patterns\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by searching for relevant information...",
+          "category": "complex_multi_agent",
+          "success": true,
+          "execution_time": 0.02373814582824707,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 337,
+          "timestamp": 1753834761.2753532
+        },
+        {
+          "prompt": "Scrape job listings from multiple sites, analyze salary trends, and create a dashboard to visualize the data",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use LaVague to explore the website structure and identify data patterns\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by searching for relevant information...",
+          "category": "complex_multi_agent",
+          "success": true,
+          "execution_time": 0.024653911590576172,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "lavague",
+            "open interpreter"
+          ],
+          "response_length": 337,
+          "timestamp": 1753834762.3013902
+        },
+        {
+          "prompt": "Create a comprehensive backup system, test it with my files, and set up automated scheduling",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "complex_multi_agent",
+          "success": true,
+          "execution_time": 0.00991201400756836,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834763.311601
+        }
+      ]
+    },
+    {
+      "category": "complex_with_learning",
+      "total_tests": 5,
+      "successful_tests": 5,
+      "orchestration_detected": 5,
+      "complexity_matches": 5,
+      "results": [
+        {
+          "prompt": "Help me automate my daily workflow - analyze what I do repeatedly and create tools to streamline it",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use Open Interpreter to execute and test the solution\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by analyzing the requirements...",
+          "category": "complex_with_learning",
+          "success": true,
+          "execution_time": 0.01385807991027832,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 379,
+          "timestamp": 1753834764.326732
+        },
+        {
+          "prompt": "Build a personal assistant system that learns my preferences and helps with task management",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "complex_with_learning",
+          "success": true,
+          "execution_time": 0.024704933166503906,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834765.352866
+        },
+        {
+          "prompt": "Create a smart home automation system that adapts to my usage patterns",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "complex_with_learning",
+          "success": true,
+          "execution_time": 0.019360065460205078,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834766.373485
+        },
+        {
+          "prompt": "Develop a content creation workflow that uses my writing style and preferences",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use Open Interpreter to execute and test the solution\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by analyzing the requirements...",
+          "category": "complex_with_learning",
+          "success": true,
+          "execution_time": 0.010331869125366211,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 379,
+          "timestamp": 1753834767.385049
+        },
+        {
+          "prompt": "Build an intelligent file organization system that learns from how I categorize things",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "category": "complex_with_learning",
+          "success": true,
+          "execution_time": 0.01871514320373535,
+          "orchestration_detected": true,
+          "intelligence_level": "high_orchestration",
+          "expected_complexity": "complex",
+          "complexity_match": true,
+          "orchestration_indicators_found": [
+            "here's my plan",
+            "let me start by",
+            "aider",
+            "open interpreter",
+            "robot framework"
+          ],
+          "response_length": 401,
+          "timestamp": 1753834768.405032
+        }
+      ]
+    }
+  ],
+  "test_prompts": {
+    "simple_direct_knowledge": [
+      "What is the capital of France?",
+      "Explain how photosynthesis works",
+      "Tell me about electric cars",
+      "What's the difference between Python and JavaScript?",
+      "How does machine learning work?"
+    ],
+    "simple_single_tool": [
+      "What time is it?",
+      "Remember that I prefer Python for data analysis",
+      "Search my memory for information about my last project",
+      "What did I tell you about my coding preferences?",
+      "Find information about machine learning in my documents"
+    ],
+    "medium_website_extraction": [
+      "Extract the product information from https://example-store.com",
+      "Scrape the latest news headlines from a tech news website",
+      "Get the pricing information from https://competitor-site.com",
+      "Extract all the job listings from a careers page",
+      "Pull the contact information from a company's about page"
+    ],
+    "medium_code_development": [
+      "Create a Python script that monitors my system's CPU usage",
+      "Build a web scraper for collecting stock prices",
+      "Write a script that organizes my Downloads folder by file type",
+      "Create a tool that backs up my important files automatically",
+      "Build a simple REST API for managing a todo list"
+    ],
+    "medium_research_analysis": [
+      "Analyze the current trends in renewable energy adoption",
+      "Research the latest developments in artificial intelligence",
+      "Compare the market performance of electric vehicle companies",
+      "Study the impact of remote work on productivity",
+      "Investigate the growth of cryptocurrency adoption"
+    ],
+    "complex_multi_agent": [
+      "Extract data from https://tech-company.com, analyze their product offerings, and create a competitive analysis report",
+      "Build a monitoring system for my server, test it thoroughly, and create documentation",
+      "Research the latest AI trends, create a summary report, and build a tool to track ongoing developments",
+      "Scrape job listings from multiple sites, analyze salary trends, and create a dashboard to visualize the data",
+      "Create a comprehensive backup system, test it with my files, and set up automated scheduling"
+    ],
+    "complex_with_learning": [
+      "Help me automate my daily workflow - analyze what I do repeatedly and create tools to streamline it",
+      "Build a personal assistant system that learns my preferences and helps with task management",
+      "Create a smart home automation system that adapts to my usage patterns",
+      "Develop a content creation workflow that uses my writing style and preferences",
+      "Build an intelligent file organization system that learns from how I categorize things"
+    ]
+  }
+}

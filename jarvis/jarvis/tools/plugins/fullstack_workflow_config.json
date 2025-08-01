@@ -1,0 +1,45 @@
+{
+    "default_tech_stacks": {
+        "modern_web": {
+            "frontend": "react",
+            "backend": "nodejs",
+            "database": "mongodb",
+            "testing": "jest",
+            "deployment": "netlify"
+        },
+        "enterprise": {
+            "frontend": "angular",
+            "backend": "python-flask",
+            "database": "postgresql",
+            "testing": "pytest",
+            "deployment": "aws"
+        },
+        "lightweight": {
+            "frontend": "vue",
+            "backend": "fastapi",
+            "database": "sqlite",
+            "testing": "vitest",
+            "deployment": "vercel"
+        }
+    },
+    "templates": {
+        "frontend": {
+            "components": ["Header", "Footer", "Navigation", "Layout"],
+            "pages": ["Home", "About", "Contact"]
+        },
+        "backend": {
+            "endpoints": [
+                {"path": "/api/health", "method": "GET"},
+                {"path": "/api/auth", "method": "POST"},
+                {"path": "/api/users", "method": "CRUD"}
+            ]
+        },
+        "database": {
+            "common_models": ["User", "Profile", "Settings"]
+        }
+    },
+    "deployment": {
+        "environments": ["development", "staging", "production"],
+        "required_configs": ["env", "database_url", "api_keys"]
+    }
+}

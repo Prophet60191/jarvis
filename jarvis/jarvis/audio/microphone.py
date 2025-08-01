@@ -285,34 +285,65 @@ class MicrophoneManager:
             error_msg = f"Speech recognition service error: {str(e)}"
             logger.error(error_msg)
             raise SpeechRecognitionError(error_msg, recognition_service=service) from e
+        except SpeechRecognitionError:
+            # Re-raise SpeechRecognitionError as-is to preserve original message
+            raise
         except Exception as e:
             error_msg = f"Unexpected error during speech recognition: {str(e)}"
             logger.error(error_msg)
             raise SpeechRecognitionError(error_msg, recognition_service=service) from e
     
-    def listen_for_speech(self, timeout: Optional[float] = None, 
+    def listen_for_speech(self, timeout: Optional[float] = None,
                          phrase_time_limit: Optional[float] = None,
                          service: str = "whisper") -> Optional[str]:
         """
         Listen for speech and return the recognized text.
-        
+
         Args:
             timeout: Maximum time to wait for audio
             phrase_time_limit: Maximum time for a single phrase
             service: Speech recognition service to use
-            
+
         Returns:
             Recognized text or None if no speech was detected
-            
+
         Raises:
             MicrophoneError: If microphone operations fail
             SpeechRecognitionError: If speech recognition fails
         """
         try:
             with self.capture_audio(timeout, phrase_time_limit) as audio:
-                return self.recognize_speech(audio, service)
-        except (AudioError, SpeechRecognitionError):
-            # Timeout, no speech, or recognition issues - return None (normal)
+                # Try primary service first
+                try:
+                    return self.recognize_speech(audio, service)
+                except SpeechRecognitionError as e:
+                    # If Whisper fails with "No speech detected", try Google as fallback
+                    if service.lower() == "whisper" and "No speech detected" in str(e):
+                        logger.debug("Whisper failed to detect speech, trying Google fallback...")
+                        try:
+                            result = self.recognize_speech(audio, "google")
+                            logger.info(f"Google fallback successful: '{result}'")
+                            return result
+                        except Exception as fallback_error:
+                            logger.debug(f"Google fallback also failed: {fallback_error}")
+                    # Re-raise original error if fallback fails or not applicable
+                    raise e
+        except AudioError as e:
+            # Check if this is a wrapped SpeechRecognitionError from capture_audio
+            if "No speech detected" in str(e) and service.lower() == "whisper":
+                logger.debug("Audio capture failed due to Whisper speech detection, trying Google fallback...")
+                try:
+                    # Try to capture audio again and use Google
+                    with self.capture_audio(timeout, phrase_time_limit) as audio:
+                        result = self.recognize_speech(audio, "google")
+                        logger.info(f"Google fallback successful after audio error: '{result}'")
+                        return result
+                except Exception as fallback_error:
+                    logger.debug(f"Google fallback after audio error also failed: {fallback_error}")
+            # Return None for normal timeout/no speech cases
+            return None
+        except SpeechRecognitionError:
+            # Recognition issues - return None (normal)
             return None
     
     @staticmethod

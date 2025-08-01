@@ -1,23 +1,10 @@
 """
-Fast/Slow Path Routing System
+Routing Package (Legacy)
 
-Industry-standard routing implementation for optimizing AI assistant performance.
-Based on patterns used by Alexa, Google Assistant, and other high-performance systems.
+This package previously contained the fast/slow path routing system.
+The functionality has been replaced by the RAG-powered workflow system
+in the orchestration package.
 """
 
-from .intent_router import IntentRouter, ExecutionPath, RouteResult
-from .execution_engine import ExecutionEngine, ExecutionResult
-from .smart_conversation_manager import SmartConversationManager
-
-__all__ = [
-    'IntentRouter',
-    'ExecutionPath', 
-    'RouteResult',
-    'ExecutionEngine',
-    'ExecutionResult',
-    'SmartConversationManager'
-]
-
-# Version info
-__version__ = "1.0.0"
-__description__ = "Fast/Slow Path Routing System for Jarvis"
+# Empty package - functionality moved to RAG-powered workflow system
+__all__ = []

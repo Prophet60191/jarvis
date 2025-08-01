@@ -1,0 +1,466 @@
+{
+  "session_summary": {
+    "total_prompts": 9,
+    "total_successful": 9,
+    "total_matches": 3,
+    "session_timestamp": 1753834819.681421
+  },
+  "phase_progress": [
+    {
+      "phase": "Phase 1 - Baseline",
+      "total_prompts": 3,
+      "successful": 3,
+      "behavior_matches": 3,
+      "results": [
+        {
+          "prompt": "What time is it?",
+          "expected_behavior": "single_tool",
+          "expected_tools": [
+            "get_current_time"
+          ],
+          "complexity": "simple",
+          "response": "As an AI, I don't have real-time information about the current time. However, you can easily check the current time on your device or ask me to assist with any questions or tasks you might have! If you need the current time for a specific location, just let me know!",
+          "execution_time": 0.9857161045074463,
+          "analysis": {
+            "orchestration_detected": false,
+            "orchestration_type": "no_orchestration",
+            "behavior_match": true,
+            "found_indicators": {
+              "planning": [],
+              "coordination": [],
+              "tools": [],
+              "workflow": []
+            },
+            "tools_mentioned": [],
+            "expected_tools": [
+              "get_current_time"
+            ],
+            "tool_match": false,
+            "response_quality": "medium"
+          },
+          "success": true,
+          "timestamp": 1753834798.858351
+        },
+        {
+          "prompt": "Remember that I prefer using Python for data analysis projects",
+          "expected_behavior": "single_tool",
+          "expected_tools": [
+            "remember_fact"
+          ],
+          "complexity": "simple",
+          "response": "Of course! If you have any specific tasks or projects in mind related to data analysis with Python, feel free to let me know! Whether it's cleaning and preprocessing data, performing statistical analyses, building predictive models, or visualizing results, I can help guide you through the process using popular libraries like pandas, NumPy, scikit-learn, and Matplotlib.\n\nDo you have a particular task or dataset in mind that we should work on together?",
+          "execution_time": 1.5193347930908203,
+          "analysis": {
+            "orchestration_detected": false,
+            "orchestration_type": "no_orchestration",
+            "behavior_match": true,
+            "found_indicators": {
+              "planning": [],
+              "coordination": [],
+              "tools": [],
+              "workflow": []
+            },
+            "tools_mentioned": [],
+            "expected_tools": [
+              "remember_fact"
+            ],
+            "tool_match": false,
+            "response_quality": "medium"
+          },
+          "success": true,
+          "timestamp": 1753834802.3796659
+        },
+        {
+          "prompt": "What did I tell you about my programming preferences?",
+          "expected_behavior": "single_tool",
+          "expected_tools": [
+            "search_long_term_memory"
+          ],
+          "complexity": "simple",
+          "response": "I'm sorry, but as an AI assistant, I don't have the ability to recall specific interactions or information that wasn't part of this current session. Could you please provide more details so I can assist you better? If you had mentioned anything about your programming preferences in our conversation, feel free to share those details again!",
+          "execution_time": 1.156825065612793,
+          "analysis": {
+            "orchestration_detected": false,
+            "orchestration_type": "no_orchestration",
+            "behavior_match": true,
+            "found_indicators": {
+              "planning": [],
+              "coordination": [],
+              "tools": [],
+              "workflow": []
+            },
+            "tools_mentioned": [],
+            "expected_tools": [
+              "search_long_term_memory"
+            ],
+            "tool_match": false,
+            "response_quality": "medium"
+          },
+          "success": true,
+          "timestamp": 1753834805.53718
+        }
+      ]
+    },
+    {
+      "phase": "Phase 2 - Orchestration",
+      "total_prompts": 3,
+      "successful": 3,
+      "behavior_matches": 0,
+      "results": [
+        {
+          "prompt": "Create a Python script that checks if a website is online",
+          "expected_behavior": "orchestration",
+          "expected_tools": [
+            "aider",
+            "open_interpreter"
+          ],
+          "complexity": "medium",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use LaVague to explore the website structure and identify data patterns\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by analyzing the website structure...",
+          "execution_time": 0.017772674560546875,
+          "analysis": {
+            "orchestration_detected": true,
+            "orchestration_type": "tool_awareness",
+            "behavior_match": false,
+            "found_indicators": {
+              "planning": [
+                "here's my plan",
+                "i'll handle this"
+              ],
+              "coordination": [],
+              "tools": [
+                "aider",
+                "lavague",
+                "open interpreter"
+              ],
+              "workflow": []
+            },
+            "tools_mentioned": [
+              "aider",
+              "lavague",
+              "open interpreter"
+            ],
+            "expected_tools": [
+              "aider",
+              "open_interpreter"
+            ],
+            "tool_match": true,
+            "response_quality": "high"
+          },
+          "success": true,
+          "timestamp": 1753834807.556323
+        },
+        {
+          "prompt": "Extract the main headlines from a news website",
+          "expected_behavior": "orchestration",
+          "expected_tools": [
+            "lavague",
+            "aider",
+            "open_interpreter"
+          ],
+          "complexity": "medium",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use LaVague to explore the website structure and identify data patterns\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by analyzing the website structure...",
+          "execution_time": 0.022821903228759766,
+          "analysis": {
+            "orchestration_detected": true,
+            "orchestration_type": "tool_awareness",
+            "behavior_match": false,
+            "found_indicators": {
+              "planning": [
+                "here's my plan",
+                "i'll handle this"
+              ],
+              "coordination": [],
+              "tools": [
+                "aider",
+                "lavague",
+                "open interpreter"
+              ],
+              "workflow": []
+            },
+            "tools_mentioned": [
+              "aider",
+              "lavague",
+              "open interpreter"
+            ],
+            "expected_tools": [
+              "lavague",
+              "aider",
+              "open_interpreter"
+            ],
+            "tool_match": true,
+            "response_quality": "high"
+          },
+          "success": true,
+          "timestamp": 1753834809.58061
+        },
+        {
+          "prompt": "Build a simple file organizer for my Downloads folder",
+          "expected_behavior": "orchestration",
+          "expected_tools": [
+            "aider",
+            "open_interpreter"
+          ],
+          "complexity": "medium",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use Open Interpreter to execute and test the solution\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by analyzing the requirements...",
+          "execution_time": 0.023823022842407227,
+          "analysis": {
+            "orchestration_detected": true,
+            "orchestration_type": "tool_awareness",
+            "behavior_match": false,
+            "found_indicators": {
+              "planning": [
+                "here's my plan",
+                "i'll handle this"
+              ],
+              "coordination": [],
+              "tools": [
+                "aider",
+                "open interpreter",
+                "robot framework"
+              ],
+              "workflow": []
+            },
+            "tools_mentioned": [
+              "aider",
+              "open interpreter",
+              "robot framework"
+            ],
+            "expected_tools": [
+              "aider",
+              "open_interpreter"
+            ],
+            "tool_match": true,
+            "response_quality": "high"
+          },
+          "success": true,
+          "timestamp": 1753834811.606007
+        }
+      ]
+    },
+    {
+      "phase": "Phase 3 - Complex Workflows",
+      "total_prompts": 3,
+      "successful": 3,
+      "behavior_matches": 0,
+      "results": [
+        {
+          "prompt": "Research the latest AI trends, create a summary, and build a tool to track future developments",
+          "expected_behavior": "complex_orchestration",
+          "expected_tools": [
+            "rag",
+            "lavague",
+            "aider",
+            "open_interpreter"
+          ],
+          "complexity": "complex",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "execution_time": 0.022505998611450195,
+          "analysis": {
+            "orchestration_detected": true,
+            "orchestration_type": "tool_awareness",
+            "behavior_match": false,
+            "found_indicators": {
+              "planning": [
+                "here's my plan",
+                "i'll handle this"
+              ],
+              "coordination": [],
+              "tools": [
+                "aider",
+                "open interpreter",
+                "robot framework"
+              ],
+              "workflow": []
+            },
+            "tools_mentioned": [
+              "aider",
+              "open interpreter",
+              "robot framework"
+            ],
+            "expected_tools": [
+              "rag",
+              "lavague",
+              "aider",
+              "open_interpreter"
+            ],
+            "tool_match": true,
+            "response_quality": "high"
+          },
+          "success": true,
+          "timestamp": 1753834813.63012
+        },
+        {
+          "prompt": "Extract product data from an e-commerce site, analyze pricing trends, and create a monitoring dashboard",
+          "expected_behavior": "complex_orchestration",
+          "expected_tools": [
+            "lavague",
+            "aider",
+            "open_interpreter"
+          ],
+          "complexity": "complex",
+          "response": "I'll handle this medium complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use LaVague to explore the website structure and identify data patterns\n3. I'll use Open Interpreter to execute and test the solution\n\nLet me start by searching for relevant information...",
+          "execution_time": 0.023485898971557617,
+          "analysis": {
+            "orchestration_detected": true,
+            "orchestration_type": "tool_awareness",
+            "behavior_match": false,
+            "found_indicators": {
+              "planning": [
+                "here's my plan",
+                "i'll handle this"
+              ],
+              "coordination": [],
+              "tools": [
+                "lavague",
+                "open interpreter"
+              ],
+              "workflow": []
+            },
+            "tools_mentioned": [
+              "lavague",
+              "open interpreter"
+            ],
+            "expected_tools": [
+              "lavague",
+              "aider",
+              "open_interpreter"
+            ],
+            "tool_match": true,
+            "response_quality": "high"
+          },
+          "success": true,
+          "timestamp": 1753834815.6550038
+        },
+        {
+          "prompt": "Build a comprehensive backup system, test it thoroughly, and create automated scheduling",
+          "expected_behavior": "complex_orchestration",
+          "expected_tools": [
+            "aider",
+            "open_interpreter",
+            "robot_framework"
+          ],
+          "complexity": "complex",
+          "response": "I'll handle this complex complexity task for you. Here's my plan:\n1. I'll use my knowledge base to search for relevant background information\n2. I'll use Aider to create the necessary code based on the analysis\n3. I'll use Open Interpreter to execute and test the solution\n4. I'll use Robot Framework to validate the solution with automated tests\n\nLet me start by searching for relevant information...",
+          "execution_time": 0.023791790008544922,
+          "analysis": {
+            "orchestration_detected": true,
+            "orchestration_type": "tool_awareness",
+            "behavior_match": false,
+            "found_indicators": {
+              "planning": [
+                "here's my plan",
+                "i'll handle this"
+              ],
+              "coordination": [],
+              "tools": [
+                "aider",
+                "open interpreter",
+                "robot framework"
+              ],
+              "workflow": []
+            },
+            "tools_mentioned": [
+              "aider",
+              "open interpreter",
+              "robot framework"
+            ],
+            "expected_tools": [
+              "aider",
+              "open_interpreter",
+              "robot_framework"
+            ],
+            "tool_match": true,
+            "response_quality": "high"
+          },
+          "success": true,
+          "timestamp": 1753834817.680214
+        }
+      ]
+    }
+  ],
+  "learning_prompts": [
+    {
+      "prompt": "What time is it?",
+      "expected_behavior": "single_tool",
+      "expected_tools": [
+        "get_current_time"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "prompt": "Remember that I prefer using Python for data analysis projects",
+      "expected_behavior": "single_tool",
+      "expected_tools": [
+        "remember_fact"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "prompt": "What did I tell you about my programming preferences?",
+      "expected_behavior": "single_tool",
+      "expected_tools": [
+        "search_long_term_memory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "prompt": "Create a Python script that checks if a website is online",
+      "expected_behavior": "orchestration",
+      "expected_tools": [
+        "aider",
+        "open_interpreter"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "prompt": "Extract the main headlines from a news website",
+      "expected_behavior": "orchestration",
+      "expected_tools": [
+        "lavague",
+        "aider",
+        "open_interpreter"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "prompt": "Build a simple file organizer for my Downloads folder",
+      "expected_behavior": "orchestration",
+      "expected_tools": [
+        "aider",
+        "open_interpreter"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "prompt": "Research the latest AI trends, create a summary, and build a tool to track future developments",
+      "expected_behavior": "complex_orchestration",
+      "expected_tools": [
+        "rag",
+        "lavague",
+        "aider",
+        "open_interpreter"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "prompt": "Extract product data from an e-commerce site, analyze pricing trends, and create a monitoring dashboard",
+      "expected_behavior": "complex_orchestration",
+      "expected_tools": [
+        "lavague",
+        "aider",
+        "open_interpreter"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "prompt": "Build a comprehensive backup system, test it thoroughly, and create automated scheduling",
+      "expected_behavior": "complex_orchestration",
+      "expected_tools": [
+        "aider",
+        "open_interpreter",
+        "robot_framework"
+      ],
+      "complexity": "complex"
+    }
+  ]
+}

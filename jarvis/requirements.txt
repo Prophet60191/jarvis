@@ -272,3 +272,6 @@ zstandard==0.23.0
 open-interpreter>=0.2.0
 matplotlib>=3.7.0
 beautifulsoup4>=4.12.0
+
+# Hot reload for dynamic plugin loading
+watchdog>=3.0.0

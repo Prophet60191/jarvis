@@ -8,6 +8,7 @@ The service acts as an intelligent layer between the main conversation LLM and
 the vector database, providing enhanced document understanding and retrieval.
 """
 
+import asyncio
 import os
 import json
 import logging
@@ -139,6 +140,44 @@ class RAGService:
         self.backup_manager = RAGBackupManager(self.config.rag)
 
         logger.info("RAGService initialized with Qwen2.5:14b for intelligent document processing")
+
+    async def query(self, query_text: str, context: str = "") -> str:
+        """
+        Simple query method for RAG-powered workflow compatibility.
+
+        Args:
+            query_text: The query to search for
+            context: Optional context for the query
+
+        Returns:
+            Synthesized answer as string
+        """
+        try:
+            result = await self.intelligent_search(query_text, context)
+            return result.get("synthesis", {}).get("synthesized_answer", "No information found")
+        except Exception as e:
+            logger.error(f"Query failed: {e}")
+            return f"Query failed: {str(e)}"
+
+    async def add_document(self, content: str, metadata: dict = None) -> bool:
+        """
+        Add a document to the RAG system for workflow compatibility.
+
+        Args:
+            content: Document content to add
+            metadata: Optional metadata for the document
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Use conversational memory for simple text content
+            self.add_conversational_memory(content)
+            logger.info(f"Added document to RAG: {content[:50]}...")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to add document: {e}")
+            return False
     
     def _init_prompts(self):
         """Initialize prompt templates for various LLM tasks."""
@@ -533,39 +572,114 @@ Content: {doc.page_content[:500]}...
 
             response = self.document_llm.invoke(prompt)
 
-            try:
-                synthesis_data = json.loads(response)
-                logger.info(f"Results synthesized for query: '{query}' (confidence: {synthesis_data.get('confidence_score', 'unknown')})")
-                return synthesis_data
-            except json.JSONDecodeError:
-                logger.warning(f"Failed to parse result synthesis, using fallback")
-                # Create basic synthesis from retrieved documents
-                sources = [doc.metadata.get('source', 'unknown') for doc in retrieved_documents]
-                combined_content = "\n\n".join([doc.page_content[:200] for doc in retrieved_documents[:3]])
-
-                return {
-                    "synthesized_answer": f"Based on the retrieved documents: {combined_content}",
-                    "key_points": ["Information found in retrieved documents"],
-                    "source_citations": [{"source": src, "relevance": "medium", "key_info": "general information"} for src in set(sources)],
-                    "confidence_score": 0.6,
-                    "information_gaps": [],
-                    "contradictions_found": [],
-                    "recommended_followup": [],
-                    "answer_completeness": "partial"
-                }
+            # Try multiple parsing strategies for robustness
+            synthesis_data = self._parse_synthesis_response(response, retrieved_documents, query)
+            logger.info(f"Results synthesized for query: '{query}' (confidence: {synthesis_data.get('confidence_score', 'unknown')})")
+            return synthesis_data
 
         except Exception as e:
             logger.error(f"Error synthesizing results for query '{query}': {e}")
-            return {
-                "synthesized_answer": "Unable to synthesize results due to processing error.",
-                "key_points": [],
-                "source_citations": [],
-                "confidence_score": 0.1,
-                "information_gaps": ["synthesis_error"],
-                "contradictions_found": [],
-                "recommended_followup": ["try_rephrasing_query"],
-                "answer_completeness": "limited"
-            }
+            return self._create_fallback_synthesis(retrieved_documents, query)
+
+    def _parse_synthesis_response(self, response: str, retrieved_documents: list, query: str) -> dict:
+        """
+        Robustly parse synthesis response with multiple fallback strategies.
+
+        Args:
+            response: Raw LLM response
+            retrieved_documents: Retrieved documents for fallback
+            query: Original query for context
+
+        Returns:
+            Parsed synthesis data
+        """
+        # Strategy 1: Direct JSON parsing
+        try:
+            synthesis_data = json.loads(response)
+            if isinstance(synthesis_data, dict) and "synthesized_answer" in synthesis_data:
+                return synthesis_data
+        except json.JSONDecodeError:
+            pass
+
+        # Strategy 2: Extract JSON from response (in case of extra text)
+        try:
+            # Look for JSON block in response
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                synthesis_data = json.loads(json_match.group())
+                if isinstance(synthesis_data, dict) and "synthesized_answer" in synthesis_data:
+                    return synthesis_data
+        except (json.JSONDecodeError, AttributeError):
+            pass
+
+        # Strategy 3: Parse structured text response
+        try:
+            # If response is structured text, extract key information
+            if "synthesized_answer" in response.lower() or "answer:" in response.lower():
+                return self._parse_structured_text_response(response, retrieved_documents, query)
+        except Exception:
+            pass
+
+        # Strategy 4: Fallback synthesis
+        logger.warning(f"Failed to parse result synthesis using all strategies, using fallback")
+        return self._create_fallback_synthesis(retrieved_documents, query)
+
+    def _parse_structured_text_response(self, response: str, retrieved_documents: list, query: str) -> dict:
+        """Parse structured text response into synthesis format."""
+        lines = response.split('\n')
+        synthesis_data = {
+            "synthesized_answer": "",
+            "key_points": [],
+            "source_citations": [],
+            "confidence_score": 0.7,
+            "information_gaps": [],
+            "contradictions_found": [],
+            "recommended_followup": [],
+            "answer_completeness": "partial"
+        }
+
+        current_section = None
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Identify sections
+            if "answer:" in line.lower() or "synthesized_answer:" in line.lower():
+                current_section = "answer"
+                synthesis_data["synthesized_answer"] = line.split(':', 1)[1].strip()
+            elif "key_points:" in line.lower() or "points:" in line.lower():
+                current_section = "points"
+            elif current_section == "answer" and not synthesis_data["synthesized_answer"]:
+                synthesis_data["synthesized_answer"] = line
+            elif current_section == "points" and line.startswith('-'):
+                synthesis_data["key_points"].append(line[1:].strip())
+
+        # If no answer found, use first substantial line
+        if not synthesis_data["synthesized_answer"]:
+            for line in lines:
+                if len(line.strip()) > 20:
+                    synthesis_data["synthesized_answer"] = line.strip()
+                    break
+
+        return synthesis_data
+
+    def _create_fallback_synthesis(self, retrieved_documents: list, query: str) -> dict:
+        """Create basic synthesis from retrieved documents."""
+        sources = [doc.metadata.get('source', 'unknown') for doc in retrieved_documents]
+        combined_content = "\n\n".join([doc.page_content[:200] for doc in retrieved_documents[:3]])
+
+        return {
+            "synthesized_answer": f"Based on the retrieved documents: {combined_content}",
+            "key_points": ["Information found in retrieved documents"],
+            "source_citations": [{"source": src, "relevance": "medium", "key_info": "general information"} for src in set(sources)],
+            "confidence_score": 0.6,
+            "information_gaps": [],
+            "contradictions_found": [],
+            "recommended_followup": [],
+            "answer_completeness": "partial"
+        }
 
     def preprocess_document_content(self, content: str, file_extension: str, filename: str) -> str:
         """

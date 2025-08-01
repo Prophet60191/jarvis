@@ -1,0 +1,19 @@
+{
+  "tool_name": "list_all_files",
+  "type": "generic",
+  "description": "Tool created from request: Create a tool to list all files in a directory",
+  "capabilities": [
+    "General purpose functionality"
+  ],
+  "voice_commands": [
+    "use list all files",
+    "run list all files",
+    "execute list all files",
+    "activate list all files"
+  ],
+  "created_from_request": "Create a tool to list all files in a directory",
+  "usage_examples": [
+    "Create a tool to list all files in a directory"
+  ],
+  "integration_notes": "Created by orchestration system for intelligent coordination"
+}
