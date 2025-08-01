@@ -19,6 +19,14 @@ chroma.sqlite3
 data/chroma_db/
 data/backups/*/vector_store/
 data/backups/*/*.bin
+jarvis/data/chroma_db/
+jarvis/data/backups/
+
+# Exclude all large binary files
+**/data_level0.bin
+**/chroma.sqlite3
+**/*.bin
+**/*.sqlite3
 
 # Python cache
 __pycache__/
