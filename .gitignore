@@ -4,3 +4,23 @@ database/schema.sql
 database/.env
 *.log
 .DS_Store
+
+# Large database files
+*.sqlite3
+data_level0.bin
+chroma.sqlite3
+
+# Vector store data
+**/vector_store/**/*.bin
+**/chroma_db/**/*.bin
+**/chroma_db/**/*.sqlite3
+
+# Data directories with large files
+data/chroma_db/
+data/backups/*/vector_store/
+data/backups/*/*.bin
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
